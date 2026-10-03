@@ -4,7 +4,11 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.ARMv7M.SysTick_Clock_Timer;
+
 procedure Nu_Pogodi.Driver is
 begin
-   null;
+   A0B.ARMv7M.SysTick_Clock_Timer.Initialize
+     (Use_Processor_Clock => True,
+      Clock_Frequency     => 80_000_000);
 end Nu_Pogodi.Driver;
