@@ -20,6 +20,10 @@ command = ["a0b-runtime", "--bb-runtimes=../../bb-runtimes-16/"]
 type = "pre-build"
 command = ["gprbuild", "-j0", "runtime/build_runtime.gpr"]
 
+[[actions]]
+type = "post-build"
+command = ["arm-eabi-objcopy", "-O", "binary", "../bin/nu_pogodi_weact_blackpill_stm32f401.elf", "../bin/nu_pogodi_weact_blackpill_stm32f401.bin"]
+
 [[depends-on]]
 a0b_armv7m_systick_clock_timer = "*"
 a0b_stm32f401 = "*"
