@@ -1,0 +1,86 @@
+{
+  "dt:&cpu0:compatible": "arm,cortex-m4f",
+  "dt:&cpu0:clock-frequency": "84_000_000",
+  "dt:&nvic:arm,num-irq-priority-bits": "4",
+  "dt:/chosen/a0b,sram:reg": ["0x20000000", "DT_SIZE_K(32)"],
+  "dt:/chosen/a0b,flash:reg": ["0x08000000", "DT_SIZE_K(64)"],
+  "dt:&flash:latency": "2",
+  "dt:&pwr:vos": "2",
+  "dt:&pll:div-m": "25",
+  "dt:&pll:mul-n": "336",
+  "dt:&pll:div-p": "4",
+  "dt:&pll:div-q": "7",
+  "dt:&rcc:ahb-prescaler": "1",
+  "dt:&rcc:apb1-prescaler": "2",
+  "dt:&rcc:apb2-prescaler": "1",
+
+  "runtime":
+  {
+    "common_required_switches": ["-mfloat-abi=hard", "-mcpu=cortex-m4", "-mfpu=fpv4-sp-d16"],
+    "linker_required_switches": ["-nostartfiles", "-nolibc"],
+    "system":
+    {
+      "restrictions":
+      {
+        "No_Finalization": true
+      }
+    },
+    "files":
+    {
+      "s-macres.adb": { "crate": "bb_runtimes", "path": "src/s-macres__cortexm3.adb" },
+      "s-sgshca.adb": { "crate": "bb_runtimes", "path": "src/s-sgshca__cortexm.adb" },
+//      // Random number generator
+//      "a-nudira.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-nudira.ads" },
+//      "a-nudira.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-nudira.adb" },
+//      "a-stbuut.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-stbuut.ads" },
+//      "a-stbuut.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-stbuut.adb" },
+//      "a-sttebu.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-sttebu.ads" },
+//      "a-sttebu.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-sttebu.adb" },
+//      "a-stuten.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-stuten.ads" },
+//      "a-stuten.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-stuten.adb" },
+//      "a-suenst.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suenst.ads" },
+//      "a-suenst.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suenst.adb" },
+//      "a-suewst.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suewst.ads" },
+//      "a-suewst.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suewst.adb" },
+//      "a-suezst.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suezst.ads" },
+//      "a-suezst.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/a-suezst.adb" },
+//      "s-rannum.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/s-rannum.ads" },
+//      "s-rannum.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/s-rannum.adb" },
+//      "s-ransee.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/s-ransee.ads" },
+//      "s-ransee.adb": { "path": "../source/runtime/s-ransee.adb" },
+//      "s-putima.ads": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/s-putima.ads" },
+//      "s-putima.adb": { "crate": "bb_runtimes", "path": "gnat_rts_sources/include/rts-sources/full/s-putima.adb" }
+    }
+  },
+
+  "scenarios":
+  {
+//    "Target_Word_Size": "32",
+//    "Has_Compare_And_Swap": "yes",
+//    "Has_CHERI": "no",
+//    "Certifiable_Packages": "no",
+    "Has_libc": "no",
+//    "Memory_Profile": "small",
+    "Text_IO": "semihosting",
+//
+//    "Timer": "timer32",
+//
+//    "Add_Value_Spec": "yes",
+//    "Add_Value_LL_Spec": "yes",
+//
+//    "Add_Math_Lib": "hardfloat_sp",
+//    "Add_Exponent_Int": "yes",
+//    "Add_Streams": "yes",
+//    "Add_Exponent_Float": "yes",
+//    "Add_Value_Int": "yes",
+//    "Add_IO_Exceptions": "yes",
+//    "Add_Value_Utils": "yes",
+//    "Add_Case_Util": "yes",
+//    "Add_Arith64": "yes",
+//    "Add_Exponent_LL_Int": "yes",
+//    "Add_Complex_Type_Support": "yes",
+//    "Add_Float_Util": "yes",
+//    "Add_Image_Char": "yes",
+//    "Add_Value_LL_Int": "yes"
+  }
+}

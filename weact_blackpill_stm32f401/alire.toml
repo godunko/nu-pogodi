@@ -1,0 +1,32 @@
+name = "nu_pogodi_weact_blackpill_stm32f401"
+version = "0.1.0-dev"
+description = "Nu, Pogodi! Game"
+
+authors = ["Vadim Godunko"]
+maintainers = ["Vadim Godunko <vgodunko@gmail.com>"]
+maintainers-logins = ["godunko"]
+licenses = "GPL-3.0-or-later"
+tags = ["embedded", "game", "nu-pogodi"]
+
+[configuration]
+generate_ada = false
+generate_c = false
+generate_gpr = true
+
+[[actions]]
+type = "pre-build"
+command = ["a0b-runtime", "--bb-runtimes=../../bb-runtimes-16/"]
+[[actions]]
+type = "pre-build"
+command = ["gprbuild", "-j0", "runtime/build_runtime.gpr"]
+
+[[depends-on]]
+a0b_stm32f401 = "*"
+gnat_arm_elf = "^16"
+
+a0b_tools = "*"
+
+[[pins]]
+#a0b_stm32f401 = { path = "../../a0b-stm32f401" }
+#a0b_armv7m = { path = "../../a0b-armv7m" }
+a0b_tools = { path = "../../a0b-tools" }
