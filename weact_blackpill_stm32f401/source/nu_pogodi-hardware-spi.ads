@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Buffers;
 with A0B.Types;
 
 package Nu_Pogodi.Hardware.SPI is
@@ -17,6 +18,8 @@ package Nu_Pogodi.Hardware.SPI is
    procedure Release;
 
    procedure Transmit (Command : A0B.Types.Unsigned_8);
+
+   procedure Transmit (Buffer : A0B.Buffers.Abstract_Buffer'Class);
 
    procedure Receive (Data : out A0B.Types.Unsigned_8);
 

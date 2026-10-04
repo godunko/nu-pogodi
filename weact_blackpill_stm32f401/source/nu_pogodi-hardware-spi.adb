@@ -8,6 +8,7 @@ pragma Ada_2022;
 
 with A0B.STM32F401.SVD.RCC;
 with A0B.STM32F401.SVD.SPI;
+with A0B.Types.Arrays;
 
 with Nu_Pogodi.Hardware.Pin_Control;
 
@@ -142,6 +143,35 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
         (DR             => A0B.Types.Unsigned_16 (Command),
          Reserved_16_31 => 0);
+
+      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+         null;
+      end loop;
+
+      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+         null;
+      end loop;
+   end Transmit;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit (Buffer : A0B.Buffers.Abstract_Buffer'Class) is
+      Data : constant A0B.Types.Arrays.Unsigned_8_Array
+        (1 .. A0B.Types.Unsigned_32 (Buffer.Length))
+        with Import, Address => Buffer.Address;
+
+   begin
+      for Item of Data loop
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+           (DR             => A0B.Types.Unsigned_16 (Item),
+            Reserved_16_31 => 0);
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+      end loop;
 
       while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
          null;
