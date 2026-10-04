@@ -4,10 +4,11 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.ARMv7M.Instructions;
 with A0B.ARMv7M.SysTick_Clock_Timer;
 
 with Nu_Pogodi.Hardware.Pin_Control;
-with Nu_Pogodi.Hardware.MIPI;
+with Nu_Pogodi.Hardware.SSD1683;
 
 procedure Nu_Pogodi.Driver is
 begin
@@ -16,5 +17,9 @@ begin
       Clock_Frequency     => 80_000_000);
 
    Nu_Pogodi.Hardware.Pin_Control.Initialize;
-   Nu_Pogodi.Hardware.MIPI.Initialize;
+   Nu_Pogodi.Hardware.SSD1683.Initialize;
+
+   loop
+      A0B.ARMv7M.Instructions.Wait_For_Interrupt;
+   end loop;
 end Nu_Pogodi.Driver;

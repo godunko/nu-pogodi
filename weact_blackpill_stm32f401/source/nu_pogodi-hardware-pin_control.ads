@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Callbacks;
+
 package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Initialize;
@@ -13,5 +15,11 @@ package Nu_Pogodi.Hardware.Pin_Control is
    procedure Configure_MIPI_Pins;
 
    procedure Set_MIPI_D_C (To : Boolean);
+
+   procedure Set_SSD1683_RES (To : Boolean);
+
+   function Get_SSD1683_BUSY return Boolean;
+
+   procedure Enable_SSD1683_BUSY (Callback : A0B.Callbacks.Callback);
 
 end Nu_Pogodi.Hardware.Pin_Control;
