@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types.Enumerable;
 
@@ -15,6 +16,12 @@ package Nu_Pogodi.Hardware.MIPI is
 
    procedure Command
      (Command  : Command_Code;
+      Finished : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+
+   procedure Command_Write
+     (Command  : Command_Code;
+      Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean);
 

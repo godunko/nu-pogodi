@@ -39,6 +39,36 @@ package body Nu_Pogodi.Hardware.MIPI is
       A0B.Callbacks.Emit (Finished);
    end Command;
 
+   -------------------
+   -- Command_Write --
+   -------------------
+
+   procedure Command_Write
+     (Command  : Command_Code;
+      Buffer   : A0B.Buffers.Abstract_Buffer'Class;
+      Finished : A0B.Callbacks.Callback;
+      Success  : in out Boolean)
+   is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      --  XXX Rewrite to use asynchronous SPI transfer, not implemented yet.
+
+      Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Write;
+
+      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
+      Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
+
+      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
+      Nu_Pogodi.Hardware.SPI.Transmit (Buffer);
+
+      Nu_Pogodi.Hardware.SPI.Release;
+
+      A0B.Callbacks.Emit (Finished);
+   end Command_Write;
+
    ----------------
    -- Initialize --
    ----------------
