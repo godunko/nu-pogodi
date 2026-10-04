@@ -26,6 +26,7 @@ command = ["arm-eabi-objcopy", "-O", "binary", "../bin/nu_pogodi_weact_blackpill
 
 [[depends-on]]
 a0b_armv7m_systick_clock_timer = "*"
+a0b_buffers = "*"
 a0b_stm32f401 = "*"
 a0b_timer = "*"
 gnat_arm_elf = "^16"
