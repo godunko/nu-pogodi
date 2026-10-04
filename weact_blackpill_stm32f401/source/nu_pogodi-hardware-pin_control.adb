@@ -23,6 +23,15 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    procedure EXTI9_5_Handler
      with Export, Convention => C, External_Name => "EXTI9_5_Handler";
 
+   procedure SSD1683_BUSY_EXTI_Clear_Pending with Inline;
+   --  Clear pending status of `SSD1683_BUSY`
+
+   procedure SSD1683_BUSY_EXTI_Mask_Interrupt with Inline;
+   --  Mask interrupt of `SSD1683_BUSY`
+
+   procedure SSD1683_BUSY_EXTI_Unmask_Interrupt with Inline;
+   --  Unmask interrupt of `SSD1683_BUSY`
+
    -------------------------
    -- Configure_MIPI_Pins --
    -------------------------
@@ -93,6 +102,21 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (5) := 2#01#;
    end Configure_SPI1_Pins;
 
+   --------------------------
+   -- Disable_SSD1683_BUSY --
+   --------------------------
+
+   procedure Disable_SSD1683_BUSY is
+   begin
+      --  * unset callback
+      --  * mask interrupt in EXTI.IMR
+      --  * clear pending request if any in ESTI.PR
+
+      A0B.Callbacks.Unset (SSD1683_BUSY_Callback);
+      SSD1683_BUSY_EXTI_Mask_Interrupt;
+      SSD1683_BUSY_EXTI_Clear_Pending;
+   end Disable_SSD1683_BUSY;
+
    -------------------------
    -- Enable_SSD1683_BUSY --
    -------------------------
@@ -100,14 +124,8 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    procedure Enable_SSD1683_BUSY (Callback : A0B.Callbacks.Callback) is
    begin
       SSD1683_BUSY_Callback := Callback;
-
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
-        (PR             =>
-           (As_Array => True, Arr => (SSD1683_BUSY => True, others => False)),
-         Reserved_23_31 => 0);
-      --  Clear pending status if any
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (SSD1683_BUSY) := True;
-      --  1: Interrupt request from line x is not masked
+      SSD1683_BUSY_EXTI_Clear_Pending;
+      SSD1683_BUSY_EXTI_Unmask_Interrupt;
    end Enable_SSD1683_BUSY;
 
    ---------------------
@@ -121,10 +139,10 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       EXT_TIME := A0B.Time.Clock;
 
       if A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR.PR.Arr (SSD1683_BUSY) then
+         SSD1683_BUSY_EXTI_Mask_Interrupt;
+         SSD1683_BUSY_EXTI_Clear_Pending;
          A0B.Callbacks.Emit_Once (SSD1683_BUSY_Callback);
       end if;
-
-      raise Program_Error;
    end EXTI9_5_Handler;
 
    ----------------------
@@ -188,5 +206,38 @@ package body Nu_Pogodi.Hardware.Pin_Control is
               (As_Array => True,
                Arr      => (SSD1683_RES => True, others => False))));
    end Set_SSD1683_RES;
+
+   -------------------------------------
+   -- SSD1683_BUSY_EXTI_Clear_Pending --
+   -------------------------------------
+
+   procedure SSD1683_BUSY_EXTI_Clear_Pending is
+   begin
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
+        (PR             =>
+           (As_Array => True, Arr => (SSD1683_BUSY => True, others => False)),
+         Reserved_23_31 => 0);
+      --  Clear pending request unconditionally
+   end SSD1683_BUSY_EXTI_Clear_Pending;
+
+   --------------------------------------
+   -- SSD1683_BUSY_EXTI_Mask_Interrupt --
+   --------------------------------------
+
+   procedure SSD1683_BUSY_EXTI_Mask_Interrupt is
+   begin
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (SSD1683_BUSY) := False;
+      --  0: Interrupt request from line x is masked
+   end SSD1683_BUSY_EXTI_Mask_Interrupt;
+
+   ----------------------------------------
+   -- SSD1683_BUSY_EXTI_Unmask_Interrupt --
+   ----------------------------------------
+
+   procedure SSD1683_BUSY_EXTI_Unmask_Interrupt is
+   begin
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (SSD1683_BUSY) := True;
+      --  1: Interrupt request from line x is not masked
+   end SSD1683_BUSY_EXTI_Unmask_Interrupt;
 
 end Nu_Pogodi.Hardware.Pin_Control;

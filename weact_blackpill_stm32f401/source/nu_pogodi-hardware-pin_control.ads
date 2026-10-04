@@ -21,5 +21,12 @@ package Nu_Pogodi.Hardware.Pin_Control is
    function Get_SSD1683_BUSY return Boolean;
 
    procedure Enable_SSD1683_BUSY (Callback : A0B.Callbacks.Callback);
+   --  Enable interrupt on falling edge of `BUSY` line. Emit given `Callback`
+   --  on interrupt.
+   --
+   --  Callback is emitted once, interrupt is disabled automatically before
+   --  callback execution.
+
+   procedure Disable_SSD1683_BUSY;
 
 end Nu_Pogodi.Hardware.Pin_Control;
