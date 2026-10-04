@@ -51,7 +51,11 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.OSPEEDR.Arr (SSD1683_RES) := 2#01#;
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.OTYPER.OT.Arr (SSD1683_RES) := False;
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.PUPDR.Arr (SSD1683_RES) := 2#01#;
-      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.BSRR.BS.Arr (SSD1683_RES) := True;
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.BSRR.BR.Arr (SSD1683_RES) := True;
+      --  MIPI DBI recommends to set `RESX` line to `low` during display
+      --  power-on process. It should help to avoid BUSY signal toggle at
+      --  application initialization time, and an issue described above for
+      --  `BUSY` line.
 
       --  PA10: OUT/D/C, high
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.MODER.Arr (MIPI_D_C) := 2#01#;
