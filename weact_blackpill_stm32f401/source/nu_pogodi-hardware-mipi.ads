@@ -4,8 +4,18 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Callbacks;
+with A0B.Types.Enumerable;
+
 package Nu_Pogodi.Hardware.MIPI is
 
+   type Command_Code is new A0B.Types.Enumerable.Enumerable_8;
+
    procedure Initialize;
+
+   procedure Command
+     (Command  : Command_Code;
+      Finished : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
 
 end Nu_Pogodi.Hardware.MIPI;

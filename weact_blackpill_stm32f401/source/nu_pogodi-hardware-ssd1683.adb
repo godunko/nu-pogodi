@@ -17,6 +17,8 @@ with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SSD1683 is
 
+   SW_RESET_Command : constant Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
+
    procedure On_Timeout;
 
    procedure On_Busy;
@@ -32,9 +34,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       VCI_Wait,
       HW_Reset_Low,
       HW_Reset_High,
+      SW_Reset_Transfer,
+      SW_Reset_Wait,
       Ready);
 
-   State   : State_Kind := Initial;
+   State   : State_Kind := Initial with Volatile;
    Timeout : aliased A0B.Timer.Timeout_Control_Block;
 
    RESET_LOW_START  : A0B.Time.Monotonic_Time with Volatile;
@@ -67,6 +71,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end VCI_Wait_State;
 
+   package SW_Reset_Transfer_State is
+
+      procedure Enter;
+
+      procedure On_Busy;
+
+   end SW_Reset_Transfer_State;
+
    -------------------------
    -- HW_Reset_High_State --
    -------------------------
@@ -98,7 +110,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Busy is
       begin
-         raise Program_Error;
+         A0B.Timer.Cancel (Timeout);
+
+         SW_Reset_Transfer_State.Enter;
       end On_Busy;
 
       ----------------
@@ -109,6 +123,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          --  Display controller doesn't respond to RES signal, indicating a
          --  hardware failure.
+
+         Nu_Pogodi.Hardware.Pin_Control.Disable_SSD1683_BUSY;
 
          --  XXX Not implemented: proper error handling for hardware failure.
 
@@ -174,6 +190,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          when HW_Reset_High =>
             HW_Reset_High_State.On_Busy;
 
+         when SW_Reset_Transfer =>
+            SW_Reset_Transfer_State.On_Busy;
+
          when others =>
             raise Program_Error;
       end case;
@@ -199,6 +218,63 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
+
+   -----------------------------
+   -- SW_Reset_Transfer_State --
+   -----------------------------
+
+   package body SW_Reset_Transfer_State is
+
+      procedure On_Transfer_Finished;
+
+      package On_Transfer_Finished_Callbacks is
+        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter is
+         Success : Boolean := True;
+
+      begin
+         State := SW_Reset_Transfer;
+
+         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
+           (On_Busy_Callbacks.Create_Callback);
+         Nu_Pogodi.Hardware.MIPI.Command
+           (SW_RESET_Command,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      -------------
+      -- On_Busy --
+      -------------
+
+      procedure On_Busy is
+      begin
+         raise Program_Error;
+      end On_Busy;
+
+      --------------------------
+      -- On_Transfer_Finished --
+      --------------------------
+
+      procedure On_Transfer_Finished is
+      begin
+         --  XXX Transfer error handling is not implemented.
+
+         null;
+      end On_Transfer_Finished;
+
+   end SW_Reset_Transfer_State;
 
    --------------------
    -- VCI_Wait_State --

@@ -116,6 +116,16 @@ package body Nu_Pogodi.Hardware.SPI is
       Data := A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
    end Receive;
 
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release is
+   begin
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
+      --  XXX This might be incorrect, TRE/BSY might be needed to check first.
+   end Release;
+
    --------------
    -- Transmit --
    --------------

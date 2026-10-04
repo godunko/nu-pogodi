@@ -14,6 +14,8 @@ package Nu_Pogodi.Hardware.SPI is
 
    procedure Acquire_MIPI_Write;
 
+   procedure Release;
+
    procedure Transmit (Command : A0B.Types.Unsigned_8);
 
    procedure Receive (Data : out A0B.Types.Unsigned_8);
