@@ -299,34 +299,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       -- On_Timeout --
       ----------------
 
-      --  RESET_DONE  : A0B.Time.Monotonic_Time with Volatile;
-      --  Counter     : Natural := 0 with Volatile;
-
       procedure On_Timeout is
       begin
          HW_Reset_Low_State.Enter;
-
-         --
-         --  Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-         --    (On_Busy_Callbacks.Create_Callback);
-         --  Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (False);
-         --
-         --  if Nu_Pogodi.Hardware.Pin_Control.Get_SSD1683_BUSY then
-         --     raise Program_Error;
-         --  end if;
-         --
-         --  while Nu_Pogodi.Hardware.Pin_Control.Get_SSD1683_BUSY loop
-         --     --  Counter := @ + 1;
-         --     null;
-         --  end loop;
-         --
-         --  for J in 1 .. 1_000_000 loop
-         --     Counter := @ + 1;
-         --  end loop;
-         --
-         --  RESET_DONE := A0B.Time.Clock;
-         --
-         --  raise Program_Error;
       end On_Timeout;
 
    end VCI_Wait_State;
