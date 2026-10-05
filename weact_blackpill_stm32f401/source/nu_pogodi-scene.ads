@@ -8,6 +8,8 @@ pragma Ada_2022;
 
 package Nu_Pogodi.Scene is
 
+   type Game_Mode is (Mode_A, Mode_B);
+
    type Lane_Side is (Left, Right);
    type Lane_Height is (Top, Bottom);
 
@@ -26,7 +28,7 @@ package Nu_Pogodi.Scene is
    --  type Miss_Score is delta 0.5 range 0.0 .. 3.0;
    --  --  Miss score: `0.5` delta allow to represent Rabbit reduction rule
 
-   procedure Initialize;
+   procedure Initialize (Mode : Game_Mode);
 
    procedure Update_Physics_Tick;
 
@@ -34,11 +36,14 @@ package Nu_Pogodi.Scene is
 
 private
 
-   --  Score                 : Natural       := 0;
-   --  Misses                : Miss_Score    := 0.0;
-   Wolf                  : Wolf_Position := (Side => Left, Height => Top);
-   Lanes                 : Game_Lanes    :=
+   Mode              : Game_Mode     := Mode_A;
+   Score             : Natural       := 0;
+   Wolf              : Wolf_Position := (Side => Left, Height => Top);
+   Lanes             : Game_Lanes    :=
      [others => [others => [others => False]]];
+   Active_Eggs_Count : Natural := 0;
+
+   --  Misses                : Miss_Score    := 0.0;
    --  Game_Over             : Boolean       := False;
    --
    --  Rabbit_Visible        : Boolean       := False;

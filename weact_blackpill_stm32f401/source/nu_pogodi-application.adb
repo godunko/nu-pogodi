@@ -326,8 +326,7 @@ package body Nu_Pogodi.Application is
       --  Set partial update mode once, to exclude command's transfer time from
       --  critical path.
 
-      Nu_Pogodi.Scene.Initialize;
-      Nu_Pogodi.Scene.Spawn_Egg (Nu_Pogodi.Scene.Left, Nu_Pogodi.Scene.Bottom);
+      Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
 
       loop
          exit when Cycle > Span'Last;
