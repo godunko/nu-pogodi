@@ -47,9 +47,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      (Initial,        --  Not initialized
       Ready,          --  Initialized, ready to execute actions
       VCI_Wait,       --  Power-on procedure, wait panel to power-on
-      HW_Reset_Low,   --  Push RES low, and wait 10 milliseconds
-      HW_Reset_High,
-      SW_Reset_Transfer,
+      HW_Reset_Low,   --  Push RES to low, and wait 10 milliseconds
+      HW_Reset_High,  --  Push RES to high, wait till BUSY released
+      Command_Busy,   --  Execute command, wait till BUSY released
       Load_WS_OTP,
       Write_BW,
       Write_Red,
@@ -58,10 +58,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
 
-   State           : State_Kind := Initial with Atomic, Volatile;
-   Timeout         : aliased A0B.Timer.Timeout_Control_Block;
-   Reset_Callback  : A0B.Callbacks.Callback;
-   Reset_After_VCI : Boolean := False with Atomic, Volatile;
+   State            : State_Kind := Initial with Atomic, Volatile;
+   Timeout          : aliased A0B.Timer.Timeout_Control_Block;
+   Reset_After_VCI  : Boolean := False with Atomic, Volatile;
+   Command_Callback : A0B.Callbacks.Callback;
 
    WRITE_BW_START   : A0B.Time.Monotonic_Time with Volatile;
    WRITE_BW_DONE    : A0B.Time.Monotonic_Time with Volatile;
@@ -86,7 +86,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    package State_Machine_HW_Reset_Low_State is
 
       --  Start of reset sequence, push RES to low state and wait 10
-      --  milliseconds, when enter `HW_Reset_High` state.
+      --  milliseconds, then enter `HW_Reset_High` state.
 
       procedure Enter;
 
@@ -96,6 +96,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    package State_Machine_HW_Reset_High_State is
 
+      --  Sets RES to high and wait for release of BUSY line, then executes
+      --  `SW_RESET` command.
+
       procedure Enter;
 
       procedure On_Timeout;
@@ -104,13 +107,18 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_HW_Reset_High_State;
 
-   package SW_Reset_Transfer_State is
+   package State_Machine_Command_Busy_State is
 
-      procedure Enter;
+      --  Executes given command and wait till release of BUSY line.
+      --
+      --  Emits `Command_Callback` when transfer is completed and BUSY line is
+      --  released.
+
+      procedure Enter (Command : Nu_Pogodi.Hardware.MIPI.Command_Code);
 
       procedure On_Busy;
 
-   end SW_Reset_Transfer_State;
+   end State_Machine_Command_Busy_State;
 
    package Load_WS_OTP_State is
 
@@ -470,7 +478,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       Entry_State : constant State_Kind := State;
 
    begin
-      Reset_Callback  := Callback;
+      Command_Callback  := Callback;
 
       if Entry_State = VCI_Wait then
          --  VCI Wait is in progress, attempt to equeue request
@@ -478,7 +486,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Reset_After_VCI := True;
 
          if State = Ready
-           and then A0B.Callbacks.Is_Set (Reset_Callback)
+           and then A0B.Callbacks.Is_Set (Command_Callback)
          then
             --  VCI state was left before enqueue completed, cleanup request
             --  and enter `HW_Reset_Low` state.
@@ -502,8 +510,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          when HW_Reset_High =>
             State_Machine_HW_Reset_High_State.On_Busy;
 
-         when SW_Reset_Transfer =>
-            SW_Reset_Transfer_State.On_Busy;
+         when Command_Busy =>
+            State_Machine_Command_Busy_State.On_Busy;
 
          when Load_WS_OTP =>
             Load_WS_OTP_State.On_Busy;
@@ -594,11 +602,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end Load_WS_OTP_State;
 
-   -----------------------------
-   -- SW_Reset_Transfer_State --
-   -----------------------------
+   --------------------------------------
+   -- State_Machine_Command_Busy_State --
+   --------------------------------------
 
-   package body SW_Reset_Transfer_State is
+   package body State_Machine_Command_Busy_State is
 
       procedure On_Transfer_Finished;
 
@@ -609,16 +617,16 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       -- Enter --
       -----------
 
-      procedure Enter is
+      procedure Enter (Command : Nu_Pogodi.Hardware.MIPI.Command_Code) is
          Success : Boolean := True;
 
       begin
-         State := SW_Reset_Transfer;
+         State := Command_Busy;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
-           (SW_RESET_Command,
+           (Command,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -637,7 +645,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          State := Ready;
 
-         A0B.Callbacks.Emit_Once (Reset_Callback);
+         A0B.Callbacks.Emit_Once (Command_Callback);
       end On_Busy;
 
       --------------------------
@@ -651,7 +659,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          null;
       end On_Transfer_Finished;
 
-   end SW_Reset_Transfer_State;
+   end State_Machine_Command_Busy_State;
 
    ---------------------------------------
    -- State_Machine_HW_Reset_High_State --
@@ -685,7 +693,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          A0B.Timer.Cancel (Timeout);
 
-         SW_Reset_Transfer_State.Enter;
+         State_Machine_Command_Busy_State.Enter (SW_RESET_Command);
       end On_Busy;
 
       ----------------
@@ -765,7 +773,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Timeout is
       begin
          if Reset_After_VCI
-           and then A0B.Callbacks.Is_Set (Reset_Callback)
+           and then A0B.Callbacks.Is_Set (Command_Callback)
          then
             Reset_After_VCI := False;
 
