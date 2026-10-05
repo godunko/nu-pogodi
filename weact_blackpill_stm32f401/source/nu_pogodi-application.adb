@@ -259,18 +259,6 @@ package body Nu_Pogodi.Application is
 
       Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-        ((Enable_Clock      => True,
-          Enable_Analog     => True,
-          Load_Temperature  => False,
-          Loat_LUT_From_OTP => True,
-          Update_Mode       => True,
-          Update_Display    => True,
-          Disable_Analog    => False,
-          Disable_Clock     => False),
-         --  Disable_Analog    => True,
-         --  Disable_Clock     => True),
-         Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
 
       Span (Cycle).Update := A0B.Time.To_Duration (A0B.Time.Clock - Start);
@@ -294,6 +282,28 @@ package body Nu_Pogodi.Application is
         (Nu_Pogodi.Hardware.SSD1683.Internal, Success);
 
       Full_Clean;
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Booster_Soft_Start_Control
+        (16#8B#,
+         16#9C#,
+         16#96#,
+         16#00#,  --  default is 16#00#
+         Success);
+      --  Change default to miminize delay
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => True,
+          Disable_Analog    => False,
+          Disable_Clock     => False),
+         --  Disable_Analog    => True,
+         --  Disable_Clock     => True),
+         Success);
+      --  Set mode once, to exclude command's transfer time from critical path
 
       loop
          exit when Cycle > Span'Last;
