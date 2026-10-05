@@ -94,9 +94,9 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
    ------------------------------------------
 
    procedure Set_RAM_X_Address_Start_End_Position
-     (X_Start  : A0B.Types.Unsigned_6;
-      X_End    : A0B.Types.Unsigned_6;
-      Success  : in out Boolean)
+     (X_Start : A0B.Types.Unsigned_6;
+      X_End   : A0B.Types.Unsigned_6;
+      Success : in out Boolean)
    is
       Await : aliased A0B.Awaits.Await;
 
@@ -105,6 +105,23 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
         (X_Start, X_End, A0B.Awaits.Create_Callback (Await), Success);
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Set_RAM_X_Address_Start_End_Position;
+
+   ------------------------------------------
+   -- Set_RAM_Y_Address_Start_End_Position --
+   ------------------------------------------
+
+   procedure Set_RAM_Y_Address_Start_End_Position
+     (Y_Start : A0B.Types.Unsigned_9;
+      Y_End   : A0B.Types.Unsigned_9;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Set_RAM_Y_Address_Start_End_Position
+        (Y_Start, Y_End, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Set_RAM_Y_Address_Start_End_Position;
 
    --------------------------------
    -- Temperature_Sensor_Control --

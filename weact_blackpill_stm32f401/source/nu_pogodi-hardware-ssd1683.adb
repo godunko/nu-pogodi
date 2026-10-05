@@ -43,6 +43,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
    Set_RAM_X_Address_Start_End_Position_Command : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#44#;
+   Set_RAM_Y_Address_Start_End_Position_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#45#;
 
    procedure On_Timeout;
 
@@ -378,6 +380,41 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Set_RAM_X_Address_Start_End_Position;
+
+   ------------------------------------------
+   -- Set_RAM_Y_Address_Start_End_Position --
+   ------------------------------------------
+
+   procedure Set_RAM_Y_Address_Start_End_Position
+     (Y_Start  : A0B.Types.Unsigned_9;
+      Y_End    : A0B.Types.Unsigned_9;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         use type A0B.Types.Unsigned_9;
+
+         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 4)
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Data (1) := A0B.Types.Unsigned_8 (Y_Start mod 256);
+         Data (2) := A0B.Types.Unsigned_8 (Y_Start / 256);
+         Data (3) := A0B.Types.Unsigned_8 (Y_End mod 256);
+         Data (4) := A0B.Types.Unsigned_8 (Y_End / 256);
+         Parameter_Buffer.Set_Actual_Length (4);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Set_RAM_Y_Address_Start_End_Position_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Set_RAM_Y_Address_Start_End_Position;
 
    --------------------------------------
    -- State_Machine_Command_Busy_State --

@@ -100,4 +100,12 @@ package Nu_Pogodi.Hardware.SSD1683 is
    --  Specify the start/end positions of the window address in the X direction
    --  by an address unit for RAM.
 
+   procedure Set_RAM_Y_Address_Start_End_Position
+     (Y_Start  : A0B.Types.Unsigned_9;
+      Y_End    : A0B.Types.Unsigned_9;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Specify the start/end positions of the window address in the Y direction
+   --  by an address unit for RAM.
+
 end Nu_Pogodi.Hardware.SSD1683;
