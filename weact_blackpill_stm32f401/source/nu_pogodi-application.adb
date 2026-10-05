@@ -60,7 +60,7 @@ package body Nu_Pogodi.Application is
       Update : A0B.Time.Duration;
    end record;
 
-   Span  : array (Natural range 0 .. 50) of Span_Record with Volatile;
+   Span  : array (Natural range 0 .. 10) of Span_Record with Volatile;
    Cycle : Natural := 0;
 
    ----------------------
@@ -289,6 +289,9 @@ package body Nu_Pogodi.Application is
       --    (On_SSD1683_Reset_Callbacks.Create_Callback);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Temperature_Sensor_Control
+        (Nu_Pogodi.Hardware.SSD1683.Internal, Success);
 
       Full_Clean;
 
