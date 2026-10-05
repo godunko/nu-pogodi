@@ -13,6 +13,7 @@ with A0B.Buffers.Static;
 with A0B.Types.Arrays;
 
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
+with Nu_Pogodi.Bitmaps;
 
 package body Nu_Pogodi.Application is
 
@@ -236,18 +237,29 @@ package body Nu_Pogodi.Application is
         with Import, Address => Active_Buffer.Address;
 
    begin
-      case Cycle mod 4 is
-         when 0 =>
-            Data :=  [others => 16#EE#];
-         when 1 =>
-            Data :=  [others => 16#DD#];
-         when 2 =>
-            Data :=  [others => 16#BB#];
-         when 3 =>
-            Data :=  [others => 16#77#];
-         when others =>
-            raise Program_Error;
-      end case;
+      if Cycle = Span'Last then
+         declare
+            FB : Nu_Pogodi.Bitmaps.Framebuffer
+              with Import, Address => Data'Address;
+
+         begin
+            Nu_Pogodi.Bitmaps.Reconstruct (FB);
+         end;
+
+      else
+         case Cycle mod 4 is
+            when 0 =>
+               Data :=  [others => 16#EE#];
+            when 1 =>
+               Data :=  [others => 16#DD#];
+            when 2 =>
+               Data :=  [others => 16#BB#];
+            when 3 =>
+               Data :=  [others => 16#77#];
+            when others =>
+               raise Program_Error;
+         end case;
+      end if;
 
       Active_Buffer.Set_Actual_Length (15_000);
 
