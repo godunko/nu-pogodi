@@ -9,17 +9,11 @@
 --     to application. While adds one more state to application, it allows to
 --     suppot cases when panel's power is managed by application.
 
---  pragma Ada_2022;
-
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
---  with A0B.Time.Clock;
 with A0B.Timer;
---  --  with A0B.Types;
---
---  with A0B.Types;
---  with A0B.Types.Arrays;
+
 with Nu_Pogodi.Hardware.MIPI;
 with Nu_Pogodi.Hardware.Pin_Control;
 
@@ -56,8 +50,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       HW_Reset_High,  --  Push RES to high, wait till BUSY released
       Command,        --  Execute command
       Command_Busy);  --  Execute command, wait till BUSY released
-      --  Load_WS_OTP,
-      --  Master_Activation);
 
    State            : State_Kind := Initial with Atomic, Volatile;
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
@@ -135,14 +127,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Busy;
 
    end State_Machine_Command_Busy_State;
-
-   --  package Load_WS_OTP_State is
-   --
-   --     procedure Enter;
-   --
-   --     procedure On_Busy;
-   --
-   --  end Load_WS_OTP_State;
 
    ------------------------------
    -- Display_Update_Control_2 --
@@ -245,9 +229,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          when Command_Busy =>
             State_Machine_Command_Busy_State.On_Busy;
 
-         --  when Load_WS_OTP =>
-         --     Load_WS_OTP_State.On_Busy;
-
          when others =>
             raise Program_Error;
       end case;
@@ -273,63 +254,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
-
-   --  -----------------------
-   --  -- Load_WS_OTP_State --
-   --  -----------------------
-   --
-   --  package body Load_WS_OTP_State is
-   --
-   --     procedure On_Transfer_Finished;
-   --
-   --     package On_Transfer_Finished_Callbacks is
-   --       new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-   --
-   --     -----------
-   --     -- Enter --
-   --     -----------
-   --
-   --     procedure Enter is
-   --        Success : Boolean := True;
-   --
-   --     begin
-   --        State := Load_WS_OTP;
-   --
-   --        Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-   --          (On_Busy_Callbacks.Create_Callback);
-   --        Nu_Pogodi.Hardware.MIPI.Command
-   --          (Load_WS_OTP_Command,
-   --           On_Transfer_Finished_Callbacks.Create_Callback,
-   --           Success);
-   --
-   --        if not Success then
-   --           --  XXX Not implemented, MIPI can't start transfer of the command.
-   --
-   --           raise Program_Error;
-   --        end if;
-   --     end Enter;
-   --
-   --     -------------
-   --     -- On_Busy --
-   --     -------------
-   --
-   --     procedure On_Busy is
-   --     begin
-   --        Write_BW_State.Enter;
-   --     end On_Busy;
-   --
-   --     --------------------------
-   --     -- On_Transfer_Finished --
-   --     --------------------------
-   --
-   --     procedure On_Transfer_Finished is
-   --     begin
-   --        --  XXX Transfer error handling is not implemented.
-   --
-   --        null;
-   --     end On_Transfer_Finished;
-   --
-   --  end Load_WS_OTP_State;
 
    --------------------------------------
    -- State_Machine_Command_Busy_State --
