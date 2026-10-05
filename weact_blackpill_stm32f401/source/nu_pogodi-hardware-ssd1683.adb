@@ -31,10 +31,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
    --  Display_Update_Control_2_Command : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
-   --  Write_RAM_Black_White_Command    : constant
-   --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
-   --  Write_RAM_Red_Command            : constant
-   --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
+   Write_RAM_Black_White_Command    : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
+   Write_RAM_Red_Command            : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
    --  Load_WS_OTP_Command              : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
 
@@ -54,25 +54,16 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       VCI_Wait,       --  Power-on procedure, wait panel to power-on
       HW_Reset_Low,   --  Push RES to low, and wait 10 milliseconds
       HW_Reset_High,  --  Push RES to high, wait till BUSY released
+      Command,        --  Execute command
       Command_Busy);  --  Execute command, wait till BUSY released
       --  Load_WS_OTP,
-      --  Write_BW,
-      --  Write_Red,
       --  Display_Update_Control_2,
       --  Master_Activation);
-
-   --  Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
 
    State            : State_Kind := Initial with Atomic, Volatile;
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
    Reset_After_VCI  : Boolean := False with Atomic, Volatile;
    Command_Callback : A0B.Callbacks.Callback;
-
-   --  WRITE_BW_START   : A0B.Time.Monotonic_Time with Volatile;
-   --  WRITE_BW_DONE    : A0B.Time.Monotonic_Time with Volatile;
-   --  WRITE_RED_START  : A0B.Time.Monotonic_Time with Volatile;
-   --  WRITE_RED_DONE   : A0B.Time.Monotonic_Time with Volatile;
-   --  REFRESH_DONE     : A0B.Time.Monotonic_Time with Volatile;
 
    package State_Machine_VCI_Wait_State is
 
@@ -112,6 +103,20 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_HW_Reset_High_State;
 
+   package State_Machine_Command_State is
+
+      --  Executes given command.
+      --
+      --  Emits `Command_Callback` when transfer is completed.
+
+      procedure Enter
+        (Command     : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Data_Buffer : A0B.Buffers.Abstract_Buffer'Class;
+         Callback    : A0B.Callbacks.Callback;
+         Success     : in out Boolean);
+
+   end State_Machine_Command_State;
+
    package State_Machine_Command_Busy_State is
 
       --  Executes given command and wait till release of BUSY line.
@@ -132,18 +137,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --     procedure On_Busy;
    --
    --  end Load_WS_OTP_State;
-   --
-   --  package Write_BW_State is
-   --
-   --     procedure Enter;
-   --
-   --  end Write_BW_State;
-   --
-   --  package Write_Red_State is
-   --
-   --     procedure Enter;
-   --
-   --  end Write_Red_State;
    --
    --  package Display_Update_Control_2_State is
    --
@@ -321,148 +314,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --     end On_Transfer_Finished;
    --
    --  end Display_Update_Control_2_State;
-   --
-   --  --------------------
-   --  -- Write_BW_State --
-   --  --------------------
-   --
-   --  package body Write_BW_State is
-   --
-   --     procedure On_Transfer_Finished;
-   --
-   --     package On_Transfer_Finished_Callbacks is
-   --       new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-   --
-   --     -----------
-   --     -- Enter --
-   --     -----------
-   --
-   --     procedure Enter is
-   --        Success : Boolean := True;
-   --
-   --     begin
-   --        State := Write_BW;
-   --        WRITE_BW_START := A0B.Time.Clock;
-   --
-   --        declare
-   --           Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-   --             with Import, Address => Pixel_Buffer.Address;
-   --
-   --        begin
-   --           --  Data := [others => 16#FF#];
-   --           --  Data := [others => 16#00#];
-   --
-   --           if Cycle = 0 then
-   --              Data := [others => 16#FF#];
-   --
-   --           elsif Cycle mod 2 = 0 then
-   --              Data := [others => 16#AA#];
-   --
-   --           else
-   --              Data := [others => 16#55#];
-   --           end if;
-   --
-   --           Pixel_Buffer.Set_Actual_Length (15_000);
-   --        end;
-   --
-   --        Nu_Pogodi.Hardware.MIPI.Command_Write
-   --          (Write_RAM_Black_White_Command,
-   --           Pixel_Buffer,
-   --           On_Transfer_Finished_Callbacks.Create_Callback,
-   --           Success);
-   --
-   --        if not Success then
-   --           --  XXX Not implemented, MIPI can't start transfer of the command.
-   --
-   --           raise Program_Error;
-   --        end if;
-   --     end Enter;
-   --
-   --     --------------------------
-   --     -- On_Transfer_Finished --
-   --     --------------------------
-   --
-   --     procedure On_Transfer_Finished is
-   --     begin
-   --        --  XXX Not implemented !!!
-   --
-   --        WRITE_BW_DONE := A0B.Time.Clock;
-   --
-   --        Write_Red_State.Enter;
-   --        --  raise Program_Error;
-   --     end On_Transfer_Finished;
-   --
-   --  end Write_BW_State;
-   --
-   --  ---------------------
-   --  -- Write_Red_State --
-   --  ---------------------
-   --
-   --  package body Write_Red_State is
-   --
-   --     procedure On_Transfer_Finished;
-   --
-   --     package On_Transfer_Finished_Callbacks is
-   --       new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-   --
-   --     -----------
-   --     -- Enter --
-   --     -----------
-   --
-   --     procedure Enter is
-   --        Success : Boolean := True;
-   --
-   --     begin
-   --        State := Write_Red;
-   --        WRITE_RED_START := A0B.Time.Clock;
-   --
-   --        declare
-   --           Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-   --             with Import, Address => Pixel_Buffer.Address;
-   --
-   --        begin
-   --           --  Data := [others => 16#FF#];
-   --           --  Data := [others => 16#00#];
-   --           if Cycle = 0 then
-   --              Data := [others => 16#00#];
-   --
-   --           elsif Cycle mod 2 = 0 then
-   --              Data := [others => 16#55#];
-   --
-   --           else
-   --              Data := [others => 16#AA#];
-   --           end if;
-   --           Pixel_Buffer.Set_Actual_Length (15_000);
-   --        end;
-   --
-   --        Nu_Pogodi.Hardware.MIPI.Command_Write
-   --          (Write_RAM_Red_Command,
-   --           Pixel_Buffer,
-   --           On_Transfer_Finished_Callbacks.Create_Callback,
-   --           Success);
-   --
-   --        if not Success then
-   --           --  XXX Not implemented, MIPI can't start transfer of the command.
-   --
-   --           raise Program_Error;
-   --        end if;
-   --     end Enter;
-   --
-   --     --------------------------
-   --     -- On_Transfer_Finished --
-   --     --------------------------
-   --
-   --     procedure On_Transfer_Finished is
-   --     begin
-   --        --  XXX Not implemented !!!
-   --
-   --        WRITE_RED_DONE := A0B.Time.Clock;
-   --
-   --        Display_Update_Control_2_State.Enter;
-   --        --  raise Program_Error;
-   --     end On_Transfer_Finished;
-   --
-   --  end Write_Red_State;
 
    ----------------
    -- Initialize --
@@ -666,6 +517,62 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_Busy_State;
 
+   ---------------------------------
+   -- State_Machine_Command_State --
+   ---------------------------------
+
+   package body State_Machine_Command_State is
+
+      procedure On_Transfer_Finished;
+
+      package On_Transfer_Finished_Callbacks is
+        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter
+        (Command     : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Data_Buffer : A0B.Buffers.Abstract_Buffer'Class;
+         Callback    : A0B.Callbacks.Callback;
+         Success     : in out Boolean) is
+      begin
+         State := SSD1683.Command;
+         Command_Callback := Callback;
+
+         Nu_Pogodi.Hardware.MIPI.Command
+           (Command,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+         Nu_Pogodi.Hardware.MIPI.Command_Write
+           (Command,
+            Data_Buffer,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      --------------------------
+      -- On_Transfer_Finished --
+      --------------------------
+
+      procedure On_Transfer_Finished is
+      begin
+         --  XXX Transfer error handling is not implemented.
+
+         State := Ready;
+
+         A0B.Callbacks.Emit_Once (Command_Callback);
+      end On_Transfer_Finished;
+
+   end State_Machine_Command_State;
+
    ---------------------------------------
    -- State_Machine_HW_Reset_High_State --
    ---------------------------------------
@@ -790,5 +697,39 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end On_Timeout;
 
    end State_Machine_VCI_Wait_State;
+
+   ---------------------------
+   -- Write_RAM_Black_White --
+   ---------------------------
+
+   procedure Write_RAM_Black_White
+     (Data     : A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      State_Machine_Command_State.Enter
+        (Write_RAM_Black_White_Command, Data, Callback, Success);
+   end Write_RAM_Black_White;
+
+   -------------------
+   -- Write_RAM_Red --
+   -------------------
+
+   procedure Write_RAM_Red
+     (Data     : A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      State_Machine_Command_State.Enter
+        (Write_RAM_Red_Command, Data, Callback, Success);
+   end Write_RAM_Red;
 
 end Nu_Pogodi.Hardware.SSD1683;
