@@ -14,7 +14,7 @@ with A0B.Types.Arrays;
 
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
-with Nu_Pogodi.Scene.Draw;
+with Nu_Pogodi.Scene.Drawing;
 
 package body Nu_Pogodi.Application is
 
@@ -244,7 +244,7 @@ package body Nu_Pogodi.Application is
 
       begin
          Data := [others => 16#FF#];
-         Nu_Pogodi.Scene.Draw (FB);
+         Nu_Pogodi.Scene.Drawing.Draw (FB);
       end;
 
       Active_Buffer.Set_Actual_Length (15_000);

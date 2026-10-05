@@ -6,5 +6,8 @@
 
 with Nu_Pogodi.Bitmaps;
 
-procedure Nu_Pogodi.Scene.Draw
-  (Framebuffer : in out Nu_Pogodi.Bitmaps.Framebuffer);
+package Nu_Pogodi.Scene.Drawing is
+
+   procedure Draw (Framebuffer : in out Nu_Pogodi.Bitmaps.Framebuffer);
+
+end Nu_Pogodi.Scene.Drawing;
