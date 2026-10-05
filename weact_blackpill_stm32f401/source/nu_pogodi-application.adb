@@ -290,6 +290,17 @@ package body Nu_Pogodi.Application is
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
 
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting
+        (Nu_Pogodi.Hardware.SSD1683.Increment,
+         Nu_Pogodi.Hardware.SSD1683.Increment,
+         Nu_Pogodi.Hardware.SSD1683.X_Axis,
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous
+        .Set_RAM_X_Address_Start_End_Position (0, 49, Success);
+      --  0 .. 400 / 8 - 1
+      Nu_Pogodi.Hardware.SSD1683.Synchronous
+        .Set_RAM_Y_Address_Start_End_Position (0, 299, Success);
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Temperature_Sensor_Control
         (Nu_Pogodi.Hardware.SSD1683.Internal, Success);
 
