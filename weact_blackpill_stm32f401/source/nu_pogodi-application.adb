@@ -295,27 +295,39 @@ package body Nu_Pogodi.Application is
 
       Full_Clean;
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Booster_Soft_Start_Control
-        (16#8B#,
-         16#9C#,
-         16#96#,
-         16#00#,  --  default is 16#00#
-         Success);
-      --  Change default to miminize delay
-
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => True,
           Enable_Analog     => True,
-          Load_Temperature  => False,
+          Load_Temperature  => True,
           Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => False,
+          Disable_Analog    => False,
+          Disable_Clock     => False),
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+      --  Enable clock, analog, load temperature and load LUT for partial
+      --  update mode. Don't disable analog and clock at the end of the
+      --  sequence.
+      --
+      --  Execution of the sequence allows to cache some of internal parameters
+      --  and use them, instead of rebuild them by each partial update command.
+      --  It save significant amount of time on each update, thus improve
+      --  refresh rate (single optimized partial update takes about 0.277
+      --  second instead of non optimized 0.450 second).
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => False,
+          Enable_Analog     => False,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => False,
           Update_Mode       => True,
           Update_Display    => True,
           Disable_Analog    => False,
           Disable_Clock     => False),
-         --  Disable_Analog    => True,
-         --  Disable_Clock     => True),
          Success);
-      --  Set mode once, to exclude command's transfer time from critical path
+      --  Set partial update mode once, to exclude command's transfer time from
+      --  critical path.
 
       loop
          exit when Cycle > Span'Last;
