@@ -45,14 +45,22 @@ package body Nu_Pogodi.Application is
 
    procedure Full_Clean;
 
-   Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
+   procedure Partial
+     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success       : in out Boolean);
+
+   subtype Pixbuf is A0B.Buffers.Static.Static_Buffer (15_000);
+
+   Pixel_Buffer :
+     array (Natural range 0 .. 1) of Pixbuf;
 
    type Span_Record is record
       Upload : A0B.Time.Duration;
       Update : A0B.Time.Duration;
    end record;
 
-   Span  : array (Natural range 0 .. 10) of Span_Record with Volatile;
+   Span  : array (Natural range 0 .. 50) of Span_Record with Volatile;
    Cycle : Natural := 0;
 
    ----------------------
@@ -170,27 +178,27 @@ package body Nu_Pogodi.Application is
    begin
       declare
          Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer.Address;
+           with Import, Address => Pixel_Buffer (0).Address;
 
       begin
          Data := [others => 16#FF#];
-         Pixel_Buffer.Set_Actual_Length (15_000);
-      end;
+         Pixel_Buffer (0).Set_Actual_Length (15_000);
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-        (Pixel_Buffer, Success);
+         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
+           (Pixel_Buffer (0), Success);
+      end;
 
       declare
          Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer.Address;
+           with Import, Address => Pixel_Buffer (1).Address;
 
       begin
          Data := [others => 16#00#];
-         Pixel_Buffer.Set_Actual_Length (15_000);
-      end;
+         Pixel_Buffer (1).Set_Actual_Length (15_000);
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
-        (Pixel_Buffer, Success);
+         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
+           (Pixel_Buffer (1), Success);
+      end;
 
       Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
 
@@ -214,12 +222,66 @@ package body Nu_Pogodi.Application is
       end if;
    end Full_Clean;
 
+   -------------
+   -- Partial --
+   -------------
+
+   procedure Partial
+     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success       : in out Boolean)
+   is
+      Start : constant A0B.Time.Monotonic_Time := A0B.Time.Clock;
+      Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
+        with Import, Address => Active_Buffer.Address;
+
+   begin
+      case Cycle mod 4 is
+         when 0 =>
+            Data :=  [others => 16#EE#];
+         when 1 =>
+            Data :=  [others => 16#DD#];
+         when 2 =>
+            Data :=  [others => 16#BB#];
+         when 3 =>
+            Data :=  [others => 16#77#];
+         when others =>
+            raise Program_Error;
+      end case;
+
+      Active_Buffer.Set_Actual_Length (15_000);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
+        (Active_Buffer, Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
+        (Backup_Buffer, Success);
+
+      Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => True,
+          Disable_Analog    => False,
+          Disable_Clock     => False),
+         --  Disable_Analog    => True,
+         --  Disable_Clock     => True),
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+
+      Span (Cycle).Update := A0B.Time.To_Duration (A0B.Time.Clock - Start);
+      Cycle := @ + 1;
+   end Partial;
+
    ---------
    -- Run --
    ---------
 
    procedure Run is
-      Start   : A0B.Time.Monotonic_Time;
       Success : Boolean := True;
 
    begin
@@ -233,51 +295,10 @@ package body Nu_Pogodi.Application is
       loop
          exit when Cycle > Span'Last;
 
-         Start := A0B.Time.Clock;
-
-         declare
-            Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-              with Import, Address => Pixel_Buffer.Address;
-
-         begin
-            Data := [others => (if Cycle mod 2 = 0 then 16#AA# else 16#55#)];
-            Pixel_Buffer.Set_Actual_Length (15_000);
-         end;
-
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-           (Pixel_Buffer, Success);
-
-         declare
-            Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-              with Import, Address => Pixel_Buffer.Address;
-
-         begin
-            Data := [others => (if Cycle mod 2 = 0 then 16#55# else 16#AA#)];
-            Pixel_Buffer.Set_Actual_Length (15_000);
-         end;
-
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
-           (Pixel_Buffer, Success);
-
-         Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
-
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-           ((Enable_Clock      => True,
-             Enable_Analog     => True,
-             Load_Temperature  => False,
-             Loat_LUT_From_OTP => True,
-             Update_Mode       => True,
-             Update_Display    => True,
-             Disable_Analog    => False,
-             Disable_Clock     => False),
-             --  Disable_Analog    => True,
-             --  Disable_Clock     => True),
+         Partial
+           (Pixel_Buffer (Cycle mod 2),
+            Pixel_Buffer ((Cycle - 1) mod 2),
             Success);
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
-
-         Span (Cycle).Update := A0B.Time.To_Duration (A0B.Time.Clock - Start);
-         Cycle := @ + 1;
-
       end loop;
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
@@ -291,6 +312,10 @@ package body Nu_Pogodi.Application is
           Disable_Clock     => True),
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+
+      if Success then
+         raise Program_Error;
+      end if;
 
       loop
          A0B.ARMv7M.Instructions.Wait_For_Interrupt;
