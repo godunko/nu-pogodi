@@ -9,6 +9,28 @@ with A0B.Callbacks;
 
 package Nu_Pogodi.Hardware.SSD1683 is
 
+   type Update_Sequence is record
+      Enable_Clock      : Boolean;
+      Enable_Analog     : Boolean;
+      Load_Temperature  : Boolean;
+      Loat_LUT_From_OTP : Boolean;
+      Update_Mode       : Boolean;
+      Update_Display    : Boolean;
+      Disable_Analog    : Boolean;
+      Disable_Clock     : Boolean;
+   end record with Size => 8;
+
+   for Update_Sequence use record
+      Enable_Clock      at 0 range 7 .. 7;
+      Enable_Analog     at 0 range 6 .. 6;
+      Load_Temperature  at 0 range 5 .. 5;
+      Loat_LUT_From_OTP at 0 range 4 .. 4;
+      Update_Mode       at 0 range 3 .. 3;
+      Update_Display    at 0 range 2 .. 2;
+      Disable_Analog    at 0 range 1 .. 1;
+      Disable_Clock     at 0 range 0 .. 0;
+   end record;
+
    procedure Initialize;
 
    procedure Reset (Callback : A0B.Callbacks.Callback);
@@ -25,5 +47,11 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Write given data to RED RAM
+
+   procedure Display_Update_Control_2
+     (Sequence : Update_Sequence;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Sets display update sequence.
 
 end Nu_Pogodi.Hardware.SSD1683;

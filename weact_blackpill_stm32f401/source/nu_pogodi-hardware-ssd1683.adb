@@ -10,8 +10,8 @@
 --     suppot cases when panel's power is managed by application.
 
 --  pragma Ada_2022;
---
---  with A0B.Buffers.Static;
+
+with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
 --  with A0B.Time.Clock;
@@ -29,8 +29,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
    --  Master_Activation_Command        : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
-   --  Display_Update_Control_2_Command : constant
-   --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
+   Display_Update_Control_2_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
    Write_RAM_Black_White_Command    : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
    Write_RAM_Red_Command            : constant
@@ -57,13 +57,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       Command,        --  Execute command
       Command_Busy);  --  Execute command, wait till BUSY released
       --  Load_WS_OTP,
-      --  Display_Update_Control_2,
       --  Master_Activation);
 
    State            : State_Kind := Initial with Atomic, Volatile;
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
    Reset_After_VCI  : Boolean := False with Atomic, Volatile;
    Command_Callback : A0B.Callbacks.Callback;
+   Parameter_Buffer : A0B.Buffers.Static.Static_Buffer (1);
 
    package State_Machine_VCI_Wait_State is
 
@@ -233,87 +233,35 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --     end On_Transfer_Finished;
    --
    --  end Master_Activation_State;
-   --
-   --  ------------------------------------
-   --  -- Display_Update_Control_2_State --
-   --  ------------------------------------
-   --
-   --  package body Display_Update_Control_2_State is
-   --
-   --     procedure On_Transfer_Finished;
-   --
-   --     package On_Transfer_Finished_Callbacks is
-   --       new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-   --
-   --     -----------
-   --     -- Enter --
-   --     -----------
-   --
-   --     procedure Enter is
-   --        Success : Boolean := True;
-   --
-   --     begin
-   --        State := Display_Update_Control_2;
-   --        --  WRITE_BW_START := A0B.Time.Clock;
-   --
-   --        declare
-   --           Code : A0B.Types.Unsigned_8
-   --             with Import, Address => Pixel_Buffer.Address;
-   --
-   --        begin
-   --           --  Code := 16#DF#;  --  Full refresh, experimental (CF)
-   --           --  Code := 16#F7#;  --  Full refresh
-   --
-   --           if Cycle = 0 then
-   --              --  Code := 16#F7#;  --  Full refresh
-   --              Code := 16#F4#;  --  Full refresh, run analog/clock
-   --
-   --           --  elsif Cycle = 1 then
-   --           --     --  Code := 16#C0#;  --  Clock, analog, load LUT
-   --           --     Code := 16#F0#;  --  Clock, analog, load temperature, load LUT
-   --
-   --           elsif Cycle = Dur'Last then
-   --              --  Last partial update, turn of analog and clocks
-   --              Code := 16#FF#;  --  Partial refresh
-   --
-   --           else
-   --              --  Code := 16#FF#;  --  Partial refresh
-   --              --  Code := 16#FC#;  --  Partial refresh, experimental
-   --              Code := 16#DC#;  --  Partial refresh, experimental
-   --              --  Code := 16#CC#;  --  Partial refresh, experimental
-   --           end if;
-   --
-   --           Pixel_Buffer.Set_Actual_Length (1);
-   --        end;
-   --
-   --        Nu_Pogodi.Hardware.MIPI.Command_Write
-   --          (Display_Update_Control_2_Command,
-   --           Pixel_Buffer,
-   --           On_Transfer_Finished_Callbacks.Create_Callback,
-   --           Success);
-   --
-   --        if not Success then
-   --           --  XXX Not implemented, MIPI can't start transfer of the command.
-   --
-   --           raise Program_Error;
-   --        end if;
-   --     end Enter;
-   --
-   --     --------------------------
-   --     -- On_Transfer_Finished --
-   --     --------------------------
-   --
-   --     procedure On_Transfer_Finished is
-   --     begin
-   --        --  XXX Not implemented !!!
-   --
-   --        --  WRITE_BW_DONE := A0B.Time.Clock;
-   --
-   --        Master_Activation_State.Enter;
-   --        --  raise Program_Error;
-   --     end On_Transfer_Finished;
-   --
-   --  end Display_Update_Control_2_State;
+
+   ------------------------------
+   -- Display_Update_Control_2 --
+   ------------------------------
+
+   procedure Display_Update_Control_2
+     (Sequence : Update_Sequence;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Code : Update_Sequence
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Code := Sequence;
+         Parameter_Buffer.Set_Actual_Length (1);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Display_Update_Control_2_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Display_Update_Control_2;
 
    ----------------
    -- Initialize --
