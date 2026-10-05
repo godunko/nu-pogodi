@@ -31,6 +31,8 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Disable_Clock     at 0 range 0 .. 0;
    end record;
 
+   type Temperature_Sensor is (External, Internal);
+
    procedure Initialize;
 
    procedure Reset (Callback : A0B.Callbacks.Callback);
@@ -58,5 +60,11 @@ package Nu_Pogodi.Hardware.SSD1683 is
      (Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Activate Display Update Sequence
+
+   procedure Temperature_Sensor_Control
+     (Sensor   : Temperature_Sensor;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Temperature Sensor Selection
 
 end Nu_Pogodi.Hardware.SSD1683;

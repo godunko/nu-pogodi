@@ -52,6 +52,26 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Reset;
 
+   --------------------------------
+   -- Temperature_Sensor_Control --
+   --------------------------------
+
+   procedure Temperature_Sensor_Control
+     (Sensor  : Temperature_Sensor;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      Temperature_Sensor_Control
+        (Sensor, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Temperature_Sensor_Control;
+
    ---------------------------
    -- Write_RAM_Black_White --
    ---------------------------

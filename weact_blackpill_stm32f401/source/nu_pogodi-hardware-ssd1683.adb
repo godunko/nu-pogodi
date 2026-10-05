@@ -14,20 +14,23 @@ with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
 with A0B.Timer;
 
+with A0B.Types;
 with Nu_Pogodi.Hardware.MIPI;
 with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SSD1683 is
 
-   SW_RESET_Command                 : constant
+   SW_RESET_Command                   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
-   Master_Activation_Command        : constant
+   Temperature_Sensor_Control_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#18#;
+   Master_Activation_Command          : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
-   Display_Update_Control_2_Command : constant
+   Display_Update_Control_2_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
-   Write_RAM_Black_White_Command    : constant
+   Write_RAM_Black_White_Command      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
-   Write_RAM_Red_Command            : constant
+   Write_RAM_Red_Command              : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
    --  Load_WS_OTP_Command              : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
@@ -520,6 +523,38 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end On_Timeout;
 
    end State_Machine_VCI_Wait_State;
+
+   --------------------------------
+   -- Temperature_Sensor_Control --
+   --------------------------------
+
+   procedure Temperature_Sensor_Control
+     (Sensor   : Temperature_Sensor;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Code : A0B.Types.Unsigned_8
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Code :=
+           (case Sensor is
+              when External => 16#48#,
+              when Internal => 16#80#);
+         Parameter_Buffer.Set_Actual_Length (1);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Temperature_Sensor_Control_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Temperature_Sensor_Control;
 
    ---------------------------
    -- Write_RAM_Black_White --

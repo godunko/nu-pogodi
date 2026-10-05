@@ -28,4 +28,9 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
      (Success : in out Boolean);
    --  Activate Display Update Sequence
 
+   procedure Temperature_Sensor_Control
+     (Sensor  : Temperature_Sensor;
+      Success : in out Boolean);
+   --  Temperature Sensor Selection
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;
