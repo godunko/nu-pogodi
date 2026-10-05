@@ -12,8 +12,9 @@ with A0B.Buffers.Static;
 --  with A0B.Callbacks.Generic_Parameterless;
 with A0B.Types.Arrays;
 
-with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.Bitmaps;
+with Nu_Pogodi.Hardware.SSD1683.Synchronous;
+with Nu_Pogodi.Scene.Draw;
 
 package body Nu_Pogodi.Application is
 
@@ -237,29 +238,14 @@ package body Nu_Pogodi.Application is
         with Import, Address => Active_Buffer.Address;
 
    begin
-      if Cycle = Span'Last then
-         declare
-            FB : Nu_Pogodi.Bitmaps.Framebuffer
-              with Import, Address => Data'Address;
+      declare
+         FB : Nu_Pogodi.Bitmaps.Framebuffer
+           with Import, Address => Data'Address;
 
-         begin
-            Nu_Pogodi.Bitmaps.Reconstruct (FB);
-         end;
-
-      else
-         case Cycle mod 4 is
-            when 0 =>
-               Data :=  [others => 16#EE#];
-            when 1 =>
-               Data :=  [others => 16#DD#];
-            when 2 =>
-               Data :=  [others => 16#BB#];
-            when 3 =>
-               Data :=  [others => 16#77#];
-            when others =>
-               raise Program_Error;
-         end case;
-      end if;
+      begin
+         Data := [others => 16#FF#];
+         Nu_Pogodi.Scene.Draw (FB);
+      end;
 
       Active_Buffer.Set_Actual_Length (15_000);
 
@@ -340,9 +326,13 @@ package body Nu_Pogodi.Application is
       --  Set partial update mode once, to exclude command's transfer time from
       --  critical path.
 
+      Nu_Pogodi.Scene.Initialize;
+      Nu_Pogodi.Scene.Spawn_Egg (Nu_Pogodi.Scene.Left, Nu_Pogodi.Scene.Bottom);
+
       loop
          exit when Cycle > Span'Last;
 
+         Nu_Pogodi.Scene.Update_Physics_Tick;
          Partial
            (Pixel_Buffer (Cycle mod 2),
             Pixel_Buffer ((Cycle - 1) mod 2),
