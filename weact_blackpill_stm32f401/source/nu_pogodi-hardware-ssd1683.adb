@@ -44,9 +44,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      new A0B.Callbacks.Generic_Parameterless (On_Busy);
 
    type State_Kind is
-     (Initial,
-      VCI_Wait,
-      HW_Reset_Low,
+     (Initial,        --  Not initialized
+      Ready,          --  Initialized, ready to execute actions
+      VCI_Wait,       --  Power-on procedure, wait panel to power-on
+      HW_Reset_Low,   --  Push RES low, and wait 10 milliseconds
       HW_Reset_High,
       SW_Reset_Transfer,
       Load_WS_OTP,
@@ -57,27 +58,43 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
 
-   State   : State_Kind := Initial with Volatile;
-   Timeout : aliased A0B.Timer.Timeout_Control_Block;
+   State           : State_Kind := Initial with Atomic, Volatile;
+   Timeout         : aliased A0B.Timer.Timeout_Control_Block;
+   Reset_Callback  : A0B.Callbacks.Callback;
+   Reset_After_VCI : Boolean := False with Atomic, Volatile;
 
-   RESET_LOW_START  : A0B.Time.Monotonic_Time with Volatile;
-   RESET_HIGH_START : A0B.Time.Monotonic_Time with Volatile;
-   RESET_BUSY       : A0B.Time.Monotonic_Time with Volatile;
    WRITE_BW_START   : A0B.Time.Monotonic_Time with Volatile;
    WRITE_BW_DONE    : A0B.Time.Monotonic_Time with Volatile;
    WRITE_RED_START  : A0B.Time.Monotonic_Time with Volatile;
    WRITE_RED_DONE   : A0B.Time.Monotonic_Time with Volatile;
    REFRESH_DONE     : A0B.Time.Monotonic_Time with Volatile;
 
-   package HW_Reset_Low_State is
+   package State_Machine_VCI_Wait_State is
+
+      --  Power-on state, wait 10 milliseconds to complete panel's power-on
+      --  operations.
+      --
+      --  Note, as recommended by MIPI specification, RES signal should low
+      --  during this time.
 
       procedure Enter;
 
       procedure On_Timeout;
 
-   end HW_Reset_Low_State;
+   end State_Machine_VCI_Wait_State;
 
-   package HW_Reset_High_State is
+   package State_Machine_HW_Reset_Low_State is
+
+      --  Start of reset sequence, push RES to low state and wait 10
+      --  milliseconds, when enter `HW_Reset_High` state.
+
+      procedure Enter;
+
+      procedure On_Timeout;
+
+   end State_Machine_HW_Reset_Low_State;
+
+   package State_Machine_HW_Reset_High_State is
 
       procedure Enter;
 
@@ -85,15 +102,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Busy;
 
-   end HW_Reset_High_State;
-
-   package VCI_Wait_State is
-
-      procedure Enter;
-
-      procedure On_Timeout;
-
-   end VCI_Wait_State;
+   end State_Machine_HW_Reset_High_State;
 
    package SW_Reset_Transfer_State is
 
@@ -442,94 +451,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end Write_Red_State;
 
-   -------------------------
-   -- HW_Reset_High_State --
-   -------------------------
-
-   package body HW_Reset_High_State is
-
-      -----------
-      -- Enter --
-      -----------
-
-      procedure Enter is
-      begin
-         State := HW_Reset_High;
-         RESET_HIGH_START := A0B.Time.Clock;
-
-         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-           (On_Busy_Callbacks.Create_Callback);
-         A0B.Timer.Enqueue
-           (Timeout,
-            On_Timeout_Callbacks.Create_Callback,
-            A0B.Time.Milliseconds (10));
-
-         Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (True);
-      end Enter;
-
-      -------------
-      -- On_Busy --
-      -------------
-
-      procedure On_Busy is
-      begin
-         A0B.Timer.Cancel (Timeout);
-
-         SW_Reset_Transfer_State.Enter;
-      end On_Busy;
-
-      ----------------
-      -- On_Timeout --
-      ----------------
-
-      procedure On_Timeout is
-      begin
-         --  Display controller doesn't respond to RES signal, indicating a
-         --  hardware failure.
-
-         Nu_Pogodi.Hardware.Pin_Control.Disable_SSD1683_BUSY;
-
-         --  XXX Not implemented: proper error handling for hardware failure.
-
-         raise Program_Error;
-      end On_Timeout;
-
-   end HW_Reset_High_State;
-
-   ------------------------
-   -- HW_Reset_Low_State --
-   ------------------------
-
-   package body HW_Reset_Low_State is
-
-      -----------
-      -- Enter --
-      -----------
-
-      procedure Enter is
-      begin
-         State := HW_Reset_Low;
-         RESET_LOW_START := A0B.Time.Clock;
-
-         Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (False);
-
-         A0B.Timer.Enqueue
-           (Timeout,
-            On_Timeout_Callbacks.Create_Callback,
-            A0B.Time.Milliseconds (10));
-      end Enter;
-
-      ----------------
-      -- On_Timeout --
-      ----------------
-
-      procedure On_Timeout is
-      begin
-         HW_Reset_High_State.Enter;
-      end On_Timeout;
-
-   end HW_Reset_Low_State;
-
    ----------------
    -- Initialize --
    ----------------
@@ -538,8 +459,38 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    begin
       Nu_Pogodi.Hardware.MIPI.Initialize;
 
-      VCI_Wait_State.Enter;
+      State_Machine_VCI_Wait_State.Enter;
    end Initialize;
+
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset (Callback : A0B.Callbacks.Callback) is
+      Entry_State : constant State_Kind := State;
+
+   begin
+      Reset_Callback  := Callback;
+
+      if Entry_State = VCI_Wait then
+         --  VCI Wait is in progress, attempt to equeue request
+
+         Reset_After_VCI := True;
+
+         if State = Ready
+           and then A0B.Callbacks.Is_Set (Reset_Callback)
+         then
+            --  VCI state was left before enqueue completed, cleanup request
+            --  and enter `HW_Reset_Low` state.
+
+            Reset_After_VCI := False;
+            State_Machine_HW_Reset_Low_State.Enter;
+         end if;
+
+      else
+         State_Machine_HW_Reset_Low_State.Enter;
+      end if;
+   end Reset;
 
    -------------
    -- On_Busy --
@@ -547,11 +498,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    procedure On_Busy is
    begin
-      RESET_BUSY := A0B.Time.Clock;
-
       case State is
          when HW_Reset_High =>
-            HW_Reset_High_State.On_Busy;
+            State_Machine_HW_Reset_High_State.On_Busy;
 
          when SW_Reset_Transfer =>
             SW_Reset_Transfer_State.On_Busy;
@@ -575,13 +524,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    begin
       case State is
          when VCI_Wait =>
-            VCI_Wait_State.On_Timeout;
+            State_Machine_VCI_Wait_State.On_Timeout;
 
          when HW_Reset_Low =>
-            HW_Reset_Low_State.On_Timeout;
+            State_Machine_HW_Reset_Low_State.On_Timeout;
 
          when HW_Reset_High =>
-            HW_Reset_High_State.On_Timeout;
+            State_Machine_HW_Reset_High_State.On_Timeout;
 
          when others =>
             raise Program_Error;
@@ -686,11 +635,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Busy is
       begin
-         Write_BW_State.Enter;
-         --  Load_WS_OTP_State.Enter;
+         State := Ready;
 
-         --  XXX Not implemented !!!
-         --  raise Program_Error;
+         A0B.Callbacks.Emit_Once (Reset_Callback);
       end On_Busy;
 
       --------------------------
@@ -706,11 +653,97 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end SW_Reset_Transfer_State;
 
-   --------------------
-   -- VCI_Wait_State --
-   --------------------
+   ---------------------------------------
+   -- State_Machine_HW_Reset_High_State --
+   ---------------------------------------
 
-   package body VCI_Wait_State is
+   package body State_Machine_HW_Reset_High_State is
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter is
+      begin
+         State := HW_Reset_High;
+
+         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
+           (On_Busy_Callbacks.Create_Callback);
+         A0B.Timer.Enqueue
+           (Timeout,
+            On_Timeout_Callbacks.Create_Callback,
+            A0B.Time.Milliseconds (10));
+
+         Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (True);
+      end Enter;
+
+      -------------
+      -- On_Busy --
+      -------------
+
+      procedure On_Busy is
+      begin
+         A0B.Timer.Cancel (Timeout);
+
+         SW_Reset_Transfer_State.Enter;
+      end On_Busy;
+
+      ----------------
+      -- On_Timeout --
+      ----------------
+
+      procedure On_Timeout is
+      begin
+         --  Display controller doesn't respond to RES signal, indicating a
+         --  hardware failure.
+
+         Nu_Pogodi.Hardware.Pin_Control.Disable_SSD1683_BUSY;
+
+         --  XXX Not implemented: proper error handling for hardware failure.
+
+         raise Program_Error;
+      end On_Timeout;
+
+   end State_Machine_HW_Reset_High_State;
+
+   --------------------------------------
+   -- State_Machine_HW_Reset_Low_State --
+   --------------------------------------
+
+   package body State_Machine_HW_Reset_Low_State is
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter is
+      begin
+         State := HW_Reset_Low;
+
+         Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (False);
+
+         A0B.Timer.Enqueue
+           (Timeout,
+            On_Timeout_Callbacks.Create_Callback,
+            A0B.Time.Milliseconds (10));
+      end Enter;
+
+      ----------------
+      -- On_Timeout --
+      ----------------
+
+      procedure On_Timeout is
+      begin
+         State_Machine_HW_Reset_High_State.Enter;
+      end On_Timeout;
+
+   end State_Machine_HW_Reset_Low_State;
+
+   ----------------------------------
+   -- State_Machine_VCI_Wait_State --
+   ----------------------------------
+
+   package body State_Machine_VCI_Wait_State is
 
       -----------
       -- Enter --
@@ -731,9 +764,18 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Timeout is
       begin
-         HW_Reset_Low_State.Enter;
+         if Reset_After_VCI
+           and then A0B.Callbacks.Is_Set (Reset_Callback)
+         then
+            Reset_After_VCI := False;
+
+            State_Machine_HW_Reset_Low_State.Enter;
+
+         else
+            State := Ready;
+         end if;
       end On_Timeout;
 
-   end VCI_Wait_State;
+   end State_Machine_VCI_Wait_State;
 
 end Nu_Pogodi.Hardware.SSD1683;
