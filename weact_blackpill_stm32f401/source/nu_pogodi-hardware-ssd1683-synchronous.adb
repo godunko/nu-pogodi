@@ -27,6 +27,24 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Booster_Soft_Start_Control;
 
+   -----------------------------
+   -- Data_Entry_Mode_Setting --
+   -----------------------------
+
+   procedure Data_Entry_Mode_Setting
+     (X_Axis  : Address_Direction;
+      Y_Axis  : Address_Direction;
+      Primary : Direction;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Data_Entry_Mode_Setting
+        (X_Axis, Y_Axis, Primary, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Data_Entry_Mode_Setting;
+
    ------------------------------
    -- Display_Update_Control_2 --
    ------------------------------

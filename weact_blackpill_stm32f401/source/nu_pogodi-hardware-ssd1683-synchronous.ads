@@ -44,4 +44,11 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
    --
    --  XXX It is raw version, should be replaced by typed interface.
 
+   procedure Data_Entry_Mode_Setting
+     (X_Axis  : Address_Direction;
+      Y_Axis  : Address_Direction;
+      Primary : Direction;
+      Success : in out Boolean);
+   --  Define data entry sequence.
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;

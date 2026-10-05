@@ -34,6 +34,10 @@ package Nu_Pogodi.Hardware.SSD1683 is
 
    type Temperature_Sensor is (External, Internal);
 
+   type Address_Direction is (Decrement, Increment);
+
+   type Direction is (X_Axis, Y_Axis);
+
    procedure Initialize;
 
    procedure Reset (Callback : A0B.Callbacks.Callback);
@@ -79,5 +83,13 @@ package Nu_Pogodi.Hardware.SSD1683 is
    --  and duration setting.
    --
    --  XXX It is raw version, should be replaced by typed interface.
+
+   procedure Data_Entry_Mode_Setting
+     (X_Axis   : Address_Direction;
+      Y_Axis   : Address_Direction;
+      Primary  : Direction;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Define data entry sequence.
 
 end Nu_Pogodi.Hardware.SSD1683;

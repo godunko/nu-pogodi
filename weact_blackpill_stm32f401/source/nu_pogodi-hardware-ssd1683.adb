@@ -9,6 +9,8 @@
 --     to application. While adds one more state to application, it allows to
 --     suppot cases when panel's power is managed by application.
 
+pragma Ada_2022;
+
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
@@ -22,6 +24,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    Booster_Soft_Start_Control_Command : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#0C#;
+   Data_Entry_Mode_Setting_Command    : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#11#;
    SW_RESET_Command                   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
    Temperature_Sensor_Control_Command : constant
@@ -167,6 +171,52 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Booster_Soft_Start_Control;
+
+   -----------------------------
+   -- Data_Entry_Mode_Setting --
+   -----------------------------
+
+   procedure Data_Entry_Mode_Setting
+     (X_Axis   : Address_Direction;
+      Y_Axis   : Address_Direction;
+      Primary  : Direction;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         use type A0B.Types.Unsigned_8;
+
+         Data : A0B.Types.Unsigned_8
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Data := 16#00#;
+
+         if X_Axis = Increment then
+            Data := @ or 2#0000_0001#;
+         end if;
+
+         if Y_Axis = Increment then
+            Data := @ or 2#0000_0010#;
+         end if;
+
+         if Primary = SSD1683.Y_Axis then
+            Data := @ or 2#0000_0100#;
+         end if;
+
+         Parameter_Buffer.Set_Actual_Length (1);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Data_Entry_Mode_Setting_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Data_Entry_Mode_Setting;
 
    ------------------------------
    -- Display_Update_Control_2 --
