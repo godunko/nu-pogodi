@@ -82,7 +82,7 @@ package body Nu_Pogodi.Application is
            with Import, Address => Pixel_Buffer.Address;
 
       begin
-         Data := [others => 16#FF#];
+         Data := [others => 16#00#];
          Pixel_Buffer.Set_Actual_Length (15_000);
       end;
 
