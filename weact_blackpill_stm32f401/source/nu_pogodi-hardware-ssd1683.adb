@@ -444,10 +444,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State := SSD1683.Command;
          Command_Callback := Callback;
 
-         Nu_Pogodi.Hardware.MIPI.Command
-           (Command,
-            On_Transfer_Finished_Callbacks.Create_Callback,
-            Success);
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
             Data_Buffer,
