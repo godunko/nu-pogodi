@@ -30,6 +30,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
    Write_RAM_Red_Command            : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
+   Load_WS_OTP_Command              : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
 
    procedure On_Timeout;
 
@@ -47,6 +49,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       HW_Reset_Low,
       HW_Reset_High,
       SW_Reset_Transfer,
+      Load_WS_OTP,
       Write_BW,
       Write_Red,
       Display_Update_Control_2,
@@ -64,6 +67,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    WRITE_BW_DONE    : A0B.Time.Monotonic_Time with Volatile;
    WRITE_RED_START  : A0B.Time.Monotonic_Time with Volatile;
    WRITE_RED_DONE   : A0B.Time.Monotonic_Time with Volatile;
+   REFRESH_DONE     : A0B.Time.Monotonic_Time with Volatile;
 
    package HW_Reset_Low_State is
 
@@ -99,6 +103,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end SW_Reset_Transfer_State;
 
+   package Load_WS_OTP_State is
+
+      procedure Enter;
+
+      procedure On_Busy;
+
+   end Load_WS_OTP_State;
+
    package Write_BW_State is
 
       procedure Enter;
@@ -124,6 +136,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Busy;
 
    end Master_Activation_State;
+
+   Cycle : Natural := 0;
+
+   --  Dur : array (Positive range 1 .. 3) of A0B.Time.Time_Span with Volatile;
+   Dur : array (Natural range 0 .. 10) of A0B.Time.Duration with Volatile;
 
    -----------------------------
    -- Master_Activation_State --
@@ -165,11 +182,28 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       -------------
 
       procedure On_Busy is
+         use type A0B.Time.Time_Span;
       begin
-         --  Write_BW_State.Enter;
+         REFRESH_DONE := A0B.Time.Clock;
+
+         Dur (Cycle) := A0B.Time.To_Duration (REFRESH_DONE - WRITE_BW_START);
+         Cycle := @ + 1;
+
+         if Cycle in Dur'Range then
+            if Cycle = 1 then
+               Load_WS_OTP_State.Enter;
+
+            else
+               Write_BW_State.Enter;
+            end if;
+
+         else
+            null;
+            --  raise Program_Error;
+         end if;
 
          --  XXX Not implemented !!!
-         raise Program_Error;
+         --  raise Program_Error;
       end On_Busy;
 
       --------------------------
@@ -212,8 +246,28 @@ package body Nu_Pogodi.Hardware.SSD1683 is
               with Import, Address => Pixel_Buffer.Address;
 
          begin
-            Code := 16#F7#;  --  Full refresh
-            --  Code := 16#FF#;  --  Partial refresh
+            --  Code := 16#DF#;  --  Full refresh, experimental (CF)
+            --  Code := 16#F7#;  --  Full refresh
+
+            if Cycle = 0 then
+               --  Code := 16#F7#;  --  Full refresh
+               Code := 16#F4#;  --  Full refresh, run analog/clock
+
+            --  elsif Cycle = 1 then
+            --     --  Code := 16#C0#;  --  Clock, analog, load LUT
+            --     Code := 16#F0#;  --  Clock, analog, load temperature, load LUT
+
+            elsif Cycle = Dur'Last then
+               --  Last partial update, turn of analog and clocks
+               Code := 16#FF#;  --  Partial refresh
+
+            else
+               --  Code := 16#FF#;  --  Partial refresh
+               --  Code := 16#FC#;  --  Partial refresh, experimental
+               Code := 16#DC#;  --  Partial refresh, experimental
+               --  Code := 16#CC#;  --  Partial refresh, experimental
+            end if;
+
             Pixel_Buffer.Set_Actual_Length (1);
          end;
 
@@ -273,7 +327,19 @@ package body Nu_Pogodi.Hardware.SSD1683 is
               with Import, Address => Pixel_Buffer.Address;
 
          begin
-            Data := [others => 16#FF#];
+            --  Data := [others => 16#FF#];
+            --  Data := [others => 16#00#];
+
+            if Cycle = 0 then
+               Data := [others => 16#FF#];
+
+            elsif Cycle mod 2 = 0 then
+               Data := [others => 16#AA#];
+
+            else
+               Data := [others => 16#55#];
+            end if;
+
             Pixel_Buffer.Set_Actual_Length (15_000);
          end;
 
@@ -333,7 +399,17 @@ package body Nu_Pogodi.Hardware.SSD1683 is
               with Import, Address => Pixel_Buffer.Address;
 
          begin
-            Data := [others => 16#00#];
+            --  Data := [others => 16#FF#];
+            --  Data := [others => 16#00#];
+            if Cycle = 0 then
+               Data := [others => 16#00#];
+
+            elsif Cycle mod 2 = 0 then
+               Data := [others => 16#55#];
+
+            else
+               Data := [others => 16#AA#];
+            end if;
             Pixel_Buffer.Set_Actual_Length (15_000);
          end;
 
@@ -480,6 +556,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          when SW_Reset_Transfer =>
             SW_Reset_Transfer_State.On_Busy;
 
+         when Load_WS_OTP =>
+            Load_WS_OTP_State.On_Busy;
+
          when Master_Activation =>
             Master_Activation_State.On_Busy;
 
@@ -508,6 +587,63 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
+
+   -----------------------
+   -- Load_WS_OTP_State --
+   -----------------------
+
+   package body Load_WS_OTP_State is
+
+      procedure On_Transfer_Finished;
+
+      package On_Transfer_Finished_Callbacks is
+        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter is
+         Success : Boolean := True;
+
+      begin
+         State := Load_WS_OTP;
+
+         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
+           (On_Busy_Callbacks.Create_Callback);
+         Nu_Pogodi.Hardware.MIPI.Command
+           (Load_WS_OTP_Command,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      -------------
+      -- On_Busy --
+      -------------
+
+      procedure On_Busy is
+      begin
+         Write_BW_State.Enter;
+      end On_Busy;
+
+      --------------------------
+      -- On_Transfer_Finished --
+      --------------------------
+
+      procedure On_Transfer_Finished is
+      begin
+         --  XXX Transfer error handling is not implemented.
+
+         null;
+      end On_Transfer_Finished;
+
+   end Load_WS_OTP_State;
 
    -----------------------------
    -- SW_Reset_Transfer_State --
@@ -551,6 +687,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Busy is
       begin
          Write_BW_State.Enter;
+         --  Load_WS_OTP_State.Enter;
 
          --  XXX Not implemented !!!
          --  raise Program_Error;
