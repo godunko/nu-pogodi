@@ -11,6 +11,7 @@
 
 pragma Ada_2022;
 
+with A0B;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
@@ -22,24 +23,26 @@ with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SSD1683 is
 
-   Booster_Soft_Start_Control_Command : constant
+   Booster_Soft_Start_Control_Command           : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#0C#;
-   Data_Entry_Mode_Setting_Command    : constant
+   Data_Entry_Mode_Setting_Command              : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#11#;
-   SW_RESET_Command                   : constant
+   SW_RESET_Command                             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
-   Temperature_Sensor_Control_Command : constant
+   Temperature_Sensor_Control_Command           : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#18#;
-   Master_Activation_Command          : constant
+   Master_Activation_Command                    : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
-   Display_Update_Control_2_Command   : constant
+   Display_Update_Control_2_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
-   Write_RAM_Black_White_Command      : constant
+   Write_RAM_Black_White_Command                : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
-   Write_RAM_Red_Command              : constant
+   Write_RAM_Red_Command                        : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
-   --  Load_WS_OTP_Command              : constant
+   --  Load_WS_OTP_Command                        : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
+   Set_RAM_X_Address_Start_End_Position_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#44#;
 
    procedure On_Timeout;
 
@@ -344,6 +347,37 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
+
+   ------------------------------------------
+   -- Set_RAM_X_Address_Start_End_Position --
+   ------------------------------------------
+
+   procedure Set_RAM_X_Address_Start_End_Position
+     (X_Start  : A0B.Types.Unsigned_6;
+      X_End    : A0B.Types.Unsigned_6;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 2)
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Data (1) := A0B.Types.Unsigned_8 (X_Start);
+         Data (2) := A0B.Types.Unsigned_8 (X_End);
+         Parameter_Buffer.Set_Actual_Length (2);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Set_RAM_X_Address_Start_End_Position_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Set_RAM_X_Address_Start_End_Position;
 
    --------------------------------------
    -- State_Machine_Command_Busy_State --
