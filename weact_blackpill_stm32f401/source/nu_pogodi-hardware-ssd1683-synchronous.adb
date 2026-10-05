@@ -8,6 +8,25 @@ with A0B.Awaits;
 
 package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
 
+   --------------------------------
+   -- Booster_Soft_Start_Control --
+   --------------------------------
+
+   procedure Booster_Soft_Start_Control
+     (B1      : A0B.Types.Unsigned_8;
+      B2      : A0B.Types.Unsigned_8;
+      B3      : A0B.Types.Unsigned_8;
+      B4      : A0B.Types.Unsigned_8;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Booster_Soft_Start_Control
+        (B1, B2, B3, B4, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Booster_Soft_Start_Control;
+
    ------------------------------
    -- Display_Update_Control_2 --
    ------------------------------

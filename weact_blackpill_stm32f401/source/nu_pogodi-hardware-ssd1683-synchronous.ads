@@ -33,4 +33,15 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
       Success : in out Boolean);
    --  Temperature Sensor Selection
 
+   procedure Booster_Soft_Start_Control
+     (B1      : A0B.Types.Unsigned_8;
+      B2      : A0B.Types.Unsigned_8;
+      B3      : A0B.Types.Unsigned_8;
+      B4      : A0B.Types.Unsigned_8;
+      Success : in out Boolean);
+   --  Booster Enable with Phase 1, Phase 2 and Phase 3 for soft start current
+   --  and duration setting.
+   --
+   --  XXX It is raw version, should be replaced by typed interface.
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;

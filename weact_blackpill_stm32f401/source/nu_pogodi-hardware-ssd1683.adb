@@ -14,12 +14,14 @@ with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
 with A0B.Timer;
 
-with A0B.Types;
+with A0B.Types.Arrays;
 with Nu_Pogodi.Hardware.MIPI;
 with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SSD1683 is
 
+   Booster_Soft_Start_Control_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#0C#;
    SW_RESET_Command                   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
    Temperature_Sensor_Control_Command : constant
@@ -58,7 +60,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
    Reset_After_VCI  : Boolean := False with Atomic, Volatile;
    Command_Callback : A0B.Callbacks.Callback;
-   Parameter_Buffer : A0B.Buffers.Static.Static_Buffer (1);
+   Parameter_Buffer : A0B.Buffers.Static.Static_Buffer (4);
 
    package State_Machine_VCI_Wait_State is
 
@@ -130,6 +132,41 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Busy;
 
    end State_Machine_Command_Busy_State;
+
+   --------------------------------
+   -- Booster_Soft_Start_Control --
+   --------------------------------
+
+   procedure Booster_Soft_Start_Control
+     (B1       : A0B.Types.Unsigned_8;
+      B2       : A0B.Types.Unsigned_8;
+      B3       : A0B.Types.Unsigned_8;
+      B4       : A0B.Types.Unsigned_8;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 4)
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Data (1) := B1;
+         Data (2) := B2;
+         Data (3) := B3;
+         Data (4) := B4;
+         Parameter_Buffer.Set_Actual_Length (4);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Booster_Soft_Start_Control_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Booster_Soft_Start_Control;
 
    ------------------------------
    -- Display_Update_Control_2 --
