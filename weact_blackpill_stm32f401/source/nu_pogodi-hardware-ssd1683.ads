@@ -54,4 +54,9 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Sets display update sequence.
 
+   procedure Master_Activation
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Activate Display Update Sequence
+
 end Nu_Pogodi.Hardware.SSD1683;

@@ -27,8 +27,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    SW_RESET_Command                 : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
-   --  Master_Activation_Command        : constant
-   --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
+   Master_Activation_Command        : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
    Display_Update_Control_2_Command : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
    Write_RAM_Black_White_Command    : constant
@@ -125,6 +125,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       --  released.
 
       procedure Enter (Command : Nu_Pogodi.Hardware.MIPI.Command_Code);
+      --  This subprogram is used only by reset sequence.
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean);
 
       procedure On_Busy;
 
@@ -137,102 +143,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    --     procedure On_Busy;
    --
    --  end Load_WS_OTP_State;
-   --
-   --  package Display_Update_Control_2_State is
-   --
-   --     procedure Enter;
-   --
-   --  end Display_Update_Control_2_State;
-   --
-   --  package Master_Activation_State is
-   --
-   --     procedure Enter;
-   --
-   --     procedure On_Busy;
-   --
-   --  end Master_Activation_State;
-   --
-   --  Cycle : Natural := 0;
-   --
-   --  --  Dur : array (Positive range 1 .. 3) of A0B.Time.Time_Span with Volatile;
-   --  Dur : array (Natural range 0 .. 10) of A0B.Time.Duration with Volatile;
-   --
-   --  -----------------------------
-   --  -- Master_Activation_State --
-   --  -----------------------------
-   --
-   --  package body Master_Activation_State is
-   --
-   --     procedure On_Transfer_Finished;
-   --
-   --     package On_Transfer_Finished_Callbacks is
-   --       new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-   --
-   --     -----------
-   --     -- Enter --
-   --     -----------
-   --
-   --     procedure Enter is
-   --        Success : Boolean := True;
-   --
-   --     begin
-   --        State := Master_Activation;
-   --
-   --        Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-   --          (On_Busy_Callbacks.Create_Callback);
-   --        Nu_Pogodi.Hardware.MIPI.Command
-   --          (Master_Activation_Command,
-   --           On_Transfer_Finished_Callbacks.Create_Callback,
-   --           Success);
-   --
-   --        if not Success then
-   --           --  XXX Not implemented, MIPI can't start transfer of the command.
-   --
-   --           raise Program_Error;
-   --        end if;
-   --     end Enter;
-   --
-   --     -------------
-   --     -- On_Busy --
-   --     -------------
-   --
-   --     procedure On_Busy is
-   --        use type A0B.Time.Time_Span;
-   --     begin
-   --        REFRESH_DONE := A0B.Time.Clock;
-   --
-   --        Dur (Cycle) := A0B.Time.To_Duration (REFRESH_DONE - WRITE_BW_START);
-   --        Cycle := @ + 1;
-   --
-   --        if Cycle in Dur'Range then
-   --           if Cycle = 1 then
-   --              Load_WS_OTP_State.Enter;
-   --
-   --           else
-   --              Write_BW_State.Enter;
-   --           end if;
-   --
-   --        else
-   --           null;
-   --           --  raise Program_Error;
-   --        end if;
-   --
-   --        --  XXX Not implemented !!!
-   --        --  raise Program_Error;
-   --     end On_Busy;
-   --
-   --     --------------------------
-   --     -- On_Transfer_Finished --
-   --     --------------------------
-   --
-   --     procedure On_Transfer_Finished is
-   --     begin
-   --        --  XXX Transfer error handling is not implemented.
-   --
-   --        null;
-   --     end On_Transfer_Finished;
-   --
-   --  end Master_Activation_State;
 
    ------------------------------
    -- Display_Update_Control_2 --
@@ -273,6 +183,24 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       State_Machine_VCI_Wait_State.Enter;
    end Initialize;
+
+   -----------------------
+   -- Master_Activation --
+   -----------------------
+
+   procedure Master_Activation
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      State_Machine_Command_Busy_State.Enter
+        (Master_Activation_Command,
+         Callback,
+         Success);
+   end Master_Activation;
 
    -----------
    -- Reset --
@@ -319,9 +247,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
          --  when Load_WS_OTP =>
          --     Load_WS_OTP_State.On_Busy;
-         --
-         --  when Master_Activation =>
-         --     Master_Activation_State.On_Busy;
 
          when others =>
             raise Program_Error;
@@ -426,6 +351,36 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       begin
          State := Command_Busy;
+
+         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
+           (On_Busy_Callbacks.Create_Callback);
+         Nu_Pogodi.Hardware.MIPI.Command
+           (Command,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean) is
+      begin
+         if not Success then
+            return;
+         end if;
+
+         State            := Command_Busy;
+         Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
