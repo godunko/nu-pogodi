@@ -26,31 +26,6 @@ package body Nu_Pogodi.Application is
    Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (20);
    --  Duration of physics update tick, running @50Hz
 
-   --  procedure On_SSD1683_Reset;
-   --
-   --  package On_SSD1683_Reset_Callbacks is
-   --    new A0B.Callbacks.Generic_Parameterless (On_SSD1683_Reset);
-
-   --  procedure On_Write_BW;
-   --
-   --  package On_Write_BW_Callbacks is
-   --    new A0B.Callbacks.Generic_Parameterless (On_Write_BW);
-
-   --  procedure On_Write_Red;
-
-   --  package On_Write_Red_Callbacks is
-   --    new A0B.Callbacks.Generic_Parameterless (On_Write_Red);
-
-   --  procedure On_DUC2;
-
-   --  package On_DUC2_Callbacks is
-   --    new A0B.Callbacks.Generic_Parameterless (On_DUC2);
-
-   --  procedure On_MA;
-
-   --  package On_MA_Callbacks is
-   --    new A0B.Callbacks.Generic_Parameterless (On_MA);
-
    procedure On_Display_Updated;
 
    package On_Display_Updated_Callbacks is
@@ -78,110 +53,6 @@ package body Nu_Pogodi.Application is
 
    Span  : array (Natural range 0 .. 10) of Span_Record with Volatile;
    Cycle : Natural := 0;
-
-   ----------------------
-   -- On_SSD1683_Reset --
-   ----------------------
-
-   --  procedure On_SSD1683_Reset is
-   --     Success : Boolean := True;
-   --
-   --  begin
-   --     declare
-   --        Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-   --          with Import, Address => Pixel_Buffer.Address;
-   --
-   --     begin
-   --        Data := [others => 16#FF#];
-   --        Pixel_Buffer.Set_Actual_Length (15_000);
-   --     end;
-   --
-   --     Nu_Pogodi.Hardware.SSD1683.Write_RAM_Black_White
-   --       (Pixel_Buffer,
-   --        On_Write_BW_Callbacks.Create_Callback,
-   --        Success);
-   --
-   --     if not Success then
-   --        raise Program_Error;
-   --     end if;
-   --  end On_SSD1683_Reset;
-
-   -----------------
-   -- On_Write_BW --
-   -----------------
-
-   --  procedure On_Write_BW is
-   --     Success : Boolean := True;
-   --
-   --  begin
-   --     declare
-   --        Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-   --          with Import, Address => Pixel_Buffer.Address;
-   --
-   --     begin
-   --        Data := [others => 16#00#];
-   --        Pixel_Buffer.Set_Actual_Length (15_000);
-   --     end;
-   --
-   --     Nu_Pogodi.Hardware.SSD1683.Write_RAM_Red
-   --       (Pixel_Buffer,
-   --        On_Write_Red_Callbacks.Create_Callback,
-   --        Success);
-   --
-   --     if not Success then
-   --        raise Program_Error;
-   --     end if;
-   --  end On_Write_BW;
-
-   ------------------
-   -- On_Write_Red --
-   ------------------
-
-   --  procedure On_Write_Red is
-   --     Success : Boolean := True;
-   --
-   --  begin
-   --     Nu_Pogodi.Hardware.SSD1683.Display_Update_Control_2
-   --       ((Enable_Clock      => True,
-   --         Enable_Analog     => True,
-   --         Load_Temperature  => True,
-   --         Loat_LUT_From_OTP => True,
-   --         Update_Mode       => False,
-   --         Update_Display    => True,
-   --         Disable_Analog    => True,
-   --         Disable_Clock     => True),
-   --        On_DUC2_Callbacks.Create_Callback,
-   --        Success);
-   --
-   --     if not Success then
-   --        raise Program_Error;
-   --     end if;
-   --  end On_Write_Red;
-
-   -------------
-   -- On_DUC2 --
-   -------------
-
-   --  procedure On_DUC2 is
-   --     Success : Boolean := True;
-   --
-   --  begin
-   --     Nu_Pogodi.Hardware.SSD1683.Master_Activation
-   --       (On_MA_Callbacks.Create_Callback, Success);
-   --
-   --     if not Success then
-   --        raise Program_Error;
-   --     end if;
-   --  end On_DUC2;
-
-   -----------
-   -- On_MA --
-   -----------
-
-   --  procedure On_MA is
-   --  begin
-   --     raise Program_Error;
-   --  end On_MA;
 
    -----------------
    -- Delay_Until --
@@ -312,9 +183,6 @@ package body Nu_Pogodi.Application is
       Success : Boolean := True;
 
    begin
-      --  Nu_Pogodi.Hardware.SSD1683.Reset
-      --    (On_SSD1683_Reset_Callbacks.Create_Callback);
-
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting
