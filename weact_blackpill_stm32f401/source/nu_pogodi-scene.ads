@@ -27,6 +27,8 @@ package Nu_Pogodi.Scene is
 
    type Game_Lanes is array (Lane_Side, Lane_Height) of Egg_Array;
 
+   type Lane is (Left_Top, Right_Top, Left_Bottom, Right_Bottom);
+
    --  type Miss_Score is delta 0.5 range 0.0 .. 3.0;
    --  --  Miss score: `0.5` delta allow to represent Rabbit reduction rule
 
@@ -41,6 +43,7 @@ private
    type Game_State is record
       Current_Tick : A0B.Types.Unsigned_32 := 0;
       Remain_Ticks : A0B.Types.Unsigned_32 := 31;
+      Current_Lane : Lane                  := Left_Top;
    end record;
 
    State : Game_State;

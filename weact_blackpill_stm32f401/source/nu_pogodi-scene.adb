@@ -15,6 +15,8 @@ package body Nu_Pogodi.Scene is
       Height : Lane_Height);
    --  Internal Lane Physics Tracker and Scoring Logic
 
+   procedure Next (Item : in out Lane);
+
    function Generate return Natural;
 
    --  --------------------------------------------------------------------------
@@ -244,7 +246,8 @@ package body Nu_Pogodi.Scene is
    begin
       State :=
         (Current_Tick => 0,
-         Remain_Ticks => 31);
+         Remain_Ticks => 31,
+         Current_Lane => Left_Top);
 
       Scene.Mode        := Mode;
       Score             := 0;
@@ -252,8 +255,25 @@ package body Nu_Pogodi.Scene is
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
 
+      Spawn_Egg (Left, Top);
       Spawn_Egg (Right, Top);
+      Spawn_Egg (Left, Bottom);
+      Spawn_Egg (Right, Bottom);
    end Initialize;
+
+   ----------
+   -- Next --
+   ----------
+
+   procedure Next (Item : in out Lane) is
+   begin
+      Item :=
+        (case Item is
+            when Left_Top     => Right_Top,
+            when Right_Top    => Left_Bottom,
+            when Left_Bottom  => Right_Bottom,
+            when Right_Bottom => Left_Top);
+   end Next;
 
    ---------------
    -- Spawn_Egg --
@@ -308,17 +328,28 @@ package body Nu_Pogodi.Scene is
 
       --  Advance active items down their tracks
 
-      Advance_Lane (Left, Top);
-      Advance_Lane (Right, Top);
-      Advance_Lane (Left, Bottom);
-      Advance_Lane (Right, Bottom);
+      case State.Current_Lane is
+         when Left_Top =>
+            Advance_Lane (Left, Top);
+
+         when Right_Top =>
+            Advance_Lane (Right, Top);
+
+         when Left_Bottom =>
+            Advance_Lane (Left, Bottom);
+
+         when Right_Bottom =>
+            Advance_Lane (Right, Bottom);
+      end case;
+
+      Next (State.Current_Lane);
 
    --     -- 2. Increment global cycle timeline
    --     State.Total_Ticks := State.Total_Ticks + 1;
 
       --  Run embedded autonomic generations
 
-      Handle_Autonomic_Generation;
+      --  Handle_Autonomic_Generation;
 
       State.Remain_Ticks := 31;
       Refresh := True;
