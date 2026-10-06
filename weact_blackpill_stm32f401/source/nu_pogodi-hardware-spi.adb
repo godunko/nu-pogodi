@@ -6,9 +6,11 @@
 
 pragma Ada_2022;
 
+with System.Storage_Elements;
+
+with A0B.STM32F401.SVD.DMA;
 with A0B.STM32F401.SVD.RCC;
 with A0B.STM32F401.SVD.SPI;
-with A0B.Types.Arrays;
 
 with Nu_Pogodi.Hardware.Pin_Control;
 
@@ -70,7 +72,37 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Initialize is
    begin
+      A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR.DMA2EN := True;
       A0B.STM32F401.SVD.RCC.RCC_Periph.APB2ENR.SPI1EN := True;
+
+      --  Basic configuration of DMA
+
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
+        (@ with delta
+           EN     => False,    --  0: Stream disabled
+           DMEIE  => False,    --  0: DME interrupt disabled
+           TEIE   => False,    --  0: TE interrupt disabled
+           HTIE   => False,    --  0: HT interrupt disabled
+           TCIE   => False,    --  0: TC interrupt disabled
+           PFCTRL => False,    --  0: The DMA is the flow controller
+           DIR    => 2#01#,    --  01: Memory-to-peripheral
+           CIRC   => False,    --  0: Circular mode disabled
+           PINC   => False,    --  0: Peripheral address pointer is fixed
+           MINC   => True,
+           --  1: Memory address pointer is incremented after each data
+           --  transfer (increment is done according to MSIZE)
+           PSIZE  => 2#00#,    --  00: Byte (8-bit)
+           MSIZE  => 2#00#,    --  00: Byte (8-bit)
+           PL     => 2#10#,    --  10: High
+           DBM    => False,
+           --  0: No buffer switching at the end of transfer
+           PBURST => 2#00#,    --  00: single transfer
+           MBURST => 2#00#,    --  00: single transfer
+           CHSEL  => 2#011#);  --  011: channel 3 selected
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3PAR :=
+        A0B.Types.Unsigned_32
+          (System.Storage_Elements.To_Integer
+             (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR'Address));
 
       --  Minimal configuration of SPI:
       --   * disable SPI
@@ -158,19 +190,30 @@ package body Nu_Pogodi.Hardware.SPI is
    --------------
 
    procedure Transmit (Buffer : A0B.Buffers.Abstract_Buffer'Class) is
-      Data : constant A0B.Types.Arrays.Unsigned_8_Array
-        (1 .. A0B.Types.Unsigned_32 (Buffer.Length))
-        with Import, Address => Buffer.Address;
-
    begin
-      for Item of Data loop
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
-           (DR             => A0B.Types.Unsigned_16 (Item),
-            Reserved_16_31 => 0);
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
+        A0B.Types.Unsigned_32
+          (System.Storage_Elements.To_Integer (Buffer.Address));
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
+        (NDT            => A0B.Types.Unsigned_16 (Buffer.Length),
+         Reserved_16_31 => 0);
 
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-            null;
-         end loop;
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+        (CFEIF3  => True,
+         CDMEIF3 => True,
+         CTEIF3  => True,
+         CHTIF3  => True,
+         CTCIF3  => True,
+         others  => <>);
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR.EN := True;
+
+      while not A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF3 loop
+         null;
+      end loop;
+
+      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+         null;
       end loop;
 
       while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
