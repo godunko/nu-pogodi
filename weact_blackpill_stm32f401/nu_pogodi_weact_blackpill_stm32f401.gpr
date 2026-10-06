@@ -18,7 +18,8 @@ project Nu_Pogodi_WeAct_BlackPill_STM32F401 is
    for Source_Dirs use ("source");
 
    package Compiler is
-      for Switches ("Ada") use Nu_Pogodi_Weact_Blackpill_Stm32f401_Config.Ada_Compiler_Switches;
+      for Switches ("Ada") use Nu_Pogodi_Weact_Blackpill_Stm32f401_Config.Ada_Compiler_Switches &
+        ("-gnatyo");  --  check subprogram bodies in alphabetical order
    end Compiler;
 
    package Builder is
