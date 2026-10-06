@@ -42,6 +42,8 @@ private
 
    type Score is mod 1_000;
 
+   subtype Score_Digit is Score range 0 .. 9;
+
    type Game_State is record
       Current_Tick  : A0B.Types.Unsigned_32 := 0;
       Cycle_Ticks   : A0B.Types.Unsigned_32 := 31;
@@ -57,6 +59,13 @@ private
    Lanes             : Game_Lanes    :=
      [others => [others => [others => False]]];
    Active_Eggs_Count : Natural := 0;
+
+   function Ones (Value : Score) return Score_Digit is (Value mod 10);
+
+   function Tens (Value : Score) return Score_Digit is ((Value / 10) mod 10);
+
+   function Hundreds (Value : Score) return Score_Digit is
+     ((Value / 100) mod 10);
 
    --  Misses                : Miss_Score    := 0.0;
    --  Game_Over             : Boolean       := False;

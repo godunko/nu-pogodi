@@ -45,8 +45,6 @@ package body Nu_Pogodi.Scene.Drawing is
 
    type Segments_State is array (Indicator_Segment) of Boolean;
 
-   subtype Score_Digit is Score range 0 .. 9;
-
    Digit_Segments : constant array (Score_Digit) of Segments_State :=
      [0 =>
         [Top          => True,
@@ -223,11 +221,11 @@ package body Nu_Pogodi.Scene.Drawing is
       Draw_Digit (State.Current_Score mod 10, Indicator_0);
 
       if (State.Current_Score / 10) /= 0 then
-         Draw_Digit (State.Current_Score / 10 mod 10, Indicator_1);
+         Draw_Digit (Tens (State.Current_Score), Indicator_1);
       end if;
 
       if (State.Current_Score / 100) /= 0 then
-         Draw_Digit (State.Current_Score / 100 mod 10, Indicator_2);
+         Draw_Digit (Hundreds (State.Current_Score), Indicator_2);
       end if;
 
       --  Nu_Pogodi.Bitmaps.Reconstruct (Framebuffer);

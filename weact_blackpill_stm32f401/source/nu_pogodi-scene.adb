@@ -385,28 +385,6 @@ package body Nu_Pogodi.Scene is
 
       use type A0B.Types.Unsigned_32;
 
-      function Hundreds (Value : Score) return Score;
-
-      function Tens (Value : Score) return Score;
-
-      --------------
-      -- Hundreds --
-      --------------
-
-      function Hundreds (Value : Score) return Score is
-      begin
-         return (Value / 100) mod 10;
-      end Hundreds;
-
-      ----------
-      -- Tens --
-      ----------
-
-      function Tens (Value : Score) return Score is
-      begin
-         return (Value / 10) mod 10;
-      end Tens;
-
       Previous_Score : constant Score := State.Current_Score;
 
    begin
