@@ -7,8 +7,10 @@
 pragma Ada_2022;
 
 with A0B.ARMv7M.Instructions;
+with A0B.Awaits;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time.Clock;
+with A0B.Timer;
 with A0B.Buffers.Static;
 with A0B.Types.Arrays;
 
@@ -20,6 +22,11 @@ with Nu_Pogodi.Scene.Drawing;
 package body Nu_Pogodi.Application is
 
    use type A0B.Time.Monotonic_Time;
+
+   Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (300);
+   --  XXX For transition, fix tick to be a bit larger that display update
+   --  Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (20);
+   --  Duration of physics update tick, running @50Hz
 
    --  procedure On_SSD1683_Reset;
    --
@@ -50,6 +57,8 @@ package body Nu_Pogodi.Application is
 
    package On_Display_Updated_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Display_Updated);
+
+   procedure Delay_Until (Time : A0B.Time.Monotonic_Time);
 
    procedure Full_Clean;
 
@@ -176,6 +185,20 @@ package body Nu_Pogodi.Application is
    --     raise Program_Error;
    --  end On_MA;
 
+   -----------------
+   -- Delay_Until --
+   -----------------
+
+   procedure Delay_Until (Time : A0B.Time.Monotonic_Time) is
+      Timeout : aliased A0B.Timer.Timeout_Control_Block;
+      Await   : aliased A0B.Awaits.Await;
+      Success : Boolean := True;
+
+   begin
+      A0B.Timer.Enqueue (Timeout, A0B.Awaits.Create_Callback (Await), Time);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Delay_Until;
+
    ----------------
    -- Full_Clean --
    ----------------
@@ -286,6 +309,7 @@ package body Nu_Pogodi.Application is
    ---------
 
    procedure Run is
+      Next    : A0B.Time.Monotonic_Time;
       Success : Boolean := True;
 
    begin
@@ -346,6 +370,8 @@ package body Nu_Pogodi.Application is
 
       Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
 
+      Next := A0B.Time.Clock;
+
       loop
          exit when Cycle > Span'Last;
 
@@ -354,6 +380,9 @@ package body Nu_Pogodi.Application is
            (Pixel_Buffer (Cycle mod 2),
             Pixel_Buffer ((Cycle - 1) mod 2),
             Success);
+
+         Next := @ + Tick_Duration;
+         Delay_Until (Next);
       end loop;
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
