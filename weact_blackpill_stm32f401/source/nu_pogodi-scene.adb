@@ -285,7 +285,7 @@ package body Nu_Pogodi.Scene is
          State.Cycle_Ticks := Cycle_Ticks;
          State.Current_Lane := Current_Lane;
 
-         State.Remain_Ticks := State.Cycle_Ticks - 1;
+         State.Remain_Ticks := State.Cycle_Ticks;
       end;
    end Initialize;
 
@@ -457,7 +457,7 @@ package body Nu_Pogodi.Scene is
 
       --  Handle_Autonomic_Generation;
 
-      State.Remain_Ticks := State.Cycle_Ticks - 1;
+      State.Remain_Ticks := State.Cycle_Ticks;
       Refresh := True;
    end Update_Physics_Tick;
 
