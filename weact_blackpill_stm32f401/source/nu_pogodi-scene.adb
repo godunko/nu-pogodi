@@ -6,14 +6,13 @@
 
 pragma Ada_2022;
 
---  with A0B.Time.Clock;
+with Nu_Pogodi.Hardware.RTC;
 
 package body Nu_Pogodi.Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height;
-      Done   : in out Natural);
+      Height : Lane_Height);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -27,6 +26,8 @@ package body Nu_Pogodi.Scene is
    package Random_Generator is
 
       function Generate return Boolean;
+
+      function Generate return A0B.Types.Unsigned_32;
 
       procedure Update;
 
@@ -177,14 +178,15 @@ package body Nu_Pogodi.Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height;
-      Done   : in out Natural)
+      Height : Lane_Height)
    --     State        : in out Game_State;
    --     Lane         : in out Egg_Array;
    --     Lane_S       : Lane_Side;
    --     Lane_H       : Lane_Height
      --  ) is
    is
+      use type A0B.Types.Unsigned_32;
+
       Lane : Egg_Array renames Lanes (Side, Height);
 
    --     Penalty_Increment : Float := 1.0;
@@ -224,7 +226,7 @@ package body Nu_Pogodi.Scene is
          Lane (Step) := Lane (Step - 1);
       end loop;
 
-      if Random_Generator.Generate then
+      if Random_Generator.Generate or Active_Eggs_Count = 0 then
          Lane (Lane'First) := True;
          Active_Eggs_Count := @ + 1;
 
@@ -233,10 +235,10 @@ package body Nu_Pogodi.Scene is
       end if;
 
       if (for some Step in Egg_Step => Lane (Step)) then
-         Done := 0;
+         State.Idle_Lane_Count := 0;
 
       else
-         Done := @ - 1;
+         State.Idle_Lane_Count := @ + 1;
       end if;
    end Advance_Lane;
 
@@ -245,19 +247,42 @@ package body Nu_Pogodi.Scene is
    ----------------
 
    procedure Initialize (Mode : Game_Mode) is
+      use type A0B.Types.Unsigned_32;
+
    begin
       State :=
-        (Current_Tick  => 0,
-         Cycle_Ticks   => (case Mode is when Mode_A => 31, when Mode_B => 25),
-         Remain_Ticks  => (case Mode is when Mode_A => 31, when Mode_B => 25),
-         Current_Score => 0,
-         Current_Lane  => Left_Top,
-         Random_Seed   => 0);
+        (Current_Tick    => 0,
+         Cycle_Ticks     => <>,
+         Remain_Ticks    => <>,
+         Current_Score   => 0,
+         Current_Lane    => <>,
+         Random_Seed     => 0,
+         Idle_Lane_Count => 0);
 
       Scene.Mode        := Mode;
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
+
+      --  Some initial values requires calculations based on the game state
+
+      declare
+         Cycle_Ticks  : constant A0B.Types.Unsigned_32 :=
+           (case Mode is when Mode_A => 31, when Mode_B => 25);
+         Current_Lane : constant Lane :=
+           (case Random_Generator.Generate mod 4 is
+               when 0      => Left_Top,
+               when 1      => Right_Top,
+               when 2      => Left_Bottom,
+               when 3      => Right_Bottom,
+               when others => raise Program_Error);
+
+      begin
+         State.Cycle_Ticks := Cycle_Ticks;
+         State.Current_Lane := Current_Lane;
+
+         State.Current_Tick := State.Cycle_Ticks;
+      end;
    end Initialize;
 
    ----------
@@ -280,6 +305,7 @@ package body Nu_Pogodi.Scene is
 
    package body Random_Generator is
 
+      Number_Value  : A0B.Types.Unsigned_32;
       Boolean_Value : Boolean;
 
       --------------
@@ -293,6 +319,17 @@ package body Nu_Pogodi.Scene is
          return Boolean_Value;
       end Generate;
 
+      --------------
+      -- Generate --
+      --------------
+
+      function Generate return A0B.Types.Unsigned_32 is
+      begin
+         Update;
+
+         return Number_Value;
+      end Generate;
+
       ------------
       -- Update --
       ------------
@@ -300,9 +337,25 @@ package body Nu_Pogodi.Scene is
       procedure Update is
          use type A0B.Types.Unsigned_32;
 
+         Time : constant Nu_Pogodi.Hardware.RTC.Time :=
+           Nu_Pogodi.Hardware.RTC.Clock;
+
       begin
+         Number_Value :=
+           (A0B.Types.Unsigned_32 (Time.Seconds_Ones)
+            + A0B.Types.Unsigned_32 (Time.Seconds_Tens)
+            + A0B.Types.Unsigned_32 (Time.Minutes_Ones)
+            + A0B.Types.Unsigned_32 (Time.Minutes_Tens)
+            + A0B.Types.Unsigned_32 (Time.Hours_Ones)
+            + A0B.Types.Unsigned_32 (Time.Hours_Tens)
+            + State.Idle_Lane_Count
+            + A0B.Types.Unsigned_32 (Hundreds (Records.A))
+            + A0B.Types.Unsigned_32 (Tens (Records.A))
+            + A0B.Types.Unsigned_32 (Ones (Records.A))
+            + State.Random_Seed) mod 16;
+
          --  Algorithm for generating a pseudo-random Boolean value generates
-         --  at most two consecutive `False` values sequentially. This is
+         --  at most two consecutive `False` values sequentially. This fact is
          --  used to limit number of iterations in the game loop.
 
          State.Random_Seed := @ + 6;
@@ -326,12 +379,6 @@ package body Nu_Pogodi.Scene is
    procedure Update_Physics_Tick (Refresh : out Boolean) is
       use type A0B.Types.Unsigned_32;
 
-      Done : Natural := 3;
-      --  Number of lanes to try to process in this tick.
-      --
-      --  This value corresponds to random number generator, which can
-      --  generate at most to `False` sequentially.
-
    begin
       State.Current_Tick := @ + 1;
       State.Remain_Ticks := @ - 1;
@@ -342,50 +389,59 @@ package body Nu_Pogodi.Scene is
          return;
       end if;
 
-      case Wolf.Side is
-         when Left =>
-            case Wolf.Height is
-               when Top =>
-                  Wolf := (Left, Bottom);
+      for Side in Lane_Side loop
+         for Height in Lane_Height loop
+            if Lanes (Side, Height) (Egg_Step'Last) then
+               Wolf := (Side, Height);
+               Random_Generator.Update;
+            end if;
+         end loop;
+      end loop;
 
-               when Bottom =>
-                  Wolf := (Right, Top);
-            end case;
-
-         when Right =>
-            case Wolf.Height is
-               when Top =>
-                  Wolf := (Right, Bottom);
-
-               when Bottom =>
-                  Wolf := (Left, Top);
-            end case;
-      end case;
+      --  case Wolf.Side is
+      --     when Left =>
+      --        case Wolf.Height is
+      --           when Top =>
+      --              Wolf := (Left, Bottom);
+      --
+      --           when Bottom =>
+      --              Wolf := (Right, Top);
+      --        end case;
+      --
+      --     when Right =>
+      --        case Wolf.Height is
+      --           when Top =>
+      --              Wolf := (Right, Bottom);
+      --
+      --           when Bottom =>
+      --              Wolf := (Left, Top);
+      --        end case;
+      --  end case;
 
    --     if State.Game_Over then
    --        return;
    --     end if;
 
-      loop
-         --  Advance active items down their tracks
+      State.Idle_Lane_Count := 0;
 
+      loop
          case State.Current_Lane is
             when Left_Top =>
-               Advance_Lane (Left, Top, Done);
+               Advance_Lane (Left, Top);
 
             when Right_Top =>
-               Advance_Lane (Right, Top, Done);
+               Advance_Lane (Right, Top);
 
             when Left_Bottom =>
-               Advance_Lane (Left, Bottom, Done);
+               Advance_Lane (Left, Bottom);
 
             when Right_Bottom =>
-               Advance_Lane (Right, Bottom, Done);
+               Advance_Lane (Right, Bottom);
          end case;
 
          Next (State.Current_Lane);
 
-         exit when Done = 0;
+         exit when State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
       end loop;
 
       Update_Score;

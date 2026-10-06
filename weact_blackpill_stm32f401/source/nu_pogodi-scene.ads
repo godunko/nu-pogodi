@@ -42,12 +42,13 @@ private
    subtype Score_Digit is Score range 0 .. 9;
 
    type Game_State is record
-      Current_Tick  : A0B.Types.Unsigned_32 := 0;
-      Cycle_Ticks   : A0B.Types.Unsigned_32 := 31;
-      Remain_Ticks  : A0B.Types.Unsigned_32 := 31;
-      Current_Lane  : Lane                  := Left_Top;
-      Current_Score : Score                 := 0;
-      Random_Seed   : A0B.Types.Unsigned_32 := 0;
+      Current_Tick    : A0B.Types.Unsigned_32 := 0;
+      Cycle_Ticks     : A0B.Types.Unsigned_32 := 31;
+      Remain_Ticks    : A0B.Types.Unsigned_32 := 31;
+      Current_Lane    : Lane                  := Left_Top;
+      Current_Score   : Score                 := 0;
+      Random_Seed     : A0B.Types.Unsigned_32 := 0;
+      Idle_Lane_Count : A0B.Types.Unsigned_32 := 0;
    end record;
 
    type Game_Records is record
