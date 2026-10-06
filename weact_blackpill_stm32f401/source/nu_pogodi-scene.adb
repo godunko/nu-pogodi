@@ -227,7 +227,7 @@ package body Nu_Pogodi.Scene is
       end loop;
 
       if State.Active_Eggs_Count < State.Eggs_Count_Limit
-        --  and then not Lane (Lane'First) ???
+        and then not Lane (Lane'First)
         and then (Random_Generator.Generate or State.Active_Eggs_Count = 0)
       then
          Lane (Lane'First) := True;
