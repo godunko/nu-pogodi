@@ -6,6 +6,7 @@
 
 pragma Ada_2022;
 
+with A0B.ARMv7M.NVIC_Utilities;
 with System.Storage_Elements;
 
 with A0B.STM32F401.SVD.DMA;
@@ -15,6 +16,11 @@ with A0B.STM32F401.SVD.SPI;
 with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SPI is
+
+   procedure DMA2_Stream3_Handler
+     with Export, Convention => C, External_Name => "DMA2_Stream3_Handler";
+
+   Transmit_Callback : A0B.Callbacks.Callback;
 
    -----------------------
    -- Acquire_MIPI_Read --
@@ -66,6 +72,33 @@ package body Nu_Pogodi.Hardware.SPI is
            FRF => False);  --  0: SPI Motorola mode
    end Acquire_MIPI_Write;
 
+   --------------------------
+   -- DMA2_Stream3_Handler --
+   --------------------------
+
+   procedure DMA2_Stream3_Handler is
+   begin
+      if A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF3 then
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CTCIF3 => True, others => <>);
+
+         --  Sequence below is necessary to complete data transfer from the
+         --  shift register.
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         --  Now transfer is completed, emit callback.
+
+         A0B.Callbacks.Emit_Once (Transmit_Callback);
+      end if;
+   end DMA2_Stream3_Handler;
+
    ----------------
    -- Initialize --
    ----------------
@@ -83,7 +116,7 @@ package body Nu_Pogodi.Hardware.SPI is
            DMEIE  => False,    --  0: DME interrupt disabled
            TEIE   => False,    --  0: TE interrupt disabled
            HTIE   => False,    --  0: HT interrupt disabled
-           TCIE   => False,    --  0: TC interrupt disabled
+           TCIE   => True,     --  0: TC interrupt enabled
            PFCTRL => False,    --  0: The DMA is the flow controller
            DIR    => 2#01#,    --  01: Memory-to-peripheral
            CIRC   => False,    --  0: Circular mode disabled
@@ -127,6 +160,11 @@ package body Nu_Pogodi.Hardware.SPI is
            RXDMAEN => False);
 
       Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_Pins;
+
+      --  Configure NVIC
+
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.DMA2_Stream3);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.DMA2_Stream3);
    end Initialize;
 
    -------------
@@ -189,8 +227,17 @@ package body Nu_Pogodi.Hardware.SPI is
    -- Transmit --
    --------------
 
-   procedure Transmit (Buffer : A0B.Buffers.Abstract_Buffer'Class) is
+   procedure Transmit
+     (Buffer   : A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
    begin
+      if not Success then
+         return;
+      end if;
+
+      Transmit_Callback := Callback;
+
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
         A0B.Types.Unsigned_32
           (System.Storage_Elements.To_Integer (Buffer.Address));
@@ -207,18 +254,6 @@ package body Nu_Pogodi.Hardware.SPI is
          CTCIF3  => True,
          others  => <>);
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR.EN := True;
-
-      while not A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF3 loop
-         null;
-      end loop;
-
-      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-         null;
-      end loop;
-
-      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-         null;
-      end loop;
    end Transmit;
 
 end Nu_Pogodi.Hardware.SPI;
