@@ -23,8 +23,8 @@ package body Nu_Pogodi.Application is
 
    use type A0B.Time.Monotonic_Time;
 
-   Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (20);
-   --  Duration of physics update tick, running @50Hz
+   Tick_Duration : constant A0B.Time.Duration := 0.031_25;
+   --  Duration of physics update tick, running @32Hz
 
    procedure On_Display_Updated;
 
