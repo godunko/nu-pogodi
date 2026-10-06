@@ -428,6 +428,20 @@ package body Nu_Pogodi.Scene is
             State.Cycle_Ticks := 9;
          end if;
       end if;
+
+      --  Update score records
+
+      case Mode is
+         when Mode_A =>
+            if State.Current_Score > Records.A then
+               Records.A := State.Current_Score;
+            end if;
+
+         when Mode_B =>
+            if State.Current_Score > Records.B then
+               Records.B := State.Current_Score;
+            end if;
+      end case;
    end Update_Score;
 
 end Nu_Pogodi.Scene;

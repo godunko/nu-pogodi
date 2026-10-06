@@ -50,7 +50,13 @@ private
       Random_Seed   : A0B.Types.Unsigned_32 := 0;
    end record;
 
-   State : Game_State;
+   type Game_Records is record
+      A : Score := 0;
+      B : Score := 0;
+   end record;
+
+   State   : Game_State;
+   Records : Game_Records;
 
    Mode              : Game_Mode     := Mode_A;
    Wolf              : Wolf_Position := (Side => Left, Height => Top);
