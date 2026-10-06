@@ -6,7 +6,7 @@
 
 pragma Ada_2022;
 
-with A0B.Time.Clock;
+--  with A0B.Time.Clock;
 
 package body Nu_Pogodi.Scene is
 
@@ -24,15 +24,14 @@ package body Nu_Pogodi.Scene is
    procedure Update_Score;
    --  Increment score, update game speed.
 
-   --  --------------------------------------------------------------------------
-   --  -- Private Helper: Pure, deterministic LCG for embedded random logic
-   --  --------------------------------------------------------------------------
-   --  function Pseudo_Random (Seed : Natural) return Natural is
-   --  begin
-   --     -- Standard numeric constants for linear congruential generation
-   --     return (Seed * 1103515245 + 12345) mod 2147483648;
-   --  end Pseudo_Random;
-   --
+   package Random_Generator is
+
+      function Generate return Boolean;
+
+      procedure Update;
+
+   end Random_Generator;
+
    --  --------------------------------------------------------------------------
    --  -- Sets initial state defaults per game mode
    --  --------------------------------------------------------------------------
@@ -93,22 +92,6 @@ package body Nu_Pogodi.Scene is
    --           end if;
    --     end case;
    --  end Spawn_Egg_In_Lane;
-
-   --------------
-   -- Generate --
-   --------------
-
-   function Generate return Natural is
-      use type A0B.Types.Unsigned_64;
-
-      Seed : constant A0B.Types.Unsigned_64 :=
-        A0B.Time.To_Nanoseconds (A0B.Time.Clock) / 3_000;
-
-   begin
-      --  Standard numeric constants for linear congruential generation
-
-      return Natural ((Seed * 1103515245 + 12345) mod 2147483648);
-   end Generate;
 
    --  --------------------------------------------------------------------------
    --  -- Private Helper: Evaluates autonomic egg spawning thresholds
@@ -237,11 +220,17 @@ package body Nu_Pogodi.Scene is
 
       --  Move eggs down in lane
 
-      for Step in reverse Egg_Step loop
+      for Step in reverse Egg_Step'First + 1 .. Egg_Step'Last loop
          Lane (Step) := Lane (Step - 1);
       end loop;
 
-      Lane (Lane'First) := False;
+      if Random_Generator.Generate then
+         Lane (Lane'First) := True;
+         Active_Eggs_Count := @ + 1;
+
+      else
+         Lane (Lane'First) := False;
+      end if;
 
       if (for some Step in Egg_Step => Lane (Step)) then
          Done := 0;
@@ -262,17 +251,13 @@ package body Nu_Pogodi.Scene is
          Cycle_Ticks   => (case Mode is when Mode_A => 31, when Mode_B => 25),
          Remain_Ticks  => (case Mode is when Mode_A => 31, when Mode_B => 25),
          Current_Score => 0,
-         Current_Lane  => Left_Top);
+         Current_Lane  => Left_Top,
+         Random_Seed   => 0);
 
       Scene.Mode        := Mode;
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
-
-      --  Spawn_Egg (Left, Top);
-      Spawn_Egg (Right, Top);
-      --  Spawn_Egg (Left, Bottom);
-      Spawn_Egg (Right, Bottom);
    end Initialize;
 
    ----------
@@ -289,15 +274,50 @@ package body Nu_Pogodi.Scene is
             when Right_Bottom => Left_Top);
    end Next;
 
-   ---------------
-   -- Spawn_Egg --
-   ---------------
+   ----------------------
+   -- Random_Generator --
+   ----------------------
 
-   procedure Spawn_Egg (Side : Lane_Side; Height : Lane_Height) is
-   begin
-      Lanes (Side, Height) (Egg_Array'First) := True;
-      Active_Eggs_Count                      := @ + 1;
-   end Spawn_Egg;
+   package body Random_Generator is
+
+      Boolean_Value : Boolean;
+
+      --------------
+      -- Generate --
+      --------------
+
+      function Generate return Boolean is
+      begin
+         Update;
+
+         return Boolean_Value;
+      end Generate;
+
+      ------------
+      -- Update --
+      ------------
+
+      procedure Update is
+         use type A0B.Types.Unsigned_32;
+
+      begin
+         --  Algorithm for generating a pseudo-random Boolean value generates
+         --  at most two consecutive `False` values sequentially. This is
+         --  used to limit number of iterations in the game loop.
+
+         State.Random_Seed := @ + 6;
+
+         if State.Random_Seed >= 16 then
+            State.Random_Seed := @ mod 16;
+
+            Boolean_Value := True;
+
+         else
+            Boolean_Value := False;
+         end if;
+      end Update;
+
+   end Random_Generator;
 
    -------------------------
    -- Update_Physics_Tick --
@@ -306,7 +326,11 @@ package body Nu_Pogodi.Scene is
    procedure Update_Physics_Tick (Refresh : out Boolean) is
       use type A0B.Types.Unsigned_32;
 
-      Done : Natural := Lane'Pos (Lane'Last) - Lane'Pos (Lane'First);
+      Done : Natural := 3;
+      --  Number of lanes to try to process in this tick.
+      --
+      --  This value corresponds to random number generator, which can
+      --  generate at most to `False` sequentially.
 
    begin
       State.Current_Tick := @ + 1;

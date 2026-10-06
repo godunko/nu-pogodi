@@ -20,10 +20,9 @@ package Nu_Pogodi.Scene is
       Height : Lane_Height;
    end record;
 
-   type Internal_Egg_Step is range 0 .. 5;
-   subtype Egg_Step is Internal_Egg_Step range 1 .. 5;
+   type Egg_Step is range 1 .. 5;
 
-   type Egg_Array is array (Internal_Egg_Step) of Boolean;
+   type Egg_Array is array (Egg_Step) of Boolean;
 
    type Game_Lanes is array (Lane_Side, Lane_Height) of Egg_Array;
 
@@ -35,8 +34,6 @@ package Nu_Pogodi.Scene is
    procedure Initialize (Mode : Game_Mode);
 
    procedure Update_Physics_Tick (Refresh : out Boolean);
-
-   procedure Spawn_Egg (Side : Lane_Side; Height : Lane_Height);
 
 private
 
@@ -50,6 +47,7 @@ private
       Remain_Ticks  : A0B.Types.Unsigned_32 := 31;
       Current_Lane  : Lane                  := Left_Top;
       Current_Score : Score                 := 0;
+      Random_Seed   : A0B.Types.Unsigned_32 := 0;
    end record;
 
    State : Game_State;
