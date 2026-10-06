@@ -40,16 +40,19 @@ package Nu_Pogodi.Scene is
 
 private
 
+   type Score is mod 1_000;
+
    type Game_State is record
-      Current_Tick : A0B.Types.Unsigned_32 := 0;
-      Remain_Ticks : A0B.Types.Unsigned_32 := 31;
-      Current_Lane : Lane                  := Left_Top;
+      Current_Tick  : A0B.Types.Unsigned_32 := 0;
+      Cycle_Ticks   : A0B.Types.Unsigned_32 := 31;
+      Remain_Ticks  : A0B.Types.Unsigned_32 := 31;
+      Current_Lane  : Lane                  := Left_Top;
+      Current_Score : Score                 := 0;
    end record;
 
    State : Game_State;
 
    Mode              : Game_Mode     := Mode_A;
-   Score             : Natural       := 0;
    Wolf              : Wolf_Position := (Side => Left, Height => Top);
    Lanes             : Game_Lanes    :=
      [others => [others => [others => False]]];

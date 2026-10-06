@@ -17,8 +17,12 @@ package body Nu_Pogodi.Scene is
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
+   --  Select next lane circulary.
 
-   function Generate return Natural;
+   --  function Generate return Natural;
+
+   procedure Update_Score;
+   --  Increment score, update game speed.
 
    --  --------------------------------------------------------------------------
    --  -- Private Helper: Pure, deterministic LCG for embedded random logic
@@ -109,60 +113,60 @@ package body Nu_Pogodi.Scene is
    --  --------------------------------------------------------------------------
    --  -- Private Helper: Evaluates autonomic egg spawning thresholds
    --  --------------------------------------------------------------------------
-   procedure Handle_Autonomic_Generation is
-      Random_Value      : Natural;
-      Max_Eggs          : Natural;
-      Spawn_Probability : Natural; -- Out of 100
-
-   begin
-      --  Establish operational constraints based on game rulesets
-
-      if Mode = Mode_A then
-         Max_Eggs          :=
-           (if Score < 100
-            then 2
-            else (if Score < 500 then 3 else 4));
-         Spawn_Probability := (if Score < 200 then 30 else 45);
-
-      else
-         --  Mode B enforces heavier pressure immediately
-
-         Max_Eggs          := (if Score < 200 then 3 else 4);
-         Spawn_Probability := (if Score < 200 then 50 else 65);
-      end if;
-
-      if Active_Eggs_Count < Max_Eggs then
-         Random_Value := Generate;
-         --  Random_Value := Pseudo_Random (Total_Ticks + Score);
-
-         if (Random_Value mod 100) < Spawn_Probability then
-            --  Choose lane based on next random iteration
-
-            declare
-               Lane_Choice : constant Natural := Generate;
-   --              Lane_Choice : Natural := Pseudo_Random(Rand_Val);
-             --  Simpson : Integer;
-            begin
-               case Lane_Choice mod 4 is
-                  when 0      => Spawn_Egg (Left, Top);
-                  when 1      => Spawn_Egg (Right, Top);
-                  when 2      => Spawn_Egg (Left, Bottom);
-                  when 3      => Spawn_Egg (Right, Bottom);
-                  when others => raise Program_Error;
-               end case;
-
-   --              Spawn_Egg_In_Lane(State, Lane_Choice);
+   --  procedure Handle_Autonomic_Generation is
+   --     Random_Value      : Natural;
+   --     Max_Eggs          : Natural;
+   --     Spawn_Probability : Natural; -- Out of 100
    --
-   --              -- Mode B rules: Chance to immediately trigger a concurrent double spawn
-   --              if State.Mode = Mode_B and then State.Active_Eggs_Count < Max_Eggs then
-   --                 if (Pseudo_Random(Lane_Choice) mod 100) < 30 then
-   --                    Spawn_Egg_In_Lane(State, Lane_Choice + 1);
-   --                 end if;
-   --              end if;
-            end;
-         end if;
-      end if;
-   end Handle_Autonomic_Generation;
+   --  begin
+   --     --  Establish operational constraints based on game rulesets
+   --
+   --     if Mode = Mode_A then
+   --        Max_Eggs          :=
+   --          (if Score < 100
+   --           then 2
+   --           else (if Score < 500 then 3 else 4));
+   --        Spawn_Probability := (if Score < 200 then 30 else 45);
+   --
+   --     else
+   --        --  Mode B enforces heavier pressure immediately
+   --
+   --        Max_Eggs          := (if Score < 200 then 3 else 4);
+   --        Spawn_Probability := (if Score < 200 then 50 else 65);
+   --     end if;
+   --
+   --     if Active_Eggs_Count < Max_Eggs then
+   --        Random_Value := Generate;
+   --        --  Random_Value := Pseudo_Random (Total_Ticks + Score);
+   --
+   --        if (Random_Value mod 100) < Spawn_Probability then
+   --           --  Choose lane based on next random iteration
+   --
+   --           declare
+   --              Lane_Choice : constant Natural := Generate;
+   --  --              Lane_Choice : Natural := Pseudo_Random(Rand_Val);
+   --            --  Simpson : Integer;
+   --           begin
+   --              case Lane_Choice mod 4 is
+   --                 when 0      => Spawn_Egg (Left, Top);
+   --                 when 1      => Spawn_Egg (Right, Top);
+   --                 when 2      => Spawn_Egg (Left, Bottom);
+   --                 when 3      => Spawn_Egg (Right, Bottom);
+   --                 when others => raise Program_Error;
+   --              end case;
+   --
+   --  --              Spawn_Egg_In_Lane(State, Lane_Choice);
+   --  --
+   --  --              -- Mode B rules: Chance to immediately trigger a concurrent double spawn
+   --  --              if State.Mode = Mode_B and then State.Active_Eggs_Count < Max_Eggs then
+   --  --                 if (Pseudo_Random(Lane_Choice) mod 100) < 30 then
+   --  --                    Spawn_Egg_In_Lane(State, Lane_Choice + 1);
+   --  --                 end if;
+   --  --              end if;
+   --           end;
+   --        end if;
+   --     end if;
+   --  end Handle_Autonomic_Generation;
 
    --  --------------------------------------------------------------------------
    --  -- Updates Wolf Placement
@@ -205,7 +209,7 @@ package body Nu_Pogodi.Scene is
       if Lane (Lane'Last) then
    --        if State.Wolf.Side = Lane_S and State.Wolf.Height = Lane_H then
    --           -- Successful Capture
-            Score := Score + 1;
+            --  Score := Score + 1;
    --           if State.Score > 999 then
    --              State.Score := 0;
    --           end if;
@@ -254,12 +258,13 @@ package body Nu_Pogodi.Scene is
    procedure Initialize (Mode : Game_Mode) is
    begin
       State :=
-        (Current_Tick => 0,
-         Remain_Ticks => (case Mode is when Mode_A => 31, when Mode_B => 25),
-         Current_Lane => Left_Top);
+        (Current_Tick  => 0,
+         Cycle_Ticks   => (case Mode is when Mode_A => 31, when Mode_B => 25),
+         Remain_Ticks  => (case Mode is when Mode_A => 31, when Mode_B => 25),
+         Current_Score => 0,
+         Current_Lane  => Left_Top);
 
       Scene.Mode        := Mode;
-      Score             := 0;
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
@@ -359,6 +364,8 @@ package body Nu_Pogodi.Scene is
          exit when Done = 0;
       end loop;
 
+      Update_Score;
+
    --     -- 2. Increment global cycle timeline
    --     State.Total_Ticks := State.Total_Ticks + 1;
 
@@ -366,8 +373,59 @@ package body Nu_Pogodi.Scene is
 
       --  Handle_Autonomic_Generation;
 
-      State.Remain_Ticks := 31;
+      State.Remain_Ticks := State.Cycle_Ticks;
       Refresh := True;
    end Update_Physics_Tick;
+
+   ------------------
+   -- Update_Score --
+   ------------------
+
+   procedure Update_Score is
+
+      use type A0B.Types.Unsigned_32;
+
+      function Hundreds (Value : Score) return Score;
+
+      function Tens (Value : Score) return Score;
+
+      --------------
+      -- Hundreds --
+      --------------
+
+      function Hundreds (Value : Score) return Score is
+      begin
+         return (Value / 100) mod 10;
+      end Hundreds;
+
+      ----------
+      -- Tens --
+      ----------
+
+      function Tens (Value : Score) return Score is
+      begin
+         return (Value / 10) mod 10;
+      end Tens;
+
+      Previous_Score : constant Score := State.Current_Score;
+
+   begin
+      State.Current_Score := @ + 1;
+
+      if Hundreds (Previous_Score) /= Hundreds (State.Current_Score) then
+         if Hundreds (State.Current_Score) /= 9 then
+            State.Cycle_Ticks := @ + 7;
+         end if;
+
+      elsif Tens (Previous_Score) /= Tens (State.Current_Score) then
+         State.Cycle_Ticks := @ - 1;
+
+         if State.Cycle_Ticks < 9 then  --  7 in original code
+            --  XXX Should be configurable !!!
+
+            State.Cycle_Ticks := 9;
+         end if;
+      end if;
+   end Update_Score;
 
 end Nu_Pogodi.Scene;
