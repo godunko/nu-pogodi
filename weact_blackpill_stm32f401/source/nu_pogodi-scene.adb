@@ -12,7 +12,8 @@ package body Nu_Pogodi.Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height);
+      Height : Lane_Height;
+      Done   : in out Boolean);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -189,7 +190,8 @@ package body Nu_Pogodi.Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height)
+      Height : Lane_Height;
+      Done   : in out Boolean)
    --     State        : in out Game_State;
    --     Lane         : in out Egg_Array;
    --     Lane_S       : Lane_Side;
@@ -236,6 +238,8 @@ package body Nu_Pogodi.Scene is
       end loop;
 
       Lane (Lane'First) := False;
+
+      Done := (for some Step in Egg_Step => Lane (Step));
    end Advance_Lane;
 
    ----------------
@@ -246,7 +250,7 @@ package body Nu_Pogodi.Scene is
    begin
       State :=
         (Current_Tick => 0,
-         Remain_Ticks => 31,
+         Remain_Ticks => (case Mode is when Mode_A => 31, when Mode_B => 25),
          Current_Lane => Left_Top);
 
       Scene.Mode        := Mode;
@@ -255,9 +259,9 @@ package body Nu_Pogodi.Scene is
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
 
-      Spawn_Egg (Left, Top);
+      --  Spawn_Egg (Left, Top);
       Spawn_Egg (Right, Top);
-      Spawn_Egg (Left, Bottom);
+      --  Spawn_Egg (Left, Bottom);
       Spawn_Egg (Right, Bottom);
    end Initialize;
 
@@ -291,6 +295,8 @@ package body Nu_Pogodi.Scene is
 
    procedure Update_Physics_Tick (Refresh : out Boolean) is
       use type A0B.Types.Unsigned_32;
+
+      Done : Boolean := False;
 
    begin
       State.Current_Tick := @ + 1;
@@ -326,23 +332,27 @@ package body Nu_Pogodi.Scene is
    --        return;
    --     end if;
 
-      --  Advance active items down their tracks
+      loop
+         --  Advance active items down their tracks
 
-      case State.Current_Lane is
-         when Left_Top =>
-            Advance_Lane (Left, Top);
+         case State.Current_Lane is
+            when Left_Top =>
+               Advance_Lane (Left, Top, Done);
 
-         when Right_Top =>
-            Advance_Lane (Right, Top);
+            when Right_Top =>
+               Advance_Lane (Right, Top, Done);
 
-         when Left_Bottom =>
-            Advance_Lane (Left, Bottom);
+            when Left_Bottom =>
+               Advance_Lane (Left, Bottom, Done);
 
-         when Right_Bottom =>
-            Advance_Lane (Right, Bottom);
-      end case;
+            when Right_Bottom =>
+               Advance_Lane (Right, Bottom, Done);
+         end case;
 
-      Next (State.Current_Lane);
+         Next (State.Current_Lane);
+
+         exit when Done;
+      end loop;
 
    --     -- 2. Increment global cycle timeline
    --     State.Total_Ticks := State.Total_Ticks + 1;
