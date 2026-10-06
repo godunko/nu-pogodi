@@ -7,12 +7,13 @@
 pragma Ada_2022;
 
 with A0B.ARMv7M.Instructions;
+with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time.Clock;
 with A0B.Buffers.Static;
---  with A0B.Callbacks.Generic_Parameterless;
 with A0B.Types.Arrays;
 
 with Nu_Pogodi.Bitmaps;
+with Nu_Pogodi.Display;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.Scene.Drawing;
 
@@ -45,6 +46,11 @@ package body Nu_Pogodi.Application is
    --  package On_MA_Callbacks is
    --    new A0B.Callbacks.Generic_Parameterless (On_MA);
 
+   procedure On_Display_Updated;
+
+   package On_Display_Updated_Callbacks is
+     new A0B.Callbacks.Generic_Parameterless (On_Display_Updated);
+
    procedure Full_Clean;
 
    procedure Partial
@@ -58,8 +64,9 @@ package body Nu_Pogodi.Application is
      array (Natural range 0 .. 1) of Pixbuf;
 
    type Span_Record is record
-      Upload : A0B.Time.Duration;
-      Update : A0B.Time.Duration;
+      Start   : A0B.Time.Monotonic_Time;
+      Release : A0B.Time.Duration;
+      Update  : A0B.Time.Duration;
    end record;
 
    Span  : array (Natural range 0 .. 10) of Span_Record with Volatile;
@@ -174,10 +181,11 @@ package body Nu_Pogodi.Application is
    ----------------
 
    procedure Full_Clean is
-      Start   : constant A0B.Time.Monotonic_Time := A0B.Time.Clock;
       Success : Boolean := True;
 
    begin
+      Span (Cycle).Start := A0B.Time.Clock;
+
       declare
          Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
            with Import, Address => Pixel_Buffer (0).Address;
@@ -202,7 +210,8 @@ package body Nu_Pogodi.Application is
            (Pixel_Buffer (1), Success);
       end;
 
-      Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
+      Span (Cycle).Release :=
+        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => True,
@@ -216,13 +225,25 @@ package body Nu_Pogodi.Application is
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
 
-      Span (Cycle).Update := A0B.Time.To_Duration (A0B.Time.Clock - Start);
+      Span (Cycle).Update :=
+        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
       Cycle := @ + 1;
 
       if not Success then
          raise Program_Error;
       end if;
    end Full_Clean;
+
+   ------------------------
+   -- On_Display_Updated --
+   ------------------------
+
+   procedure On_Display_Updated is
+   begin
+      Span (Cycle).Update :=
+        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
+      Cycle := @ + 1;
+   end On_Display_Updated;
 
    -------------
    -- Partial --
@@ -233,11 +254,12 @@ package body Nu_Pogodi.Application is
       Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
       Success       : in out Boolean)
    is
-      Start : constant A0B.Time.Monotonic_Time := A0B.Time.Clock;
       Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
         with Import, Address => Active_Buffer.Address;
 
    begin
+      Span (Cycle).Start := A0B.Time.Clock;
+
       declare
          FB : Nu_Pogodi.Bitmaps.Framebuffer
            with Import, Address => Data'Address;
@@ -249,18 +271,14 @@ package body Nu_Pogodi.Application is
 
       Active_Buffer.Set_Actual_Length (15_000);
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-        (Active_Buffer, Success);
+      Nu_Pogodi.Display.Update
+        (Active_Buffer,
+         Backup_Buffer,
+         On_Display_Updated_Callbacks.Create_Callback,
+         Success);
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
-        (Backup_Buffer, Success);
-
-      Span (Cycle).Upload := A0B.Time.To_Duration (A0B.Time.Clock - Start);
-
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
-
-      Span (Cycle).Update := A0B.Time.To_Duration (A0B.Time.Clock - Start);
-      Cycle := @ + 1;
+      Span (Cycle).Release :=
+        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
    end Partial;
 
    ---------
