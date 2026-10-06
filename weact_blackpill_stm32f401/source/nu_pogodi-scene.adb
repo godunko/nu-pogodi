@@ -13,7 +13,7 @@ package body Nu_Pogodi.Scene is
    procedure Advance_Lane
      (Side   : Lane_Side;
       Height : Lane_Height;
-      Done   : in out Boolean);
+      Done   : in out Natural);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -191,7 +191,7 @@ package body Nu_Pogodi.Scene is
    procedure Advance_Lane
      (Side   : Lane_Side;
       Height : Lane_Height;
-      Done   : in out Boolean)
+      Done   : in out Natural)
    --     State        : in out Game_State;
    --     Lane         : in out Egg_Array;
    --     Lane_S       : Lane_Side;
@@ -239,7 +239,12 @@ package body Nu_Pogodi.Scene is
 
       Lane (Lane'First) := False;
 
-      Done := (for some Step in Egg_Step => Lane (Step));
+      if (for some Step in Egg_Step => Lane (Step)) then
+         Done := 0;
+
+      else
+         Done := @ - 1;
+      end if;
    end Advance_Lane;
 
    ----------------
@@ -296,7 +301,7 @@ package body Nu_Pogodi.Scene is
    procedure Update_Physics_Tick (Refresh : out Boolean) is
       use type A0B.Types.Unsigned_32;
 
-      Done : Boolean := False;
+      Done : Natural := Lane'Pos (Lane'Last) - Lane'Pos (Lane'First);
 
    begin
       State.Current_Tick := @ + 1;
@@ -351,7 +356,7 @@ package body Nu_Pogodi.Scene is
 
          Next (State.Current_Lane);
 
-         exit when Done;
+         exit when Done = 0;
       end loop;
 
    --     -- 2. Increment global cycle timeline
