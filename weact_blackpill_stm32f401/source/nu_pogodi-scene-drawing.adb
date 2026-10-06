@@ -37,11 +37,147 @@ package body Nu_Pogodi.Scene.Drawing is
             Nu_Pogodi.Bitmaps.Path160,
             Nu_Pogodi.Bitmaps.Path178]]];
 
+   type Indicator_Segment is
+     (Top, Left_Top, Right_Top, Middle, Left_Bottom, Right_Bottom, Bottom);
+
+   type Segment_Bitmap is
+     array (Indicator_Segment) of Nu_Pogodi.Bitmaps.Bitmap_Id;
+
+   type Segments_State is array (Indicator_Segment) of Boolean;
+
+   Digit_Segments : constant
+     array (Natural range 0 .. 9) of Segments_State :=
+     [0 =>
+        [Top          => True,
+         Left_Top     => True,
+         Right_Top    => True,
+         Middle       => False,
+         Left_Bottom  => True,
+         Right_Bottom => True,
+         Bottom       => True],
+      1 =>
+        [Top          => False,
+         Left_Top     => False,
+         Right_Top    => True,
+         Middle       => False,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => False],
+      2 =>
+        [Top          => True,
+         Left_Top     => False,
+         Right_Top    => True,
+         Middle       => True,
+         Left_Bottom  => True,
+         Right_Bottom => False,
+         Bottom       => True],
+      3 =>
+        [Top          => True,
+         Left_Top     => False,
+         Right_Top    => True,
+         Middle       => True,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => True],
+      4 =>
+        [Top          => False,
+         Left_Top     => True,
+         Right_Top    => True,
+         Middle       => True,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => False],
+      5 =>
+        [Top          => True,
+         Left_Top     => True,
+         Right_Top    => False,
+         Middle       => True,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => True],
+      6 =>
+        [Top          => True,
+         Left_Top     => True,
+         Right_Top    => False,
+         Middle       => True,
+         Left_Bottom  => True,
+         Right_Bottom => True,
+         Bottom       => True],
+      7 =>
+        [Top          => True,
+         Left_Top     => False,
+         Right_Top    => True,
+         Middle       => False,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => False],
+      8 =>
+        [Top          => True,
+         Left_Top     => True,
+         Right_Top    => True,
+         Middle       => True,
+         Left_Bottom  => True,
+         Right_Bottom => True,
+         Bottom       => True],
+      9 =>
+        [Top          => True,
+         Left_Top     => True,
+         Right_Top    => True,
+         Middle       => True,
+         Left_Bottom  => False,
+         Right_Bottom => True,
+         Bottom       => True]];
+
+   Indicator_0 : constant Segment_Bitmap :=
+     [Top          => Nu_Pogodi.Bitmaps.Path22,
+      Left_Top     => Nu_Pogodi.Bitmaps.Path38,
+      Right_Top    => Nu_Pogodi.Bitmaps.Path36,
+      Middle       => Nu_Pogodi.Bitmaps.Path44_0_1_66,
+      Left_Bottom  => Nu_Pogodi.Bitmaps.Path54,
+      Right_Bottom => Nu_Pogodi.Bitmaps.Path58,
+      Bottom       => Nu_Pogodi.Bitmaps.Path72];
+   Indicator_1 : constant Segment_Bitmap :=
+     [Top          => Nu_Pogodi.Bitmaps.Path20,
+      Left_Top     => Nu_Pogodi.Bitmaps.Path34,
+      Right_Top    => Nu_Pogodi.Bitmaps.Path30,
+      Middle       => Nu_Pogodi.Bitmaps.Path44_0_65,
+      Left_Bottom  => Nu_Pogodi.Bitmaps.Path50,
+      Right_Bottom => Nu_Pogodi.Bitmaps.Path56,
+      Bottom       => Nu_Pogodi.Bitmaps.Path68];
+   Indicator_2 : constant Segment_Bitmap :=
+     [Top          => Nu_Pogodi.Bitmaps.Path18,
+      Left_Top     => Nu_Pogodi.Bitmaps.Path34_8_63,
+      Right_Top    => Nu_Pogodi.Bitmaps.Path32,
+      Middle       => Nu_Pogodi.Bitmaps.Path44,
+      Left_Bottom  => Nu_Pogodi.Bitmaps.Path48,
+      Right_Bottom => Nu_Pogodi.Bitmaps.Path56_3_64,
+      Bottom       => Nu_Pogodi.Bitmaps.Path66];
+
    ----------
    -- Draw --
    ----------
 
    procedure Draw (Framebuffer : in out Nu_Pogodi.Bitmaps.Framebuffer) is
+
+      procedure Draw_Digit
+        (Value     : Natural;
+         Indicator : Segment_Bitmap);
+
+      ----------------
+      -- Draw_Digit --
+      ----------------
+
+      procedure Draw_Digit
+        (Value     : Natural;
+         Indicator : Segment_Bitmap) is
+      begin
+         for Segment in Indicator_Segment loop
+            if Digit_Segments (Value) (Segment) then
+               Nu_Pogodi.Bitmaps.Draw (Framebuffer, Indicator (Segment));
+            end if;
+         end loop;
+      end Draw_Digit;
+
    begin
       case Wolf.Side is
          when Left =>
@@ -82,6 +218,16 @@ package body Nu_Pogodi.Scene.Drawing is
             end loop;
          end loop;
       end loop;
+
+      Draw_Digit (Score mod 10, Indicator_0);
+
+      if Score / 10 /= 0 then
+         Draw_Digit (Score / 10 mod 10, Indicator_1);
+      end if;
+
+      if Score / 100 /= 0 then
+         Draw_Digit (Score / 100 mod 10, Indicator_2);
+      end if;
 
       --  Nu_Pogodi.Bitmaps.Reconstruct (Framebuffer);
    end Draw;
