@@ -217,7 +217,7 @@ package body Nu_Pogodi.Scene is
    --        end if;
    --
    --        Lane(Egg_Max_Step) := False;
-         Active_Eggs_Count := @ - 1;
+         State.Active_Eggs_Count := @ - 1;
       end if;
 
       --  Move eggs down in lane
@@ -226,9 +226,12 @@ package body Nu_Pogodi.Scene is
          Lane (Step) := Lane (Step - 1);
       end loop;
 
-      if Random_Generator.Generate or Active_Eggs_Count = 0 then
+      if State.Active_Eggs_Count < State.Eggs_Count_Limit
+        --  and then not Lane (Lane'First) ???
+        and then (Random_Generator.Generate or State.Active_Eggs_Count = 0)
+      then
          Lane (Lane'First) := True;
-         Active_Eggs_Count := @ + 1;
+         State.Active_Eggs_Count := @ + 1;
 
       else
          Lane (Lane'First) := False;
@@ -251,18 +254,19 @@ package body Nu_Pogodi.Scene is
 
    begin
       State :=
-        (Current_Tick    => 0,
-         Cycle_Ticks     => <>,
-         Remain_Ticks    => <>,
-         Current_Score   => 0,
-         Current_Lane    => <>,
-         Random_Seed     => 0,
-         Idle_Lane_Count => 0);
+        (Current_Tick      => 0,
+         Cycle_Ticks       => <>,
+         Remain_Ticks      => <>,
+         Current_Score     => 0,
+         Current_Lane      => <>,
+         Random_Seed       => 0,
+         Idle_Lane_Count   => 0,
+         Eggs_Count_Limit  => 1,
+         Active_Eggs_Count => 0);
 
       Scene.Mode        := Mode;
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
-      Active_Eggs_Count := 0;
 
       --  Some initial values requires calculations based on the game state
 
@@ -484,6 +488,24 @@ package body Nu_Pogodi.Scene is
             State.Cycle_Ticks := 9;
          end if;
       end if;
+
+      --  Update eggs limit
+
+      declare
+         Assessment : constant Score :=
+           Hundreds (State.Current_Score) + Tens (State.Current_Score);
+
+      begin
+         State.Eggs_Count_Limit :=
+           (if Assessment > 16                  then 12
+            elsif Assessment >= 14              then 9
+            elsif Assessment >= 11              then 7
+            elsif Assessment >= 9               then 5
+            elsif Assessment >= 5               then 4
+            elsif Assessment >= 1               then 3
+            elsif State.Current_Score in 5 .. 9 then 2
+            else                                     1);
+      end;
 
       --  Update score records
 
