@@ -23,9 +23,7 @@ package body Nu_Pogodi.Application is
 
    use type A0B.Time.Monotonic_Time;
 
-   Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (300);
-   --  XXX For transition, fix tick to be a bit larger that display update
-   --  Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (20);
+   Tick_Duration : constant A0B.Time.Time_Span := A0B.Time.Milliseconds (20);
    --  Duration of physics update tick, running @50Hz
 
    --  procedure On_SSD1683_Reset;
@@ -310,6 +308,7 @@ package body Nu_Pogodi.Application is
 
    procedure Run is
       Next    : A0B.Time.Monotonic_Time;
+      Refresh : Boolean;
       Success : Boolean := True;
 
    begin
@@ -375,11 +374,14 @@ package body Nu_Pogodi.Application is
       loop
          exit when Cycle > Span'Last;
 
-         Nu_Pogodi.Scene.Update_Physics_Tick;
-         Partial
-           (Pixel_Buffer (Cycle mod 2),
-            Pixel_Buffer ((Cycle - 1) mod 2),
-            Success);
+         Nu_Pogodi.Scene.Update_Physics_Tick (Refresh);
+
+         if Refresh then
+            Partial
+              (Pixel_Buffer (Cycle mod 2),
+               Pixel_Buffer ((Cycle - 1) mod 2),
+               Success);
+         end if;
 
          Next := @ + Tick_Duration;
          Delay_Until (Next);

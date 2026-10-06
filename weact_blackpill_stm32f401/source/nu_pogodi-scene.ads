@@ -6,6 +6,8 @@
 
 pragma Ada_2022;
 
+private with A0B.Types;
+
 package Nu_Pogodi.Scene is
 
    type Game_Mode is (Mode_A, Mode_B);
@@ -30,11 +32,18 @@ package Nu_Pogodi.Scene is
 
    procedure Initialize (Mode : Game_Mode);
 
-   procedure Update_Physics_Tick;
+   procedure Update_Physics_Tick (Refresh : out Boolean);
 
    procedure Spawn_Egg (Side : Lane_Side; Height : Lane_Height);
 
 private
+
+   type Game_State is record
+      Current_Tick : A0B.Types.Unsigned_32 := 0;
+      Remain_Ticks : A0B.Types.Unsigned_32 := 31;
+   end record;
+
+   State : Game_State;
 
    Mode              : Game_Mode     := Mode_A;
    Score             : Natural       := 0;

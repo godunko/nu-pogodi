@@ -7,7 +7,6 @@
 pragma Ada_2022;
 
 with A0B.Time.Clock;
-with A0B.Types;
 
 package body Nu_Pogodi.Scene is
 
@@ -243,11 +242,17 @@ package body Nu_Pogodi.Scene is
 
    procedure Initialize (Mode : Game_Mode) is
    begin
+      State :=
+        (Current_Tick => 0,
+         Remain_Ticks => 31);
+
       Scene.Mode        := Mode;
       Score             := 0;
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
       Active_Eggs_Count := 0;
+
+      Spawn_Egg (Right, Top);
    end Initialize;
 
    ---------------
@@ -264,8 +269,19 @@ package body Nu_Pogodi.Scene is
    -- Update_Physics_Tick --
    -------------------------
 
-   procedure Update_Physics_Tick is
+   procedure Update_Physics_Tick (Refresh : out Boolean) is
+      use type A0B.Types.Unsigned_32;
+
    begin
+      State.Current_Tick := @ + 1;
+      State.Remain_Ticks := @ - 1;
+
+      if State.Remain_Ticks /= 0 then
+         Refresh := False;
+
+         return;
+      end if;
+
       case Wolf.Side is
          when Left =>
             case Wolf.Height is
@@ -303,6 +319,9 @@ package body Nu_Pogodi.Scene is
       --  Run embedded autonomic generations
 
       Handle_Autonomic_Generation;
+
+      State.Remain_Ticks := 31;
+      Refresh := True;
    end Update_Physics_Tick;
 
 end Nu_Pogodi.Scene;
