@@ -191,20 +191,20 @@ package body Nu_Pogodi.Scene is
 
    begin
       State :=
-        (Mode              => Mode,
-         Current_Tick      => 0,
-         Cycle_Ticks       => <>,
-         Remain_Ticks      => <>,
-         Current_Score     => 0,
-         Miss_Count        => 0,
-         Miss_Side         => <>,
-         Miss_Cycle        => 0,
-         Current_Lane      => <>,
-         Random_Seed       => 0,
-         Idle_Lane_Count   => 0,
-         Eggs_Count_Limit  => 1,
-         Active_Eggs_Count => 0,
-         Dangerous_Lane    => None);
+        (Mode                 => Mode,
+         Current_Tick         => 0,
+         Cycle_Ticks          => <>,
+         Remain_Ticks         => <>,
+         Current_Score        => 0,
+         Miss_Count           => 0,
+         Miss_Animation_Side  => <>,
+         Miss_Animation_Cycle => 0,
+         Current_Lane         => <>,
+         Random_Seed          => 0,
+         Idle_Lane_Count      => 0,
+         Eggs_Count_Limit     => 1,
+         Active_Eggs_Count    => 0,
+         Dangerous_Lane       => None);
 
       Wolf              := (Side => Right, Height => Bottom);
       Lanes             := [others => [others => [others => False]]];
@@ -367,16 +367,16 @@ package body Nu_Pogodi.Scene is
    --        return;
    --     end if;
 
-      if State.Miss_Cycle = 0 then
+      if State.Miss_Animation_Cycle = 0 then
          if State.Dangerous_Lane /= None then
-            State.Miss_Side  :=
+            State.Miss_Animation_Side  :=
               (case State.Dangerous_Lane is
                   when None         => raise Program_Error,
                   when Left_Top     => Left,
                   when Right_Top    => Right,
                   when Left_Bottom  => Left,
                   when Right_Bottom => Right);
-            State.Miss_Cycle := 4;
+            State.Miss_Animation_Cycle := 4;
 
             Lanes := [others => [others => [others => False]]];
             State.Active_Eggs_Count := 0;
@@ -421,9 +421,9 @@ package body Nu_Pogodi.Scene is
          end if;
 
       else
-         State.Miss_Cycle := @ - 1;
+         State.Miss_Animation_Cycle := @ - 1;
 
-         if State.Miss_Cycle = 0 then
+         if State.Miss_Animation_Cycle = 0 then
             --  XXX Recompute miss count
             --  raise Program_Error;
             null;

@@ -45,24 +45,24 @@ private
    subtype Score_Digit is Score range 0 .. 9;
 
    type Game_State is record
-      Mode              : Game_Mode             := Mode_A;
+      Mode                 : Game_Mode             := Mode_A;
 
-      Current_Tick      : A0B.Types.Unsigned_32 := 0;
-      Cycle_Ticks       : A0B.Types.Unsigned_32 := 31;
-      Remain_Ticks      : A0B.Types.Unsigned_32 := 31;
+      Current_Tick         : A0B.Types.Unsigned_32 := 0;
+      Cycle_Ticks          : A0B.Types.Unsigned_32 := 31;
+      Remain_Ticks         : A0B.Types.Unsigned_32 := 31;
 
-      Miss_Side         : Lane_Side             := Left;
-      Miss_Cycle        : A0B.Types.Unsigned_32 := 0;
+      Miss_Animation_Side  : Lane_Side             := Left;
+      Miss_Animation_Cycle : A0B.Types.Unsigned_32 := 0;
       --  Miss animation when not equal to zero.
 
-      Current_Lane      : Lane                  := Left_Top;
-      Current_Score     : Score                 := 0;
-      Miss_Count        : Natural               := 0;
-      Random_Seed       : A0B.Types.Unsigned_32 := 0;
-      Idle_Lane_Count   : A0B.Types.Unsigned_32 := 0;
-      Eggs_Count_Limit  : A0B.Types.Unsigned_32 := 1;
-      Active_Eggs_Count : A0B.Types.Unsigned_32 := 0;
-      Dangerous_Lane    : Optional_Lane         := None;
+      Current_Lane         : Lane                  := Left_Top;
+      Current_Score        : Score                 := 0;
+      Miss_Count           : Natural               := 0;
+      Random_Seed          : A0B.Types.Unsigned_32 := 0;
+      Idle_Lane_Count      : A0B.Types.Unsigned_32 := 0;
+      Eggs_Count_Limit     : A0B.Types.Unsigned_32 := 1;
+      Active_Eggs_Count    : A0B.Types.Unsigned_32 := 0;
+      Dangerous_Lane       : Optional_Lane         := None;
    end record;
 
    type Game_Records is record
@@ -88,11 +88,6 @@ private
    --  Game_Over             : Boolean       := False;
    --
    --  Rabbit_Visible        : Boolean       := False;
-   --  Base_Speed_Ms         : Positive      := 1000;
-   --  --  Baseline tick speed in milliseconds
-   --  Current_Tick_Interval : Positive      := 1000;
-   --  --  Dynamically adjusted delay threshold
-   --  Total_Ticks           : Natural       := 0;
 
    --  Algorithmic Entry Points
    --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height);
