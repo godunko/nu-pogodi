@@ -45,14 +45,6 @@ package body Nu_Pogodi.Application is
    Pixel_Buffer :
      array (Natural range 0 .. 1) of Pixbuf;
 
-   type Span_Record is record
-      Start   : A0B.Time.Monotonic_Time;
-      Release : A0B.Time.Duration;
-      Update  : A0B.Time.Duration;
-   end record;
-
-   --  Span  : array (Natural range 0 .. 4 * (5 + 1)) of Span_Record with Volatile;
-   Span  : array (Natural range 0 .. 1002) of Span_Record with Volatile;
    Cycle : Natural := 0;
 
    -----------------
@@ -77,8 +69,6 @@ package body Nu_Pogodi.Application is
       Success : Boolean := True;
 
    begin
-      Span (Cycle).Start := A0B.Time.Clock;
-
       --  Clear panel to white color. Implementation minimize unnecessary data
       --  transfers and utilize display controller's features:
       --   * content of RED RAM are fixed to all zeros
@@ -96,9 +86,6 @@ package body Nu_Pogodi.Application is
            Nu_Pogodi.Hardware.SSD1683.Width_Full,
            Nu_Pogodi.Hardware.SSD1683.Height_Full,
            Success);
-
-      Span (Cycle).Release :=
-        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => True,
@@ -137,8 +124,6 @@ package body Nu_Pogodi.Application is
          Pixel_Buffer (0).Set_Actual_Length (15_000);
       end;
 
-      Span (Cycle).Update :=
-        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
       Cycle := @ + 1;
 
       if not Success then
@@ -152,8 +137,6 @@ package body Nu_Pogodi.Application is
 
    procedure On_Display_Updated is
    begin
-      Span (Cycle).Update :=
-        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
       Cycle := @ + 1;
    end On_Display_Updated;
 
@@ -170,8 +153,6 @@ package body Nu_Pogodi.Application is
         with Import, Address => Active_Buffer.Address;
 
    begin
-      Span (Cycle).Start := A0B.Time.Clock;
-
       declare
          FB : Nu_Pogodi.Bitmaps.Framebuffer
            with Import, Address => Data'Address;
@@ -188,9 +169,6 @@ package body Nu_Pogodi.Application is
          Backup_Buffer,
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
-
-      Span (Cycle).Release :=
-        A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
    end Partial;
 
    ---------
