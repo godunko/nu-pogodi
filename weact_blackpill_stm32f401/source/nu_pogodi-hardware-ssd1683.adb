@@ -281,36 +281,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success);
    end Master_Activation;
 
-   -----------
-   -- Reset --
-   -----------
-
-   procedure Reset (Callback : A0B.Callbacks.Callback) is
-      Entry_State : constant State_Kind := State;
-
-   begin
-      Command_Callback := Callback;
-
-      if Entry_State = VCI_Wait then
-         --  VCI Wait is in progress, attempt to equeue request
-
-         Reset_After_VCI := True;
-
-         if State = Ready
-           and then A0B.Callbacks.Is_Set (Command_Callback)
-         then
-            --  VCI state was left before enqueue completed, cleanup request
-            --  and enter `HW_Reset_Low` state.
-
-            Reset_After_VCI := False;
-            State_Machine_HW_Reset_Low_State.Enter;
-         end if;
-
-      else
-         State_Machine_HW_Reset_Low_State.Enter;
-      end if;
-   end Reset;
-
    -------------
    -- On_Busy --
    -------------
@@ -349,6 +319,36 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
+
+   -----------
+   -- Reset --
+   -----------
+
+   procedure Reset (Callback : A0B.Callbacks.Callback) is
+      Entry_State : constant State_Kind := State;
+
+   begin
+      Command_Callback := Callback;
+
+      if Entry_State = VCI_Wait then
+         --  VCI Wait is in progress, attempt to equeue request
+
+         Reset_After_VCI := True;
+
+         if State = Ready
+           and then A0B.Callbacks.Is_Set (Command_Callback)
+         then
+            --  VCI state was left before enqueue completed, cleanup request
+            --  and enter `HW_Reset_Low` state.
+
+            Reset_After_VCI := False;
+            State_Machine_HW_Reset_Low_State.Enter;
+         end if;
+
+      else
+         State_Machine_HW_Reset_Low_State.Enter;
+      end if;
+   end Reset;
 
    ------------------------------------------
    -- Set_RAM_X_Address_Start_End_Position --
