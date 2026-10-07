@@ -282,14 +282,14 @@ package body Nu_Pogodi.Scene is
 
       State.Current_Cycle := @ + 1;
 
-      --  for Side in Lane_Side loop
-      --     for Height in Lane_Height loop
-      --        if Lanes (Side, Height) (Egg_Step'Last) then
-      --           Wolf := (Side, Height);
-      --           Random_Generator.Update;
-      --        end if;
-      --     end loop;
-      --  end loop;
+      for Side in Lane_Side loop
+         for Height in Lane_Height loop
+            if Lanes (Side, Height) (Egg_Step'Last) then
+               Wolf := (Side, Height);
+               Random_Generator.Update;
+            end if;
+         end loop;
+      end loop;
 
       --  case Wolf.Side is
       --     when Left =>
