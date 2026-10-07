@@ -189,6 +189,9 @@ package body Nu_Pogodi.Scene is
    procedure Initialize (Mode : Game_Mode) is
       use type A0B.Types.Unsigned_32;
 
+      Save_Random_Seed : constant A0B.Types.Unsigned_32 :=
+        State.Random_Seed;
+
    begin
       State :=
         (Mode                 => Mode,
@@ -200,7 +203,7 @@ package body Nu_Pogodi.Scene is
          Miss_Animation_Side  => <>,
          Miss_Animation_Cycle => 0,
          Current_Lane         => <>,
-         Random_Seed          => 0,
+         Random_Seed          => Save_Random_Seed,
          Idle_Lane_Count      => 0,
          Eggs_Count_Limit     => 1,
          Active_Eggs_Count    => 0,
