@@ -260,7 +260,7 @@ package body Nu_Pogodi.Application is
       Next := A0B.Time.Clock;
 
       loop
-         exit when Cycle > Span'Last;
+         exit when Nu_Pogodi.Scene.Is_Game_Over;
 
          Nu_Pogodi.Scene.Update_Physics_Tick (Refresh);
 
