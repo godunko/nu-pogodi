@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Callbacks;
+
 package Nu_Pogodi.Hardware.RTC is
 
    type Seconds_Ones_Type is range 0 .. 9;
@@ -31,5 +33,7 @@ package Nu_Pogodi.Hardware.RTC is
    procedure Initialize;
 
    function Clock return Time;
+
+   procedure Set_Wakeup (Callback : A0B.Callbacks.Callback);
 
 end Nu_Pogodi.Hardware.RTC;
