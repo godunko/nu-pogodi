@@ -51,6 +51,10 @@ private
       Cycle_Ticks       : A0B.Types.Unsigned_32 := 31;
       Remain_Ticks      : A0B.Types.Unsigned_32 := 31;
 
+      Miss_Side         : Lane_Side             := Left;
+      Miss_Cycle        : A0B.Types.Unsigned_32 := 0;
+      --  Miss animation when not equal to zero.
+
       Current_Lane      : Lane                  := Left_Top;
       Current_Score     : Score                 := 0;
       Miss_Count        : Natural               := 0;

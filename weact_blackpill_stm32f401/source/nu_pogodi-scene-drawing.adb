@@ -207,6 +207,8 @@ package body Nu_Pogodi.Scene.Drawing is
             end case;
       end case;
 
+      --  Eggs on lanes
+
       for Side in Lane_Side loop
          for Height in Lane_Height loop
             for Step in Egg_Step loop
@@ -218,6 +220,8 @@ package body Nu_Pogodi.Scene.Drawing is
          end loop;
       end loop;
 
+      --  Score
+
       Draw_Digit (State.Current_Score mod 10, Indicator_0);
 
       if (State.Current_Score / 10) /= 0 then
@@ -227,6 +231,54 @@ package body Nu_Pogodi.Scene.Drawing is
       if (State.Current_Score / 100) /= 0 then
          Draw_Digit (Hundreds (State.Current_Score), Indicator_2);
       end if;
+
+      --  Chick
+
+      case State.Miss_Cycle is
+         when 0 =>
+            null;
+
+         when 1 =>
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.Path30_8_71,
+                   when Right => Nu_Pogodi.Bitmaps.Path150_4_67));
+
+         when 2 =>
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.Path166,
+                   when Right => Nu_Pogodi.Bitmaps.Path190));
+
+         when 3 =>
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.Path168_3_72,
+                   when Right => Nu_Pogodi.Bitmaps.Path164));
+
+         when 4 =>
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.G4631,
+                   when Right => Nu_Pogodi.Bitmaps.G4636));
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.G4659,
+                   when Right => Nu_Pogodi.Bitmaps.G4648));
+            Nu_Pogodi.Bitmaps.Draw
+              (Framebuffer,
+               (case State.Miss_Side is
+                   when Left  => Nu_Pogodi.Bitmaps.Path202,
+                   when Right => Nu_Pogodi.Bitmaps.Path208));
+
+         when others =>
+            raise Program_Error;
+      end case;
 
       --  Nu_Pogodi.Bitmaps.Reconstruct (Framebuffer);
    end Draw;

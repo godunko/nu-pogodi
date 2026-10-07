@@ -35,6 +35,8 @@ package body Nu_Pogodi.Scene is
 
    end Random_Generator;
 
+   Miss_Animation_Ticks : constant := 15;
+
    To_Lane : constant array (Lane_Side, Lane_Height) of Lane :=
      [Left  =>
         [Top    => Left_Top,
@@ -195,6 +197,8 @@ package body Nu_Pogodi.Scene is
          Remain_Ticks      => <>,
          Current_Score     => 0,
          Miss_Count        => 0,
+         Miss_Side         => <>,
+         Miss_Cycle        => 0,
          Current_Lane      => <>,
          Random_Seed       => 0,
          Idle_Lane_Count   => 0,
@@ -202,7 +206,7 @@ package body Nu_Pogodi.Scene is
          Active_Eggs_Count => 0,
          Dangerous_Lane    => None);
 
-      Wolf              := (Side => Left, Height => Top);
+      Wolf              := (Side => Right, Height => Bottom);
       Lanes             := [others => [others => [others => False]]];
 
       --  Some initial values requires calculations based on the game state
@@ -330,14 +334,14 @@ package body Nu_Pogodi.Scene is
          return;
       end if;
 
-      for Side in Lane_Side loop
-         for Height in Lane_Height loop
-            if Lanes (Side, Height) (Egg_Step'Last) then
-               Wolf := (Side, Height);
-               Random_Generator.Update;
-            end if;
-         end loop;
-      end loop;
+      --  for Side in Lane_Side loop
+      --     for Height in Lane_Height loop
+      --        if Lanes (Side, Height) (Egg_Step'Last) then
+      --           Wolf := (Side, Height);
+      --           Random_Generator.Update;
+      --        end if;
+      --     end loop;
+      --  end loop;
 
       --  case Wolf.Side is
       --     when Left =>
@@ -363,44 +367,71 @@ package body Nu_Pogodi.Scene is
    --        return;
    --     end if;
 
-      if State.Dangerous_Lane /= None then
-         raise Program_Error;
+      if State.Miss_Cycle = 0 then
+         if State.Dangerous_Lane /= None then
+            State.Miss_Side  :=
+              (case State.Dangerous_Lane is
+                  when None         => raise Program_Error,
+                  when Left_Top     => Left,
+                  when Right_Top    => Right,
+                  when Left_Bottom  => Left,
+                  when Right_Bottom => Right);
+            State.Miss_Cycle := 4;
+
+            Lanes := [others => [others => [others => False]]];
+            State.Active_Eggs_Count := 0;
+
+            State.Dangerous_Lane := None;
+            State.Remain_Ticks := Miss_Animation_Ticks;
+
+         else
+            State.Idle_Lane_Count := 0;
+
+            loop
+               case State.Current_Lane is
+                  when Left_Top =>
+                     Advance_Lane (Left, Top);
+
+                  when Right_Top =>
+                     Advance_Lane (Right, Top);
+
+                  when Left_Bottom =>
+                     Advance_Lane (Left, Bottom);
+
+                  when Right_Bottom =>
+                     Advance_Lane (Right, Bottom);
+               end case;
+
+               Next (State.Current_Lane);
+
+               exit when
+                 State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
+            end loop;
+
+            if State.Dangerous_Lane /= None
+              and then State.Dangerous_Lane = To_Lane (Wolf.Side, Wolf.Height)
+            then
+               State.Dangerous_Lane := None;
+               State.Active_Eggs_Count := @ - 1;
+
+               Update_Score;
+            end if;
+
+            State.Remain_Ticks := State.Cycle_Ticks;
+         end if;
 
       else
-         State.Idle_Lane_Count := 0;
+         State.Miss_Cycle := @ - 1;
 
-         loop
-            case State.Current_Lane is
-               when Left_Top =>
-                  Advance_Lane (Left, Top);
-
-               when Right_Top =>
-                  Advance_Lane (Right, Top);
-
-               when Left_Bottom =>
-                  Advance_Lane (Left, Bottom);
-
-               when Right_Bottom =>
-                  Advance_Lane (Right, Bottom);
-            end case;
-
-            Next (State.Current_Lane);
-
-            exit when State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
-         end loop;
-
-         if State.Dangerous_Lane /= None
-           and then State.Dangerous_Lane = To_Lane (Wolf.Side, Wolf.Height)
-         then
-            State.Dangerous_Lane := None;
-            State.Active_Eggs_Count := @ - 1;
-
-            Update_Score;
+         if State.Miss_Cycle = 0 then
+            --  XXX Recompute miss count
+            --  raise Program_Error;
+            null;
          end if;
-      end if;
-      --  Update_Score;
 
-      State.Remain_Ticks := State.Cycle_Ticks;
+         State.Remain_Ticks := Miss_Animation_Ticks;
+      end if;
+
       Refresh := True;
    end Update_Physics_Tick;
 
