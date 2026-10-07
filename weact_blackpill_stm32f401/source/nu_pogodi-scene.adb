@@ -196,10 +196,12 @@ package body Nu_Pogodi.Scene is
       State :=
         (Mode                 => Mode,
          Current_Tick         => 0,
+         Current_Cycle        => 0,
          Cycle_Ticks          => <>,
          Remain_Ticks         => <>,
          Current_Score        => 0,
          Miss_Count           => 0,
+         Miss_Half            => False,
          Miss_Animation_Side  => <>,
          Miss_Animation_Cycle => 0,
          Current_Lane         => <>,
@@ -337,6 +339,8 @@ package body Nu_Pogodi.Scene is
          return;
       end if;
 
+      State.Current_Cycle := @ + 1;
+
       --  for Side in Lane_Side loop
       --     for Height in Lane_Height loop
       --        if Lanes (Side, Height) (Egg_Step'Last) then
@@ -427,9 +431,13 @@ package body Nu_Pogodi.Scene is
          State.Miss_Animation_Cycle := @ - 1;
 
          if State.Miss_Animation_Cycle = 0 then
-            --  XXX Recompute miss count
-            --  raise Program_Error;
-            null;
+            if State.Miss_Half then
+               State.Miss_Half := False;
+
+            else
+               State.Miss_Count := @ + 1;
+               State.Miss_Half  := True;
+            end if;
          end if;
 
          State.Remain_Ticks := Miss_Animation_Ticks;

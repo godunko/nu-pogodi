@@ -158,6 +158,8 @@ package body Nu_Pogodi.Scene.Drawing is
 
    procedure Draw (Framebuffer : in out Nu_Pogodi.Bitmaps.Framebuffer) is
 
+      use type A0B.Types.Unsigned_32;
+
       procedure Draw_Digit
         (Value     : Score_Digit;
          Indicator : Segment_Bitmap);
@@ -176,6 +178,8 @@ package body Nu_Pogodi.Scene.Drawing is
             end if;
          end loop;
       end Draw_Digit;
+
+      Even_Cycle : constant Boolean := (State.Current_Cycle mod 2) = 0;
 
    begin
       case Wolf.Side is
@@ -279,6 +283,26 @@ package body Nu_Pogodi.Scene.Drawing is
          when others =>
             raise Program_Error;
       end case;
+
+      --  Miss count
+
+      if State.Miss_Count > 0
+        and (State.Miss_Count /= 1 or not State.Miss_Half or Even_Cycle)
+      then
+         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Bitmaps.Path80);
+      end if;
+
+      if State.Miss_Count > 1
+        and (State.Miss_Count /= 2 or not State.Miss_Half or Even_Cycle)
+      then
+         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Bitmaps.Path84);
+      end if;
+
+      if State.Miss_Count > 2
+        and (State.Miss_Count /= 3 or not State.Miss_Half or Even_Cycle)
+      then
+         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Bitmaps.Path82);
+      end if;
 
       --  Nu_Pogodi.Bitmaps.Reconstruct (Framebuffer);
    end Draw;
