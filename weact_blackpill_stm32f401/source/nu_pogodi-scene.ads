@@ -42,11 +42,15 @@ private
    subtype Score_Digit is Score range 0 .. 9;
 
    type Game_State is record
+      Mode              : Game_Mode             := Mode_A;
+
       Current_Tick      : A0B.Types.Unsigned_32 := 0;
       Cycle_Ticks       : A0B.Types.Unsigned_32 := 31;
       Remain_Ticks      : A0B.Types.Unsigned_32 := 31;
+
       Current_Lane      : Lane                  := Left_Top;
       Current_Score     : Score                 := 0;
+      Miss_Count        : Natural               := 0;
       Random_Seed       : A0B.Types.Unsigned_32 := 0;
       Idle_Lane_Count   : A0B.Types.Unsigned_32 := 0;
       Eggs_Count_Limit  : A0B.Types.Unsigned_32 := 1;
@@ -61,7 +65,6 @@ private
    State   : Game_State;
    Records : Game_Records;
 
-   Mode              : Game_Mode     := Mode_A;
    Wolf              : Wolf_Position := (Side => Left, Height => Top);
    Lanes             : Game_Lanes    :=
      [others => [others => [others => False]]];
