@@ -51,7 +51,8 @@ package body Nu_Pogodi.Application is
       Update  : A0B.Time.Duration;
    end record;
 
-   Span  : array (Natural range 0 .. 10) of Span_Record with Volatile;
+   --  Span  : array (Natural range 0 .. 4 * (5 + 1)) of Span_Record with Volatile;
+   Span  : array (Natural range 0 .. 1002) of Span_Record with Volatile;
    Cycle : Natural := 0;
 
    -----------------
@@ -78,6 +79,11 @@ package body Nu_Pogodi.Application is
    begin
       Span (Cycle).Start := A0B.Time.Clock;
 
+      --  Clear panel to white color. Implementation minimize unnecessary data
+      --  transfers and utilize display controller's features:
+      --   * content of RED RAM are fixed to all zeros
+      --   * content of BW RAM is filled by ones
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_1
         (BW_RAM  => Nu_Pogodi.Hardware.SSD1683.Normal,
          RED_RAM => Nu_Pogodi.Hardware.SSD1683.Bypass,
@@ -90,15 +96,6 @@ package body Nu_Pogodi.Application is
            Nu_Pogodi.Hardware.SSD1683.Width_Full,
            Nu_Pogodi.Hardware.SSD1683.Height_Full,
            Success);
-
-      declare
-         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer (0).Address;
-
-      begin
-         Data := [others => 16#FF#];
-         Pixel_Buffer (0).Set_Actual_Length (15_000);
-      end;
 
       Span (Cycle).Release :=
         A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
@@ -115,11 +112,30 @@ package body Nu_Pogodi.Application is
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
 
+      --  Revert to normal use of both RAM, fill RED RAM to match an "empty"
+      --  content on the panel, and fill back buffer in MCU memory.
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_1
         (BW_RAM  => Nu_Pogodi.Hardware.SSD1683.Normal,
          RED_RAM => Nu_Pogodi.Hardware.SSD1683.Normal,
          Cascade => False,
          Success => Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous
+        .Auto_Write_RED_RAM_For_Regular_Pattern
+          (1,
+           Nu_Pogodi.Hardware.SSD1683.Width_Full,
+           Nu_Pogodi.Hardware.SSD1683.Height_Full,
+           Success);
+
+      declare
+         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
+           with Import, Address => Pixel_Buffer (0).Address;
+
+      begin
+         Data := [others => 16#FF#];
+         Pixel_Buffer (0).Set_Actual_Length (15_000);
+      end;
 
       Span (Cycle).Update :=
         A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
