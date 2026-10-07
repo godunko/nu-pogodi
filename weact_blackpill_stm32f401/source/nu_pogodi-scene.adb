@@ -46,26 +46,6 @@ package body Nu_Pogodi.Scene is
          Bottom => Right_Bottom]];
 
    --  --------------------------------------------------------------------------
-   --  -- Sets initial state defaults per game mode
-   --  --------------------------------------------------------------------------
-   --  procedure Initialize_Game (State : out Game_State; Mode : Game_Mode_Type) is
-   --  begin
-   --     State := (
-   --        Mode                  => Mode,
-   --        Score                 => 0,
-   --        Misses                => 0.0,
-   --        Wolf                  => (Side => Left, Height => Top),
-   --        Lanes                 => (others => (others => False)),
-   --        Game_Over             => False,
-   --        Rabbit_Visible        => False,
-   --        Base_Speed_Ms         => (if Mode = Mode_A then 1000 else 800), -- Mode B starts faster
-   --        Current_Tick_Interval => (if Mode = Mode_A then 1000 else 800),
-   --        Total_Ticks           => 0,
-   --        Active_Eggs_Count     => 0
-   --     );
-   --  end Initialize_Game;
-   --
-   --  --------------------------------------------------------------------------
    --  -- Updates Wolf Placement
    --  --------------------------------------------------------------------------
    --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height) is
@@ -82,47 +62,12 @@ package body Nu_Pogodi.Scene is
    procedure Advance_Lane
      (Side   : Lane_Side;
       Height : Lane_Height)
-   --     State        : in out Game_State;
-   --     Lane         : in out Egg_Array;
-   --     Lane_S       : Lane_Side;
-   --     Lane_H       : Lane_Height
-     --  ) is
    is
       use type A0B.Types.Unsigned_32;
 
       Lane : Egg_Array renames Lanes (Side, Height);
 
-   --     Penalty_Increment : Float := 1.0;
    begin
-   --     if Lane (Lane'Last) then
-   --  --        if State.Wolf.Side = Lane_S and State.Wolf.Height = Lane_H then
-   --  --           -- Successful Capture
-   --           --  Score := Score + 1;
-   --  --           if State.Score > 999 then
-   --  --              State.Score := 0;
-   --  --           end if;
-   --  --
-   --  --           Recalculate_Game_Speed(State);
-   --  --
-   --  --           if State.Score = 200 or State.Score = 500 then
-   --  --              State.Misses := 0.0;
-   --  --           end if;
-   --  --        else
-   --  --           -- Drop Registered
-   --  --           if State.Rabbit_Visible then
-   --  --              Penalty_Increment := 0.5;
-   --  --           end if;
-   --  --
-   --  --           State.Misses := State.Misses + Penalty_Increment;
-   --  --           if State.Misses >= 3.0 then
-   --  --              State.Game_Over := True;
-   --  --           end if;
-   --  --        end if;
-   --  --
-   --  --        Lane(Egg_Max_Step) := False;
-   --        State.Active_Eggs_Count := @ - 1;
-   --     end if;
-
       if Lane (Lane'Last) then
          State.Dangerous_Lane := To_Lane (Side, Height);
       end if;
@@ -365,10 +310,6 @@ package body Nu_Pogodi.Scene is
       --              Wolf := (Left, Top);
       --        end case;
       --  end case;
-
-   --     if State.Game_Over then
-   --        return;
-   --     end if;
 
       if State.Miss_Animation_Cycle = 0 then
          if State.Dangerous_Lane /= None then

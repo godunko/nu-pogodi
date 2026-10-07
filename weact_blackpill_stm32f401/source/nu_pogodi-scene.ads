@@ -31,9 +31,6 @@ package Nu_Pogodi.Scene is
 
    subtype Lane is Optional_Lane range Left_Top .. Right_Bottom;
 
-   --  type Miss_Score is delta 0.5 range 0.0 .. 3.0;
-   --  --  Miss score: `0.5` delta allow to represent Rabbit reduction rule
-
    procedure Initialize (Mode : Game_Mode);
 
    procedure Update_Physics_Tick (Refresh : out Boolean);
@@ -90,11 +87,6 @@ private
 
    function Hundreds (Value : Score) return Score_Digit is
      ((Value / 100) mod 10);
-
-   --  Misses                : Miss_Score    := 0.0;
-   --  Game_Over             : Boolean       := False;
-   --
-   --  Rabbit_Visible        : Boolean       := False;
 
    --  Algorithmic Entry Points
    --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height);
