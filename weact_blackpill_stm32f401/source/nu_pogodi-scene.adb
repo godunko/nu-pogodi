@@ -74,16 +74,6 @@ package body Nu_Pogodi.Scene is
    --        State.Wolf := (Side => Side, Height => Height);
    --     end if;
    --  end Move_Wolf;
-   --
-   --  --------------------------------------------------------------------------
-   --  -- Toggles Rabbit Windows
-   --  --------------------------------------------------------------------------
-   --  procedure Set_Rabbit_State (State : in out Game_State; Visible : Boolean) is
-   --  begin
-   --     if not State.Game_Over then
-   --        State.Rabbit_Visible := Visible;
-   --     end if;
-   --  end Set_Rabbit_State;
 
    ------------------
    -- Advance_Lane --
@@ -204,6 +194,8 @@ package body Nu_Pogodi.Scene is
          Miss_Half            => False,
          Miss_Animation_Side  => <>,
          Miss_Animation_Cycle => 0,
+         Rabbit_Visible       =>  False,
+         Rabbit_Remain_Cycles => 15,
          Current_Lane         => <>,
          Random_Seed          => Save_Random_Seed,
          Idle_Lane_Count      => 0,
@@ -329,7 +321,7 @@ package body Nu_Pogodi.Scene is
       State.Current_Tick := @ + 1;
       State.Remain_Ticks := @ - 1;
 
-      if State.Remain_Ticks /= 0 then
+      if State.Remain_Ticks /= 0 or State.Miss_Count > 3 then
          Refresh := False;
 
          return;
@@ -420,6 +412,23 @@ package body Nu_Pogodi.Scene is
                Update_Score;
             end if;
 
+            --  Update rabbit state
+
+            State.Rabbit_Remain_Cycles := @ - 1;
+
+            if State.Rabbit_Remain_Cycles = 0 then
+               if State.Rabbit_Visible then
+                  State.Rabbit_Visible := False;
+                  State.Rabbit_Remain_Cycles :=
+                    15 + Random_Generator.Generate / 2;
+
+               else
+                  State.Rabbit_Visible := True;
+                  State.Rabbit_Remain_Cycles :=
+                    5 + Random_Generator.Generate / 2;
+               end if;
+            end if;
+
             State.Remain_Ticks := State.Cycle_Ticks;
          end if;
 
@@ -427,12 +436,23 @@ package body Nu_Pogodi.Scene is
          State.Miss_Animation_Cycle := @ - 1;
 
          if State.Miss_Animation_Cycle = 0 then
-            if State.Miss_Half then
-               State.Miss_Half := False;
+            if State.Rabbit_Visible then
+               if State.Miss_Half then
+                  State.Miss_Half := False;
+
+               else
+                  State.Miss_Count := @ + 1;
+                  State.Miss_Half  := True;
+               end if;
 
             else
                State.Miss_Count := @ + 1;
-               State.Miss_Half  := True;
+            end if;
+
+            if State.Miss_Count > 3
+              or (State.Miss_Count = 3 and not State.Miss_Half)
+            then
+               State.Miss_Count := 4;
             end if;
          end if;
 

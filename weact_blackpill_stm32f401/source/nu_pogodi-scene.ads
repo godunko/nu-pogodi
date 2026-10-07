@@ -56,6 +56,9 @@ private
       Miss_Animation_Cycle : A0B.Types.Unsigned_32 := 0;
       --  Miss animation when not equal to zero.
 
+      Rabbit_Visible       : Boolean               := False;
+      Rabbit_Remain_Cycles : A0B.Types.Unsigned_32 := 15;
+
       Current_Lane         : Lane                  := Left_Top;
       Current_Score        : Score                 := 0;
       Miss_Count           : Natural               := 0;
@@ -93,7 +96,5 @@ private
 
    --  Algorithmic Entry Points
    --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height);
-   --  procedure Spawn_Egg (State : in out Game_State; Side : Lane_Side; Height : Lane_Height);
-   --  procedure Set_Rabbit_State (State : in out Game_State; Visible : Boolean);
 
 end Nu_Pogodi.Scene;

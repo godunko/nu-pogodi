@@ -284,6 +284,12 @@ package body Nu_Pogodi.Scene.Drawing is
             raise Program_Error;
       end case;
 
+      --  Rabbit
+
+      if State.Rabbit_Visible then
+         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Bitmaps.Path16_9_74);
+      end if;
+
       --  Miss count
 
       if State.Miss_Count > 0
