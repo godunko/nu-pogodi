@@ -19,6 +19,13 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
       Success : in out Boolean);
    --  Write given data to RED RAM
 
+   procedure Display_Update_Control_1
+     (BW_RAM  : RAM_Content;
+      RED_RAM : RAM_Content;
+      Cascade : Boolean;
+      Success : in out Boolean);
+   --  Sets RAM content option for Display Update
+
    procedure Display_Update_Control_2
      (Sequence : Update_Sequence;
       Success  : in out Boolean);

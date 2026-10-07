@@ -33,6 +33,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#18#;
    Master_Activation_Command                    : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
+   Display_Update_Control_1_Command             : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#21#;
    Display_Update_Control_2_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
    Write_RAM_Black_White_Command                : constant
@@ -45,6 +47,24 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#44#;
    Set_RAM_Y_Address_Start_End_Position_Command : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#45#;
+
+   Display_Update_Control_1_Parameters_Length : constant := 2;
+
+   type Display_Update_Control_1_Parameters is record
+      RED_RAM        : RAM_Content;
+      BW_RAM         : RAM_Content;
+      Reserved_1_7_5 : A0B.Types.Reserved_3 := A0B.Types.Zero;
+      Cascade        : Boolean;
+      Reserved_1_3_0 : A0B.Types.Reserved_4 := A0B.Types.Zero;
+   end record with Size => 8 * Display_Update_Control_1_Parameters_Length;
+
+   for Display_Update_Control_1_Parameters use record
+      BW_RAM         at 0 range 0 .. 3;
+      RED_RAM        at 0 range 4 .. 7;
+      Reserved_1_3_0 at 1 range 0 .. 3;
+      Cascade        at 1 range 4 .. 4;
+      Reserved_1_7_5 at 1 range 5 .. 7;
+   end record;
 
    procedure On_Timeout;
 
@@ -222,6 +242,42 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Data_Entry_Mode_Setting;
+
+   ------------------------------
+   -- Display_Update_Control_1 --
+   ------------------------------
+
+   procedure Display_Update_Control_1
+     (BW_RAM   : RAM_Content;
+      RED_RAM  : RAM_Content;
+      Cascade  : Boolean;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Parameters : Display_Update_Control_1_Parameters
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameters :=
+           (RED_RAM => RED_RAM,
+            BW_RAM  => BW_RAM,
+            Cascade => Cascade,
+            others  => <>);
+         Parameter_Buffer.Set_Actual_Length
+           (Display_Update_Control_1_Parameters_Length);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Display_Update_Control_1_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Display_Update_Control_1;
 
    ------------------------------
    -- Display_Update_Control_2 --

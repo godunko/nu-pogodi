@@ -46,6 +46,28 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
    end Data_Entry_Mode_Setting;
 
    ------------------------------
+   -- Display_Update_Control_1 --
+   ------------------------------
+
+   procedure Display_Update_Control_1
+     (BW_RAM  : RAM_Content;
+      RED_RAM : RAM_Content;
+      Cascade : Boolean;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Display_Update_Control_1
+        (BW_RAM   => BW_RAM,
+         RED_RAM  => RED_RAM,
+         Cascade  => Cascade,
+         Callback => A0B.Awaits.Create_Callback (Await),
+         Success  => Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Display_Update_Control_1;
+
+   ------------------------------
    -- Display_Update_Control_2 --
    ------------------------------
 

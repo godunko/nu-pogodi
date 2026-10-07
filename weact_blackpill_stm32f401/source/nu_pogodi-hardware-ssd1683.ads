@@ -38,6 +38,13 @@ package Nu_Pogodi.Hardware.SSD1683 is
 
    type Direction is (X_Axis, Y_Axis);
 
+   type RAM_Content is (Normal, Bypass, Inverse) with Size => 4;
+
+   for RAM_Content use
+     (Normal  => 2#0000#,
+      Bypass  => 2#0100#,
+      Inverse => 2#1000#);
+
    procedure Initialize;
 
    procedure Reset (Callback : A0B.Callbacks.Callback);
@@ -54,6 +61,14 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Write given data to RED RAM
+
+   procedure Display_Update_Control_1
+     (BW_RAM   : RAM_Content;
+      RED_RAM  : RAM_Content;
+      Cascade  : Boolean;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Sets RAM content option for Display Update
 
    procedure Display_Update_Control_2
      (Sequence : Update_Sequence;
