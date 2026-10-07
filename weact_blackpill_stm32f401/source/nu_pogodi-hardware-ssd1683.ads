@@ -92,6 +92,14 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Write given data to BW RAM
 
+   procedure Auto_Write_BW_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Auto Write BW RAM for Regular Pattern
+
    procedure Write_RAM_Red
      (Data     : A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;

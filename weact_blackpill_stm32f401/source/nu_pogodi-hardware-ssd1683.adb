@@ -49,9 +49,26 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#45#;
    Auto_Write_RED_RAM_For_Regular_Pattern_Command : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#46#;
+   Auto_Write_BW_RAM_For_Regular_Pattern_Command  : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#47#;
 
+   Auto_Write_BW_RAM_For_Regular_Pattern_Length  : constant := 1;
    Auto_Write_RED_RAM_For_Regular_Pattern_Length : constant := 1;
    Display_Update_Control_1_Parameters_Length    : constant := 2;
+
+   type Auto_Write_BW_RAM_For_Regular_Pattern_Parameters is record
+      Value          : A0B.Types.Unsigned_1;
+      Step_Height    : Height_Pattern_Step;
+      Reserved_0_3_3 : A0B.Types.Reserved_1 := A0B.Types.Zero;
+      Step_Width     : Width_Pattern_Step;
+   end record with Size => 8 * Auto_Write_BW_RAM_For_Regular_Pattern_Length;
+
+   for Auto_Write_BW_RAM_For_Regular_Pattern_Parameters use record
+      Step_Width     at 0 range 0 .. 2;
+      Reserved_0_3_3 at 0 range 3 .. 3;
+      Step_Height    at 0 range 4 .. 6;
+      Value          at 0 range 7 .. 7;
+   end record;
 
    type Auto_Write_RED_RAM_For_Regular_Pattern_Parameters is record
       Value          : A0B.Types.Unsigned_1;
@@ -184,6 +201,42 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Busy;
 
    end State_Machine_Command_Busy_State;
+
+   -------------------------------------------
+   -- Auto_Write_BW_RAM_For_Regular_Pattern --
+   -------------------------------------------
+
+   procedure Auto_Write_BW_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Parameters : Auto_Write_BW_RAM_For_Regular_Pattern_Parameters
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameters :=
+           (Value       => Value,
+            Step_Height => Height,
+            Step_Width  => Width,
+            others      => <>);
+         Parameter_Buffer.Set_Actual_Length
+           (Auto_Write_BW_RAM_For_Regular_Pattern_Length);
+      end;
+
+      State_Machine_Command_Busy_State.Enter
+        (Auto_Write_BW_RAM_For_Regular_Pattern_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Auto_Write_BW_RAM_For_Regular_Pattern;
 
    --------------------------------------------
    -- Auto_Write_RED_RAM_For_Regular_Pattern --
