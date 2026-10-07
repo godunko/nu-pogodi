@@ -22,6 +22,8 @@ package body Nu_Pogodi.Scene is
    --  Increment score, update game speed.
 
    function Exclude_Current_Lane return Boolean;
+   --  Returns `True` when current lane should be excluded from egg generation
+   --  procedure.
 
    package Random_Generator is
 
@@ -32,6 +34,14 @@ package body Nu_Pogodi.Scene is
       procedure Update;
 
    end Random_Generator;
+
+   To_Lane : constant array (Lane_Side, Lane_Height) of Lane :=
+     [Left  =>
+        [Top    => Left_Top,
+         Bottom => Left_Bottom],
+      Right =>
+        [Top    => Right_Top,
+         Bottom => Right_Bottom]];
 
    --  --------------------------------------------------------------------------
    --  -- Sets initial state defaults per game mode
@@ -53,31 +63,6 @@ package body Nu_Pogodi.Scene is
    --     );
    --  end Initialize_Game;
    --
-   --  --------------------------------------------------------------------------
-   --  -- Private Helper: Injects an egg into a target lane safely
-   --  --------------------------------------------------------------------------
-   --  procedure Spawn_Egg_In_Lane (State : in out Game_State; Lane_Idx : Natural) is
-   --  begin
-   --     case Lane_Idx mod 4 is
-   --        when 0 =>
-   --           if not State.Lanes.Top_Left(0) then
-   --              State.Lanes.Top_Left(0) := True; State.Active_Eggs_Count := State.Active_Eggs_Count + 1;
-   --           end if;
-   --        when 1 =>
-   --           if not State.Lanes.Top_Right(0) then
-   --              State.Lanes.Top_Right(0) := True; State.Active_Eggs_Count := State.Active_Eggs_Count + 1;
-   --           end if;
-   --        when 2 =>
-   --           if not State.Lanes.Bottom_Left(0) then
-   --              State.Lanes.Bottom_Left(0) := True; State.Active_Eggs_Count := State.Active_Eggs_Count + 1;
-   --           end if;
-   --        when others =>
-   --           if not State.Lanes.Bottom_Right(0) then
-   --              State.Lanes.Bottom_Right(0) := True; State.Active_Eggs_Count := State.Active_Eggs_Count + 1;
-   --           end if;
-   --     end case;
-   --  end Spawn_Egg_In_Lane;
-
    --  --------------------------------------------------------------------------
    --  -- Updates Wolf Placement
    --  --------------------------------------------------------------------------
@@ -117,36 +102,38 @@ package body Nu_Pogodi.Scene is
 
    --     Penalty_Increment : Float := 1.0;
    begin
-      if Lane (Lane'Last) then
-   --        if State.Wolf.Side = Lane_S and State.Wolf.Height = Lane_H then
-   --           -- Successful Capture
-            --  Score := Score + 1;
-   --           if State.Score > 999 then
-   --              State.Score := 0;
-   --           end if;
-   --
-   --           Recalculate_Game_Speed(State);
-   --
-   --           if State.Score = 200 or State.Score = 500 then
-   --              State.Misses := 0.0;
-   --           end if;
-   --        else
-   --           -- Drop Registered
-   --           if State.Rabbit_Visible then
-   --              Penalty_Increment := 0.5;
-   --           end if;
-   --
-   --           State.Misses := State.Misses + Penalty_Increment;
-   --           if State.Misses >= 3.0 then
-   --              State.Game_Over := True;
-   --           end if;
-   --        end if;
-   --
-   --        Lane(Egg_Max_Step) := False;
-         State.Active_Eggs_Count := @ - 1;
-      end if;
+   --     if Lane (Lane'Last) then
+   --  --        if State.Wolf.Side = Lane_S and State.Wolf.Height = Lane_H then
+   --  --           -- Successful Capture
+   --           --  Score := Score + 1;
+   --  --           if State.Score > 999 then
+   --  --              State.Score := 0;
+   --  --           end if;
+   --  --
+   --  --           Recalculate_Game_Speed(State);
+   --  --
+   --  --           if State.Score = 200 or State.Score = 500 then
+   --  --              State.Misses := 0.0;
+   --  --           end if;
+   --  --        else
+   --  --           -- Drop Registered
+   --  --           if State.Rabbit_Visible then
+   --  --              Penalty_Increment := 0.5;
+   --  --           end if;
+   --  --
+   --  --           State.Misses := State.Misses + Penalty_Increment;
+   --  --           if State.Misses >= 3.0 then
+   --  --              State.Game_Over := True;
+   --  --           end if;
+   --  --        end if;
+   --  --
+   --  --        Lane(Egg_Max_Step) := False;
+   --        State.Active_Eggs_Count := @ - 1;
+   --     end if;
 
-      --  Move eggs down in lane
+      if Lane (Lane'Last) then
+         State.Dangerous_Lane := To_Lane (Side, Height);
+      end if;
 
       for Step in reverse Egg_Step'First + 1 .. Egg_Step'Last loop
          Lane (Step) := Lane (Step - 1);
@@ -164,7 +151,9 @@ package body Nu_Pogodi.Scene is
          Lane (Lane'First) := False;
       end if;
 
-      if (for some Step in Egg_Step => Lane (Step)) then
+      if (for some Step in Egg_Step => Lane (Step))
+        or State.Dangerous_Lane /= None
+      then
          State.Idle_Lane_Count := 0;
 
       else
@@ -210,7 +199,8 @@ package body Nu_Pogodi.Scene is
          Random_Seed       => 0,
          Idle_Lane_Count   => 0,
          Eggs_Count_Limit  => 1,
-         Active_Eggs_Count => 0);
+         Active_Eggs_Count => 0,
+         Dangerous_Lane    => None);
 
       Wolf              := (Side => Left, Height => Top);
       Lanes             := [others => [others => [others => False]]];
@@ -373,29 +363,42 @@ package body Nu_Pogodi.Scene is
    --        return;
    --     end if;
 
-      State.Idle_Lane_Count := 0;
+      if State.Dangerous_Lane /= None then
+         raise Program_Error;
 
-      loop
-         case State.Current_Lane is
-            when Left_Top =>
-               Advance_Lane (Left, Top);
+      else
+         State.Idle_Lane_Count := 0;
 
-            when Right_Top =>
-               Advance_Lane (Right, Top);
+         loop
+            case State.Current_Lane is
+               when Left_Top =>
+                  Advance_Lane (Left, Top);
 
-            when Left_Bottom =>
-               Advance_Lane (Left, Bottom);
+               when Right_Top =>
+                  Advance_Lane (Right, Top);
 
-            when Right_Bottom =>
-               Advance_Lane (Right, Bottom);
-         end case;
+               when Left_Bottom =>
+                  Advance_Lane (Left, Bottom);
 
-         Next (State.Current_Lane);
+               when Right_Bottom =>
+                  Advance_Lane (Right, Bottom);
+            end case;
 
-         exit when State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
-      end loop;
+            Next (State.Current_Lane);
 
-      Update_Score;
+            exit when State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
+         end loop;
+
+         if State.Dangerous_Lane /= None
+           and then State.Dangerous_Lane = To_Lane (Wolf.Side, Wolf.Height)
+         then
+            State.Dangerous_Lane := None;
+            State.Active_Eggs_Count := @ - 1;
+
+            Update_Score;
+         end if;
+      end if;
+      --  Update_Score;
 
       State.Remain_Ticks := State.Cycle_Ticks;
       Refresh := True;
