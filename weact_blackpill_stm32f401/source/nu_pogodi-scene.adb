@@ -304,10 +304,6 @@ package body Nu_Pogodi.Scene is
             + A0B.Types.Unsigned_32 (Ones (Records.A))
             + State.Random_Seed) mod 16;
 
-         --  Algorithm for generating a pseudo-random Boolean value generates
-         --  at most two consecutive `False` values sequentially. This fact is
-         --  used to limit number of iterations in the game loop.
-
          State.Random_Seed := @ + 6;
 
          if State.Random_Seed >= 16 then
@@ -412,7 +408,7 @@ package body Nu_Pogodi.Scene is
                Next (State.Current_Lane);
 
                exit when
-                 State.Idle_Lane_Count = 0 or State.Idle_Lane_Count >= 3;
+                 State.Idle_Lane_Count = 0 or State.Idle_Lane_Count > 3;
             end loop;
 
             if State.Dangerous_Lane /= None
