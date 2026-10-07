@@ -318,10 +318,18 @@ package body Nu_Pogodi.Scene is
       use type A0B.Types.Unsigned_32;
 
    begin
+      if State.Miss_Count > 3 then
+         --  Game over
+
+         Refresh := False;
+
+         return;
+      end if;
+
       State.Current_Tick := @ + 1;
       State.Remain_Ticks := @ - 1;
 
-      if State.Remain_Ticks /= 0 or State.Miss_Count > 3 then
+      if State.Remain_Ticks /= 0 then
          Refresh := False;
 
          return;
