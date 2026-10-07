@@ -502,6 +502,13 @@ package body Nu_Pogodi.Scene is
          end if;
       end if;
 
+      --  Reset misses at 200 and 500
+
+      if State.Current_Score in 200 | 500 then
+         State.Miss_Count := 0;
+         State.Miss_Half  := False;
+      end if;
+
       --  Update eggs limit
 
       declare
