@@ -50,7 +50,9 @@ private
       Current_Tick         : A0B.Types.Unsigned_32 := 0;
       Current_Cycle        : A0B.Types.Unsigned_32 := 0;
       Cycle_Ticks          : A0B.Types.Unsigned_32 := 31;
-      Remain_Ticks         : A0B.Types.Unsigned_32 := 31;
+      --  Original amount of ticks in game cycle
+      Remain_Ticks         : A0B.Types.Unsigned_32 := 32;
+      --  Actual amount of ticks to wait, it is original amout plus one.
 
       Miss_Animation_Side  : Lane_Side             := Left;
       Miss_Animation_Cycle : A0B.Types.Unsigned_32 := 0;

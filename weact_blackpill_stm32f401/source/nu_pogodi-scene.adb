@@ -223,7 +223,7 @@ package body Nu_Pogodi.Scene is
          State.Cycle_Ticks := Cycle_Ticks;
          State.Current_Lane := Current_Lane;
 
-         State.Remain_Ticks := State.Cycle_Ticks;
+         State.Remain_Ticks := State.Cycle_Ticks + 1;
       end;
    end Initialize;
 
@@ -429,7 +429,7 @@ package body Nu_Pogodi.Scene is
                end if;
             end if;
 
-            State.Remain_Ticks := State.Cycle_Ticks;
+            State.Remain_Ticks := State.Cycle_Ticks + 1;
          end if;
 
       else
@@ -483,10 +483,14 @@ package body Nu_Pogodi.Scene is
       elsif Tens (Previous_Score) /= Tens (State.Current_Score) then
          State.Cycle_Ticks := @ - 1;
 
-         if State.Cycle_Ticks < 9 then  --  7 in original code
+         if State.Cycle_Ticks < 8 then  --  Original minimum interval: 7 ticks.
+            --  Value of 8 means 9 ticks, if timer run @32Hz it produce 0.281
+            --  seconds of one cycle. It is a bit more than display refresh
+            --  time.
+            --
             --  XXX Should be configurable !!!
 
-            State.Cycle_Ticks := 9;
+            State.Cycle_Ticks := 8;
          end if;
       end if;
 
