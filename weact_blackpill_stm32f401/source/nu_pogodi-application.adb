@@ -15,6 +15,7 @@ with A0B.Buffers.Static;
 with A0B.Types.Arrays;
 
 with Nu_Pogodi.Bitmaps;
+with Nu_Pogodi.Clock;
 with Nu_Pogodi.Display;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.Scene.Drawing;
@@ -160,6 +161,7 @@ package body Nu_Pogodi.Application is
       begin
          Data := [others => 16#FF#];
          Nu_Pogodi.Scene.Drawing.Draw (FB);
+         Nu_Pogodi.Clock.Draw (Active_Buffer);
       end;
 
       Active_Buffer.Set_Actual_Length (15_000);
