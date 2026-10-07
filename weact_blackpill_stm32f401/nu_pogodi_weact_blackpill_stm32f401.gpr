@@ -19,7 +19,8 @@ project Nu_Pogodi_WeAct_BlackPill_STM32F401 is
 
    package Compiler is
       for Switches ("Ada") use Nu_Pogodi_Weact_Blackpill_Stm32f401_Config.Ada_Compiler_Switches &
-        ("-gnatyo");  --  check subprogram bodies in alphabetical order
+        ("-gnatyo",    --  check subprogram bodies in alphabetical order
+         "-gnaty-B");  --  check no use of AND/OR for boolean expressions
    end Compiler;
 
    package Builder is
