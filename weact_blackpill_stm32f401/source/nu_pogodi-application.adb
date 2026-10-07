@@ -78,6 +78,19 @@ package body Nu_Pogodi.Application is
    begin
       Span (Cycle).Start := A0B.Time.Clock;
 
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_1
+        (BW_RAM  => Nu_Pogodi.Hardware.SSD1683.Normal,
+         RED_RAM => Nu_Pogodi.Hardware.SSD1683.Bypass,
+         Cascade => False,
+         Success => Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous
+        .Auto_Write_BW_RAM_For_Regular_Pattern
+          (1,
+           Nu_Pogodi.Hardware.SSD1683.Width_Full,
+           Nu_Pogodi.Hardware.SSD1683.Height_Full,
+           Success);
+
       declare
          Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
            with Import, Address => Pixel_Buffer (0).Address;
@@ -85,21 +98,6 @@ package body Nu_Pogodi.Application is
       begin
          Data := [others => 16#FF#];
          Pixel_Buffer (0).Set_Actual_Length (15_000);
-
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-           (Pixel_Buffer (0), Success);
-      end;
-
-      declare
-         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer (1).Address;
-
-      begin
-         Data := [others => 16#00#];
-         Pixel_Buffer (1).Set_Actual_Length (15_000);
-
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
-           (Pixel_Buffer (1), Success);
       end;
 
       Span (Cycle).Release :=
@@ -116,6 +114,12 @@ package body Nu_Pogodi.Application is
           Disable_Clock     => True),
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_1
+        (BW_RAM  => Nu_Pogodi.Hardware.SSD1683.Normal,
+         RED_RAM => Nu_Pogodi.Hardware.SSD1683.Normal,
+         Cascade => False,
+         Success => Success);
 
       Span (Cycle).Update :=
         A0B.Time.To_Duration (A0B.Time.Clock - Span (Cycle).Start);
