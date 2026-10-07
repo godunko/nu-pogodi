@@ -17,6 +17,7 @@ with A0B.Types.Arrays;
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Clock;
 with Nu_Pogodi.Display;
+with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.Scene.Drawing;
 
@@ -32,6 +33,11 @@ package body Nu_Pogodi.Application is
    package On_Display_Updated_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Display_Updated);
 
+   procedure On_Wakeup;
+
+   package On_Wakeup_Callbacks is
+     new A0B.Callbacks.Generic_Parameterless (On_Wakeup);
+
    procedure Delay_Until (Time : A0B.Time.Monotonic_Time);
 
    procedure Full_Clean;
@@ -43,10 +49,9 @@ package body Nu_Pogodi.Application is
 
    subtype Pixbuf is A0B.Buffers.Static.Static_Buffer (15_000);
 
-   Pixel_Buffer :
-     array (Natural range 0 .. 1) of Pixbuf;
-
-   Cycle : Natural := 0;
+   Pixel_Buffer : array (Natural range 0 .. 1) of Pixbuf;
+   Cycle        : Natural := 0;
+   Wakeup       : Boolean := False with Volatile;
 
    -----------------
    -- Delay_Until --
@@ -141,6 +146,15 @@ package body Nu_Pogodi.Application is
       Cycle := @ + 1;
    end On_Display_Updated;
 
+   ---------------
+   -- On_Wakeup --
+   ---------------
+
+   procedure On_Wakeup is
+   begin
+      Wakeup := True;
+   end On_Wakeup;
+
    -------------
    -- Partial --
    -------------
@@ -173,6 +187,51 @@ package body Nu_Pogodi.Application is
          Success);
    end Partial;
 
+   -------------------
+   -- Partial_Clock --
+   -------------------
+
+   procedure Partial_Clock
+     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success       : in out Boolean)
+   is
+      Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
+        with Import, Address => Active_Buffer.Address;
+
+   begin
+      declare
+         FB : Nu_Pogodi.Bitmaps.Framebuffer
+           with Import, Address => Data'Address;
+
+      begin
+         Data := [others => 16#FF#];
+         Nu_Pogodi.Scene.Drawing.Draw (FB);
+         Nu_Pogodi.Clock.Draw (Active_Buffer);
+      end;
+
+      Active_Buffer.Set_Actual_Length (15_000);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
+        (Active_Buffer, Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
+        (Backup_Buffer, Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => True,
+          Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => True,
+          Disable_Analog    => True,
+          Disable_Clock     => True),
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation
+        (Success);
+
+      Cycle := @ + 1;
+   end Partial_Clock;
+
    ---------
    -- Run --
    ---------
@@ -183,6 +242,8 @@ package body Nu_Pogodi.Application is
       Success : Boolean := True;
 
    begin
+      Nu_Pogodi.Hardware.RTC.Set_Wakeup (On_Wakeup_Callbacks.Create_Callback);
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting
@@ -267,12 +328,17 @@ package body Nu_Pogodi.Application is
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
 
-      if Success then
-         raise Program_Error;
-      end if;
-
       loop
          A0B.ARMv7M.Instructions.Wait_For_Interrupt;
+
+         if Wakeup then
+            Wakeup := False;
+
+            Partial_Clock
+              (Pixel_Buffer (Cycle mod 2),
+               Pixel_Buffer ((Cycle - 1) mod 2),
+               Success);
+         end if;
       end loop;
    end Run;
 
