@@ -23,32 +23,49 @@ with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SSD1683 is
 
-   Booster_Soft_Start_Control_Command           : constant
+   Booster_Soft_Start_Control_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#0C#;
-   Data_Entry_Mode_Setting_Command              : constant
+   Data_Entry_Mode_Setting_Command                : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#11#;
-   SW_RESET_Command                             : constant
+   SW_RESET_Command                               : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
-   Temperature_Sensor_Control_Command           : constant
+   Temperature_Sensor_Control_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#18#;
-   Master_Activation_Command                    : constant
+   Master_Activation_Command                      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
-   Display_Update_Control_1_Command             : constant
+   Display_Update_Control_1_Command               : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#21#;
-   Display_Update_Control_2_Command             : constant
+   Display_Update_Control_2_Command               : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#22#;
-   Write_RAM_Black_White_Command                : constant
+   Write_RAM_Black_White_Command                  : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
-   Write_RAM_Red_Command                        : constant
+   Write_RAM_Red_Command                          : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
-   --  Load_WS_OTP_Command                        : constant
+   --  Load_WS_OTP_Command                          : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
-   Set_RAM_X_Address_Start_End_Position_Command : constant
+   Set_RAM_X_Address_Start_End_Position_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#44#;
-   Set_RAM_Y_Address_Start_End_Position_Command : constant
+   Set_RAM_Y_Address_Start_End_Position_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#45#;
+   Auto_Write_RED_RAM_For_Regular_Pattern_Command : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#46#;
 
-   Display_Update_Control_1_Parameters_Length : constant := 2;
+   Auto_Write_RED_RAM_For_Regular_Pattern_Length : constant := 1;
+   Display_Update_Control_1_Parameters_Length    : constant := 2;
+
+   type Auto_Write_RED_RAM_For_Regular_Pattern_Parameters is record
+      Value          : A0B.Types.Unsigned_1;
+      Step_Height    : Height_Pattern_Step;
+      Reserved_0_3_3 : A0B.Types.Reserved_1 := A0B.Types.Zero;
+      Step_Width     : Width_Pattern_Step;
+   end record with Size => 8 * Auto_Write_RED_RAM_For_Regular_Pattern_Length;
+
+   for Auto_Write_RED_RAM_For_Regular_Pattern_Parameters use record
+      Step_Width     at 0 range 0 .. 2;
+      Reserved_0_3_3 at 0 range 3 .. 3;
+      Step_Height    at 0 range 4 .. 6;
+      Value          at 0 range 7 .. 7;
+   end record;
 
    type Display_Update_Control_1_Parameters is record
       RED_RAM        : RAM_Content;
@@ -158,9 +175,51 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean);
 
+      procedure Enter
+        (Command     : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Data_Buffer : A0B.Buffers.Abstract_Buffer'Class;
+         Callback    : A0B.Callbacks.Callback;
+         Success     : in out Boolean);
+
       procedure On_Busy;
 
    end State_Machine_Command_Busy_State;
+
+   --------------------------------------------
+   -- Auto_Write_RED_RAM_For_Regular_Pattern --
+   --------------------------------------------
+
+   procedure Auto_Write_RED_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Parameters : Auto_Write_RED_RAM_For_Regular_Pattern_Parameters
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameters :=
+           (Value       => Value,
+            Step_Height => Height,
+            Step_Width  => Width,
+            others      => <>);
+         Parameter_Buffer.Set_Actual_Length
+           (Auto_Write_RED_RAM_For_Regular_Pattern_Length);
+      end;
+
+      State_Machine_Command_Busy_State.Enter
+        (Auto_Write_RED_RAM_For_Regular_Pattern_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Auto_Write_RED_RAM_For_Regular_Pattern;
 
    --------------------------------
    -- Booster_Soft_Start_Control --
@@ -527,6 +586,38 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
            (Command,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter
+        (Command     : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Data_Buffer : A0B.Buffers.Abstract_Buffer'Class;
+         Callback    : A0B.Callbacks.Callback;
+         Success     : in out Boolean) is
+      begin
+         if not Success then
+            return;
+         end if;
+
+         State := Command_Busy;
+         Command_Callback := Callback;
+
+         Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
+           (On_Busy_Callbacks.Create_Callback);
+         Nu_Pogodi.Hardware.MIPI.Command_Write
+           (Command,
+            Data_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 

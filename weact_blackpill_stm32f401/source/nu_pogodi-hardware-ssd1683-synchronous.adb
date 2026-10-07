@@ -8,6 +8,24 @@ with A0B.Awaits;
 
 package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
 
+   --------------------------------------------
+   -- Auto_Write_RED_RAM_For_Regular_Pattern --
+   --------------------------------------------
+
+   procedure Auto_Write_RED_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Success  : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Auto_Write_RED_RAM_For_Regular_Pattern
+        (Value, Width, Height, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Auto_Write_RED_RAM_For_Regular_Pattern;
+
    --------------------------------
    -- Booster_Soft_Start_Control --
    --------------------------------

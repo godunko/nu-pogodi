@@ -19,6 +19,13 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
       Success : in out Boolean);
    --  Write given data to RED RAM
 
+   procedure Auto_Write_RED_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Success  : in out Boolean);
+   --  Auto Write RED RAM for Regular Pattern
+
    procedure Display_Update_Control_1
      (BW_RAM  : RAM_Content;
       RED_RAM : RAM_Content;

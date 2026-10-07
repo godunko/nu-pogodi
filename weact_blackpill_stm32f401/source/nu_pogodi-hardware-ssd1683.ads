@@ -45,6 +45,42 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Bypass  => 2#0100#,
       Inverse => 2#1000#);
 
+   type Width_Pattern_Step is
+     (Width_8,
+      Width_16,
+      Width_32,
+      Width_64,
+      Width_128,
+      Width_256,
+      Width_Full);
+
+   for Width_Pattern_Step use
+     (Width_8    => 2#000#,
+      Width_16   => 2#001#,
+      Width_32   => 2#010#,
+      Width_64   => 2#011#,
+      Width_128  => 2#100#,
+      Width_256  => 2#101#,
+      Width_Full => 2#110#);
+
+   type Height_Pattern_Step is
+     (Height_8,
+      Height_16,
+      Height_32,
+      Height_64,
+      Height_128,
+      Height_256,
+      Height_Full);
+
+   for Height_Pattern_Step use
+     (Height_8    => 2#000#,
+      Height_16   => 2#001#,
+      Height_32   => 2#010#,
+      Height_64   => 2#011#,
+      Height_128  => 2#100#,
+      Height_256  => 2#101#,
+      Height_Full => 2#110#);
+
    procedure Initialize;
 
    procedure Reset (Callback : A0B.Callbacks.Callback);
@@ -61,6 +97,14 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Write given data to RED RAM
+
+   procedure Auto_Write_RED_RAM_For_Regular_Pattern
+     (Value    : A0B.Types.Unsigned_1;
+      Width    : Width_Pattern_Step;
+      Height   : Height_Pattern_Step;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Auto Write RED RAM for Regular Pattern
 
    procedure Display_Update_Control_1
      (BW_RAM   : RAM_Content;
