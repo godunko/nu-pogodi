@@ -35,6 +35,8 @@ package Nu_Pogodi.Scene is
 
    procedure Update_Physics_Tick (Refresh : out Boolean);
 
+   function Is_Game_Over return Boolean;
+
 private
 
    type Score is mod 1_000;

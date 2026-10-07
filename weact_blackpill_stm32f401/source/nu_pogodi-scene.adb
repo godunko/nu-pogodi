@@ -172,6 +172,15 @@ package body Nu_Pogodi.Scene is
       end;
    end Initialize;
 
+   ------------------
+   -- Is_Game_Over --
+   ------------------
+
+   function Is_Game_Over return Boolean is
+   begin
+      return State.Miss_Count > 3;
+   end Is_Game_Over;
+
    ----------
    -- Next --
    ----------
