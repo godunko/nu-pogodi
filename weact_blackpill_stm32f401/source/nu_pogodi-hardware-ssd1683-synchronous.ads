@@ -84,6 +84,11 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
    --  Specify the start/end positions of the window address in the X direction
    --  by an address unit for RAM.
 
+   procedure Set_RAM_Y_Address_Counter
+     (Y       : A0B.Types.Unsigned_9;
+      Success : in out Boolean);
+   --  Set the RAM Y address counter in row address units.
+
    procedure Set_RAM_Y_Address_Start_End_Position
      (Y_Start : A0B.Types.Unsigned_9;
       Y_End   : A0B.Types.Unsigned_9;
