@@ -27,4 +27,24 @@ package body Nu_Pogodi.Hardware is
         or A0B.Types.Shift_Right (Result, 4);
    end Reverse_Bits;
 
+   ------------------
+   -- Reverse_Bits --
+   ------------------
+
+   procedure Reverse_Bits
+     (Buffer : in out A0B.Buffers.Abstract_Buffer'Class)
+   is
+      type Byte_Array is
+        array (A0B.Buffers.Storage_Count range <>) of A0B.Types.Unsigned_8
+          with Component_Size => 8;
+
+      Data : Byte_Array (1 .. Buffer.Length)
+        with Import, Address => Buffer.Address;
+
+   begin
+      for Byte of Data loop
+         Byte := Reverse_Bits (Byte);
+      end loop;
+   end Reverse_Bits;
+
 end Nu_Pogodi.Hardware;

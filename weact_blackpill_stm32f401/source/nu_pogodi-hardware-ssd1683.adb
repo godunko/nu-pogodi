@@ -125,8 +125,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Command_Callback : A0B.Callbacks.Callback;
    Parameter_Buffer : A0B.Buffers.Static.Static_Buffer (4);
 
-   procedure Prepare_Parameters (Length : A0B.Buffers.Storage_Count);
-
    package State_Machine_VCI_Wait_State is
 
       --  Power-on state, wait 10 milliseconds to complete panel's power-on
@@ -224,13 +222,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length
+           (Auto_Write_BW_RAM_For_Regular_Pattern_Length);
          Parameters :=
            (Value       => Value,
             Step_Height => Height,
             Step_Width  => Width,
             others      => <>);
-         Prepare_Parameters
-           (Auto_Write_BW_RAM_For_Regular_Pattern_Length);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_Busy_State.Enter
@@ -260,13 +259,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length
+           (Auto_Write_RED_RAM_For_Regular_Pattern_Length);
          Parameters :=
            (Value       => Value,
             Step_Height => Height,
             Step_Width  => Width,
             others      => <>);
-         Prepare_Parameters
-           (Auto_Write_RED_RAM_For_Regular_Pattern_Length);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_Busy_State.Enter
@@ -297,11 +297,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length (4);
          Data (1) := B1;
          Data (2) := B2;
          Data (3) := B3;
          Data (4) := B4;
-         Prepare_Parameters (4);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -333,7 +334,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
-         Data := 16#00#;
+         Parameter_Buffer.Set_Actual_Length (1);
+         Data := 0;
 
          if X_Axis = Increment then
             Data := @ or 2#0000_0001#;
@@ -347,7 +349,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             Data := @ or 2#0000_0100#;
          end if;
 
-         Prepare_Parameters (1);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -377,13 +379,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length
+           (Display_Update_Control_1_Parameters_Length);
          Parameters :=
            (RED_RAM => RED_RAM,
             BW_RAM  => BW_RAM,
             Cascade => Cascade,
             others  => <>);
-         Prepare_Parameters
-           (Display_Update_Control_1_Parameters_Length);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -411,8 +414,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length (1);
          Code := Sequence;
-         Prepare_Parameters (1);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -490,27 +494,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end case;
    end On_Timeout;
 
-   ------------------------
-   -- Prepare_Parameters --
-   ------------------------
-
-   procedure Prepare_Parameters (Length : A0B.Buffers.Storage_Count) is
-      Data : A0B.Types.Arrays.Unsigned_8_Array
-        (1 .. A0B.Types.Unsigned_32 (Length))
-        with Import, Address => Parameter_Buffer.Address;
-
-   begin
-      --  Preserve the controller's MSB-first parameter encoding on the wire.
-      --  Pixel buffers already use bit 0 for the leftmost pixel and bypass
-      --  this conversion.
-
-      for Byte of Data loop
-         Byte := Nu_Pogodi.Hardware.Reverse_Bits (Byte);
-      end loop;
-
-      Parameter_Buffer.Set_Actual_Length (Length);
-   end Prepare_Parameters;
-
    -----------
    -- Reset --
    -----------
@@ -560,9 +543,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length (2);
          Data (1) := A0B.Types.Unsigned_8 (X_Start);
          Data (2) := A0B.Types.Unsigned_8 (X_End);
-         Prepare_Parameters (2);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -593,11 +577,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length (4);
          Data (1) := A0B.Types.Unsigned_8 (Y_Start mod 256);
          Data (2) := A0B.Types.Unsigned_8 (Y_Start / 256);
          Data (3) := A0B.Types.Unsigned_8 (Y_End mod 256);
          Data (4) := A0B.Types.Unsigned_8 (Y_End / 256);
-         Prepare_Parameters (4);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -923,11 +908,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            with Import, Address => Parameter_Buffer.Address;
 
       begin
+         Parameter_Buffer.Set_Actual_Length (1);
          Code :=
            (case Sensor is
               when External => 16#48#,
               when Internal => 16#80#);
-         Prepare_Parameters (1);
+         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter

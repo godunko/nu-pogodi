@@ -4,6 +4,16 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+--  Driver of the SSD1683 display driver controller.
+--
+--  Note: it is expected that framebuffer data use LSB-first format (the
+--  leftmost pixel maps to the least significant bit. It is most efficient
+--  format for pixel processing by MCU.
+--
+--  Implementation note: SSD1683 accepts bytes in MSB format; underlying SPI is
+--  configured to use LSB transfer mode, and driver do conversion of bit order
+--  for commands and their parameters.
+
 with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types;
