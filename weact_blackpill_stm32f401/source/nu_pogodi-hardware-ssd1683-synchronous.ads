@@ -72,6 +72,11 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
       Success : in out Boolean);
    --  Define data entry sequence.
 
+   procedure Set_RAM_X_Address_Counter
+     (X       : A0B.Types.Unsigned_6;
+      Success : in out Boolean);
+   --  Set the RAM X address counter in byte address units.
+
    procedure Set_RAM_X_Address_Start_End_Position
      (X_Start : A0B.Types.Unsigned_6;
       X_End   : A0B.Types.Unsigned_6;

@@ -147,6 +147,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Reset;
 
+   -------------------------------
+   -- Set_RAM_X_Address_Counter --
+   -------------------------------
+
+   procedure Set_RAM_X_Address_Counter
+     (X       : A0B.Types.Unsigned_6;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Set_RAM_X_Address_Counter
+        (X, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Set_RAM_X_Address_Counter;
+
    ------------------------------------------
    -- Set_RAM_X_Address_Start_End_Position --
    ------------------------------------------

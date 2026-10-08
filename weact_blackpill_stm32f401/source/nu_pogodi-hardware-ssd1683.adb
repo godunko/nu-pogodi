@@ -51,6 +51,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#46#;
    Auto_Write_BW_RAM_For_Regular_Pattern_Command  : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#47#;
+   Set_RAM_X_Address_Counter_Command              : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#4E#;
 
    Auto_Write_BW_RAM_For_Regular_Pattern_Length  : constant := 1;
    Auto_Write_RED_RAM_For_Regular_Pattern_Length : constant := 1;
@@ -523,6 +525,36 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State_Machine_HW_Reset_Low_State.Enter;
       end if;
    end Reset;
+
+   -------------------------------
+   -- Set_RAM_X_Address_Counter --
+   -------------------------------
+
+   procedure Set_RAM_X_Address_Counter
+     (X        : A0B.Types.Unsigned_6;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : A0B.Types.Unsigned_8
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length (1);
+         Data := A0B.Types.Unsigned_8 (X);
+         Reverse_Bits (Parameter_Buffer);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Set_RAM_X_Address_Counter_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Set_RAM_X_Address_Counter;
 
    ------------------------------------------
    -- Set_RAM_X_Address_Start_End_Position --
