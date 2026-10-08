@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.ARMv7M.Instructions;
+
 package body Nu_Pogodi.Hardware is
 
    ------------------
@@ -11,20 +13,14 @@ package body Nu_Pogodi.Hardware is
    ------------------
 
    function Reverse_Bits
-     (Value : A0B.Types.Unsigned_8) return A0B.Types.Unsigned_8
-   is
-      use type A0B.Types.Unsigned_8;
-
-      Result : A0B.Types.Unsigned_8 := Value;
-
+     (Value : A0B.Types.Unsigned_8) return A0B.Types.Unsigned_8 is
    begin
-      Result := A0B.Types.Shift_Left (Result and 16#55#, 1)
-        or A0B.Types.Shift_Right (Result and 16#AA#, 1);
-      Result := A0B.Types.Shift_Left (Result and 16#33#, 2)
-        or A0B.Types.Shift_Right (Result and 16#CC#, 2);
-
-      return A0B.Types.Shift_Left (Result, 4)
-        or A0B.Types.Shift_Right (Result, 4);
+      return
+        A0B.Types.Unsigned_8
+          (A0B.Types.Shift_Right
+            (A0B.ARMv7M.Instructions.Reverse_Bits
+              (A0B.Types.Unsigned_32 (Value)),
+             24));
    end Reverse_Bits;
 
    ------------------
