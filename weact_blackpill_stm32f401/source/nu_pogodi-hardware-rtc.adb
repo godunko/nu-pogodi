@@ -25,6 +25,42 @@ package body Nu_Pogodi.Hardware.RTC is
    -- Clock --
    -----------
 
+   function Clock return Date_Time is
+   begin
+      return Result : Date_Time do
+         declare
+            TR : constant A0B.STM32F401.SVD.RTC.TR_Register :=
+              A0B.STM32F401.SVD.RTC.RTC_Periph.TR;
+
+         begin
+            Result.Seconds_Ones := Seconds_Ones_Type (TR.SU);
+            Result.Seconds_Tens := Seconds_Tens_Type (TR.ST);
+            Result.Minutes_Ones := Minutes_Ones_Type (TR.MNU);
+            Result.Minutes_Tens := Minutes_Tens_Type (TR.MNT);
+            Result.Hours_Ones   := Hours_Ones_Type (TR.HU);
+            Result.Hours_Tens   := Hours_Tens_Type (TR.HT);
+            Result.PM           := TR.PM;
+         end;
+
+         declare
+            DR : constant A0B.STM32F401.SVD.RTC.DR_Register :=
+              A0B.STM32F401.SVD.RTC.RTC_Periph.DR;
+
+         begin
+            Result.Dates_Ones  := Dates_Ones_Type (DR.DT);
+            Result.Dates_Tens  := Dates_Tens_Type (DR.DU);
+            Result.Months_Ones := (if DR.MT then 1 else 0);
+            Result.Months_Tens := Months_Tens_Type (DR.MU);
+            Result.Years_Ones  := Years_Ones_Type (DR.YT);
+            Result.Years_Tens  := Years_Tens_Type (DR.YU);
+         end;
+      end return;
+   end Clock;
+
+   -----------
+   -- Clock --
+   -----------
+
    function Clock return Time is
    begin
       return Result : Time do

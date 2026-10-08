@@ -43,6 +43,8 @@ package body Nu_Pogodi.Clock is
      [16#78#, 16#CC#, 16#CC#, 16#7C#, 16#0C#, 16#18#, 16#70#, 16#00#];
    Digit_Colon : constant Display_Cell_Content :=
      [16#00#, 16#30#, 16#30#, 16#00#, 16#00#, 16#30#, 16#30#, 16#00#];
+   Digit_Minus : constant Display_Cell_Content :=
+     [16#00#, 16#00#, 16#00#, 16#FC#, 16#00#, 16#00#, 16#00#, 16#00#];
 
    ----------
    -- Draw --
@@ -51,7 +53,8 @@ package body Nu_Pogodi.Clock is
    procedure Draw (Buffer : in out A0B.Buffers.Abstract_Buffer'Class) is
       use type A0B.Types.Unsigned_32;
 
-      T : constant Nu_Pogodi.Hardware.RTC.Time := Nu_Pogodi.Hardware.RTC.Clock;
+      T : constant Nu_Pogodi.Hardware.RTC.Date_Time :=
+        Nu_Pogodi.Hardware.RTC.Clock;
 
       F : Frame_Buffer with Import, Address => Buffer.Address;
 
@@ -111,19 +114,22 @@ package body Nu_Pogodi.Clock is
          F (F'Last (1) - 10, J) := 16#00#;
       end loop;
 
-      Draw (25, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Hours_Tens));
-      Draw (26, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Hours_Ones));
+      Draw (34, F'Last (1) - 8, Digit_2);
+      Draw (35, F'Last (1) - 8, Digit_0);
+      Draw (36, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Years_Tens));
+      Draw (37, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Years_Ones));
+      Draw (38, F'Last (1) - 8, Digit_Minus);
+      Draw (39, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Months_Tens));
+      Draw (40, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Months_Ones));
+      Draw (41, F'Last (1) - 8, Digit_Minus);
+      Draw (42, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Dates_Tens));
+      Draw (43, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Dates_Ones));
 
-      Draw (28, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Minutes_Tens));
-      Draw (29, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Minutes_Ones));
-
-      Draw (31, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Seconds_Tens));
-      Draw (32, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Seconds_Ones));
-
-      if A0B.Types.Unsigned_32 (T.Seconds_Ones) mod 2 = 0 then
-         Draw (27, F'Last (1) - 8, Digit_Colon);
-         Draw (30, F'Last (1) - 8, Digit_Colon);
-      end if;
+      Draw (45, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Hours_Tens));
+      Draw (46, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Hours_Ones));
+      Draw (47, F'Last (1) - 8, Digit_Colon);
+      Draw (48, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Minutes_Tens));
+      Draw (49, F'Last (1) - 8, A0B.Types.Unsigned_8 (T.Minutes_Ones));
    end Draw;
 
 end Nu_Pogodi.Clock;
