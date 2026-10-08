@@ -35,6 +35,6 @@ a0b_tools = "*"
 
 [[pins]]
 #a0b_stm32f401 = { path = "../../a0b-stm32f401" }
-#a0b_armv7m = { path = "../../a0b-armv7m" }
+a0b_armv7m = { path = "../../a0b-armv7m" }
 a0b_time = { path = "../../a0b-time" }
 a0b_tools = { path = "../../a0b-tools" }
