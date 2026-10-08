@@ -90,7 +90,4 @@ private
    function Hundreds (Value : Score) return Score_Digit is
      ((Value / 100) mod 10);
 
-   --  Algorithmic Entry Points
-   --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height);
-
 end Nu_Pogodi.Scene;

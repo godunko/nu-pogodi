@@ -6,6 +6,7 @@
 
 pragma Ada_2022;
 
+with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
 
 package body Nu_Pogodi.Scene is
@@ -44,16 +45,11 @@ package body Nu_Pogodi.Scene is
       Right =>
         [Top    => Right_Top,
          Bottom => Right_Bottom]];
-
-   --  --------------------------------------------------------------------------
-   --  -- Updates Wolf Placement
-   --  --------------------------------------------------------------------------
-   --  procedure Move_Wolf (State : in out Game_State; Side : Lane_Side; Height : Lane_Height) is
-   --  begin
-   --     if not State.Game_Over then
-   --        State.Wolf := (Side => Side, Height => Height);
-   --     end if;
-   --  end Move_Wolf;
+   To_Wolf : constant array (Lane) of Wolf_Position :=
+     [Left_Top     => (Side => Left,  Height => Top),
+      Right_Top    => (Side => Right, Height => Top),
+      Left_Bottom  => (Side => Left,  Height => Bottom),
+      Right_Bottom => (Side => Right, Height => Bottom)];
 
    ------------------
    -- Advance_Lane --
@@ -264,41 +260,24 @@ package body Nu_Pogodi.Scene is
 
    end Random_Generator;
 
-   -------------------------
-   -- Update_Physics_Tick --
-   -------------------------
+   ----------------------
+   -- Update_Game_Tick --
+   ----------------------
 
-   procedure Update_Physics_Tick (Refresh : out Boolean) is
+   procedure Update_Game_Tick is
       use type A0B.Types.Unsigned_32;
 
    begin
-      if State.Miss_Count > 3 then
-         --  Game over
-
-         Refresh := False;
-
-         return;
-      end if;
-
-      State.Current_Tick := @ + 1;
-      State.Remain_Ticks := @ - 1;
-
-      if State.Remain_Ticks /= 0 then
-         Refresh := False;
-
-         return;
-      end if;
-
       State.Current_Cycle := @ + 1;
 
-      for Side in Lane_Side loop
-         for Height in Lane_Height loop
-            if Lanes (Side, Height) (Egg_Step'Last) then
-               Wolf := (Side, Height);
-               Random_Generator.Update;
-            end if;
-         end loop;
-      end loop;
+      --  for Side in Lane_Side loop
+      --     for Height in Lane_Height loop
+      --        if Lanes (Side, Height) (Egg_Step'Last) then
+      --           Wolf := (Side, Height);
+      --           Random_Generator.Update;
+      --        end if;
+      --     end loop;
+      --  end loop;
 
       --  case Wolf.Side is
       --     when Left =>
@@ -362,9 +341,9 @@ package body Nu_Pogodi.Scene is
             end loop;
 
             if State.Dangerous_Lane /= None
-              and then State.Dangerous_Lane = To_Lane (Wolf.Side, Wolf.Height)
+              and then To_Wolf (State.Dangerous_Lane) = Wolf
             then
-               State.Dangerous_Lane := None;
+               State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
 
                Update_Score;
@@ -416,6 +395,70 @@ package body Nu_Pogodi.Scene is
 
          State.Remain_Ticks := Miss_Animation_Ticks;
       end if;
+   end Update_Game_Tick;
+
+   ------------------
+   -- Update_Input --
+   ------------------
+
+   procedure Update_Input is
+      use type A0B.Types.Unsigned_32;
+
+      Keys     : constant Nu_Pogodi.Hardware.Keyboard.Keyboard_State :=
+        Nu_Pogodi.Hardware.Keyboard.Get;
+      New_Wolf : constant Wolf_Position :=
+        (if Keys.Left_Top        then (Side => Left, Height => Top)
+         elsif Keys.Right_Top    then (Side => Right, Height => Top)
+         elsif Keys.Left_Bottom  then (Side => Left, Height => Bottom)
+         elsif Keys.Right_Bottom then (Side => Right, Height => Bottom)
+         else Wolf);
+
+   begin
+      if New_Wolf /= Wolf then
+         Wolf := New_Wolf;
+
+         Random_Generator.Update;
+
+         if State.Dangerous_Lane /= None
+          and then To_Wolf (State.Dangerous_Lane) = Wolf
+         then
+            State.Dangerous_Lane    := None;
+            State.Active_Eggs_Count := @ - 1;
+
+            Update_Score;
+         end if;
+      end if;
+   end Update_Input;
+
+   -------------------------
+   -- Update_Physics_Tick --
+   -------------------------
+
+   procedure Update_Physics_Tick (Refresh : out Boolean) is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if State.Miss_Count > 3 then
+         --  Game over
+
+         Refresh := False;
+
+         return;
+      end if;
+
+      State.Current_Tick := @ + 1;
+      State.Remain_Ticks := @ - 1;
+
+      if State.Remain_Ticks /= 0 then
+         Update_Input;
+
+         Refresh := False;
+
+         return;
+      end if;
+
+      Update_Game_Tick;
+      Update_Input;
 
       Refresh := True;
    end Update_Physics_Tick;
