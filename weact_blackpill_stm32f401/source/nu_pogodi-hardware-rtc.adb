@@ -14,10 +14,12 @@ with A0B.STM32F401.SVD.RTC;
 
 package body Nu_Pogodi.Hardware.RTC is
 
-   procedure EXTI22_RTC_WKUP_Handler
-     with Export, Convention => C, External_Name => "EXTI22_RTC_WKUP_Handler";
+   procedure EXTI17_RTC_Alarm_Handler
+     with Export, Convention => C, External_Name => "EXTI17_RTC_Alarm_Handler";
 
    Wakeup_Callback : A0B.Callbacks.Callback;
+
+   procedure Configure_Alarm;
 
    -----------
    -- Clock --
@@ -54,27 +56,98 @@ package body Nu_Pogodi.Hardware.RTC is
       end return;
    end Clock;
 
-   -----------------------------
-   -- EXTI22_RTC_WKUP_Handler --
-   -----------------------------
+   ---------------------
+   -- Configure_Alarm --
+   ---------------------
 
-   procedure EXTI22_RTC_WKUP_Handler is
+   procedure Configure_Alarm is
    begin
-      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.WUTF := False;
-      --  WUTF is cleared by writing zero. Write ones to the other rc_w0
-      --  flags to preserve them, including flags set during this write.
-      --  Clearing WUTF does not require unlocking RTC write protection.
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
+        (@ with delta
+           ALRAE  => False,   --  0: Alarm A disabled
+           ALRAIE => False);  --  0: Alarm A interrupt disabled
+      --  Disable both alarm and interrupt while configuring them.
 
-      --  Clear the source before acknowledging EXTI22. PR is write-one-
-      --  to-clear, so do not use a read-modify-write of this register.
+      while not A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.ALRAWF loop
+         --  1: Alarm A update allowed
+
+         null;
+      end loop;
+
+      --  Clear pending alarm flag
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.ALRAF := False;
+
+      --  Configure EXTI to process alarm interrupt
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.RTSR.TR.Arr (17) := True;
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.FTSR.TR.Arr (17) := False;
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
+        (PR             =>
+           (As_Array => True, Arr => [17 => True, others => False]),
+         Reserved_23_31 => 0);
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (17) := True;
+
+      --  Configure NVIC
+
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI17_RTC_Alarm);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt
+        (A0B.STM32F401.EXTI17_RTC_Alarm);
+
+      --  Configure alarm
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ALRMAR :=
+        (SU    => 0,
+         ST    => 0,
+         MSK1  => False,  --  0: Alarm A set if the seconds match
+         MNU   => 0,
+         MNT   => 0,
+         MSK2  => True,   --  1: Minutes don’t care in Alarm A comparison
+         HU    => 0,
+         HT    => 0,
+         PM    => False,  --  0: AM or 24-hour format
+         MSK3  => True,   --  1: Hours don’t care in Alarm A comparison
+         DU    => 0,
+         DT    => 0,
+         WDSEL => False,  --  0: DU[3:0] represents the date units
+         MSK4  => True);  --  1: Date/day don’t care in Alarm A comparison
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ALRMASSR :=
+        (SS             => 0,
+         Reserved_15_23 => 0,
+         MASKSS         => 2#0000#,
+         --  0: No comparison on sub seconds for Alarm A. The alarm is set when
+         --  the seconds unit is incremented (assuming that the rest of the
+         --  fields match).
+         Reserved_28_31 => 0);
+
+      --  Enable alarm A and interrupt
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
+        (@ with delta
+           ALRAE  => True,   --  1: Alarm A enabled
+           ALRAIE => True);  --  1: Alarm A interrupt enabled
+   end Configure_Alarm;
+
+   ------------------------------
+   -- EXTI17_RTC_Alarm_Handler --
+   ------------------------------
+
+   procedure EXTI17_RTC_Alarm_Handler is
+   begin
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.ALRAF := False;
+      --  ALRAF is cleared by writing zero. Write ones to the other rc_w0
+      --  flags to preserve them, including flags set during this write.
+      --  Clearing ALRAF does not require unlocking RTC write protection.
 
       A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
         (PR             =>
-           (As_Array => True, Arr => [22 => True, others => False]),
+           (As_Array => True, Arr => [17 => True, others => False]),
          Reserved_23_31 => 0);
+      --  Clear the source before acknowledging EXTI17. PR is write-one-
+      --  to-clear, so do not use a read-modify-write of this register.
 
       A0B.Callbacks.Emit (Wakeup_Callback);
-   end EXTI22_RTC_WKUP_Handler;
+   end EXTI17_RTC_Alarm_Handler;
 
    ----------------
    -- Initialize --
@@ -138,55 +211,7 @@ package body Nu_Pogodi.Hardware.RTC is
 
       A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.INIT := False;
 
-      --  Configure wakeup timer:
-      --    * disable wakeup timer
-      --    * wait when it will be ready for configuration
-      --    * select clock source
-      --    * set auto-reload value
-      --    * enable wakeup timer
-
-      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
-        (@ with delta WUTE => False, WUTIE => False);
-      --  Disable both timer and interrupt while configuring them.
-
-      while not A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.WUTWF loop
-         null;
-      end loop;
-
-      A0B.STM32F401.SVD.RTC.RTC_Periph.CR.WCKSEL := 2#000#;
-      --  000: RTC/16 clock is selected
-
-      A0B.STM32F401.SVD.RTC.RTC_Periph.WUTR := (WUT => 2_047, others => <>);
-      --  (2_047 + 1) * 16 / 32_768 = 1 second
-
-      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.WUTF := False;
-      --  RTC state survives a system reset. Clear a previous wakeup flag
-      --  so that the next expiry generates a new rising edge on EXTI22.
-
-      --  Clear_Wakeup_Flag;
-
-      --  Configure EXTI to process wakeup interrupts
-
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.RTSR.TR.Arr (22) := True;
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.FTSR.TR.Arr (22) := False;
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
-        (PR             =>
-           (As_Array => True, Arr => [22 => True, others => False]),
-         Reserved_23_31 => 0);
-      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (22) := True;
-
-      --  Configure NVIC
-
-      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI22_RTC_WKUP);
-      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt
-        (A0B.STM32F401.EXTI22_RTC_WKUP);
-
-      --  Start the timer only after EXTI and NVIC are ready.
-
-      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
-        (@ with delta
-           WUTE  => True,   --  1: Wakeup timer enabled
-           WUTIE => True);  --  1: Wakeup timer interrupt enabled
+      Configure_Alarm;
 
       --  Re-lock write protection
 
