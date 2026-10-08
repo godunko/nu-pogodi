@@ -41,7 +41,7 @@ package body Nu_Pogodi.Hardware.MIPI is
       Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Write;
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Reverse_Bits (A0B.Types.Unsigned_8 (Command)));
+        (A0B.Types.Unsigned_8 (Command));
       Nu_Pogodi.Hardware.SPI.Release;
 
       A0B.Callbacks.Emit (Finished);
@@ -73,7 +73,7 @@ package body Nu_Pogodi.Hardware.MIPI is
 
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Reverse_Bits (A0B.Types.Unsigned_8 (Command)));
+        (A0B.Types.Unsigned_8 (Command));
 
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
       Nu_Pogodi.Hardware.SPI.Transmit
@@ -91,12 +91,11 @@ package body Nu_Pogodi.Hardware.MIPI is
 
       --  Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
       --  Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
-      --  Nu_Pogodi.Hardware.SPI.Transmit (Reverse_Bits (16#2F#));
-      --  Status Bit Read
+      --  Nu_Pogodi.Hardware.SPI.Transmit (16#F4#);
+      --  Status Bit Read (16#2F# encoded for LSB-first SPI)
 
       --  Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
       --  Nu_Pogodi.Hardware.SPI.Receive (Aux);
-      --  Aux := Reverse_Bits (Aux);
    end Initialize;
 
    -----------------

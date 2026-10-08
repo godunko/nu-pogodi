@@ -4,6 +4,9 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+--  Commands and buffer bytes are transmitted LSB first without conversion.
+--  The caller supplies commands and parameters encoded for this bit order.
+
 with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types.Enumerable;
@@ -24,7 +27,5 @@ package Nu_Pogodi.Hardware.MIPI is
       Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean);
-   --  Buffer bytes are transmitted LSB first without conversion. Parameters
-   --  must be encoded with `Reverse_Bits`; pixel data has bit 0 on the left.
 
 end Nu_Pogodi.Hardware.MIPI;

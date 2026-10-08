@@ -616,7 +616,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
-           (Command,
+           (Nu_Pogodi.Hardware.MIPI.Command_Code
+              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -646,7 +647,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
-           (Command,
+           (Nu_Pogodi.Hardware.MIPI.Command_Code
+              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -677,7 +679,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command_Write
-           (Command,
+           (Nu_Pogodi.Hardware.MIPI.Command_Code
+              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
             Data_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
@@ -738,7 +741,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.MIPI.Command_Write
-           (Command,
+           (Nu_Pogodi.Hardware.MIPI.Command_Code
+              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
             Data_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
