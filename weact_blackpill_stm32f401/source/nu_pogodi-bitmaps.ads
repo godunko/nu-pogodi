@@ -3,8 +3,8 @@ pragma Ada_2022;
 with Interfaces;
 
 package Nu_Pogodi.Bitmaps is
-   --  Height-major layout: scanlines top-to-bottom, bytes left-to-right.
-   --  Each byte holds 8 horizontal pixels; bit 7 is the leftmost.
+   --  Layout: scanlines top-to-bottom, bytes left-to-right.
+   --  Each byte holds 8 horizontal pixels; bit 0 is the leftmost.
    --  Black pixels are 0; white/padding pixels are 1.
    Screen_Width   : constant := 400;
    Screen_Height  : constant := 252;

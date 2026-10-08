@@ -24,5 +24,7 @@ package Nu_Pogodi.Hardware.MIPI is
       Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean);
+   --  Buffer bytes are transmitted LSB first without conversion. Parameters
+   --  must be encoded with `Reverse_Bits`; pixel data has bit 0 on the left.
 
 end Nu_Pogodi.Hardware.MIPI;

@@ -18,33 +18,34 @@ package body Nu_Pogodi.Clock is
        of aliased A0B.Types.Unsigned_8
      with Size => 400 * 300, Component_Size => 8;
 
+   --  Each glyph row has its leftmost pixel in bit 0.
    type Display_Cell_Content is
      array (A0B.Types.Unsigned_32 range 0 .. 7) of A0B.Types.Unsigned_8;
 
    Digit_0 : constant Display_Cell_Content :=
-     [16#7C#, 16#C6#, 16#CE#, 16#DE#, 16#F6#, 16#E6#, 16#7C#, 16#00#];
+     [16#3E#, 16#63#, 16#73#, 16#7B#, 16#6F#, 16#67#, 16#3E#, 16#00#];
    Digit_1 : constant Display_Cell_Content :=
-     [16#30#, 16#70#, 16#30#, 16#30#, 16#30#, 16#30#, 16#FC#, 16#00#];
+     [16#0C#, 16#0E#, 16#0C#, 16#0C#, 16#0C#, 16#0C#, 16#3F#, 16#00#];
    Digit_2 : constant Display_Cell_Content :=
-     [16#78#, 16#CC#, 16#0C#, 16#38#, 16#60#, 16#CC#, 16#FC#, 16#00#];
+     [16#1E#, 16#33#, 16#30#, 16#1C#, 16#06#, 16#33#, 16#3F#, 16#00#];
    Digit_3 : constant Display_Cell_Content :=
-     [16#78#, 16#CC#, 16#0C#, 16#38#, 16#0C#, 16#CC#, 16#78#, 16#00#];
+     [16#1E#, 16#33#, 16#30#, 16#1C#, 16#30#, 16#33#, 16#1E#, 16#00#];
    Digit_4 : constant Display_Cell_Content :=
-     [16#1C#, 16#3C#, 16#6C#, 16#CC#, 16#FE#, 16#0C#, 16#1E#, 16#00#];
+     [16#38#, 16#3C#, 16#36#, 16#33#, 16#7F#, 16#30#, 16#78#, 16#00#];
    Digit_5 : constant Display_Cell_Content :=
-     [16#FC#, 16#C0#, 16#F8#, 16#0C#, 16#0C#, 16#CC#, 16#78#, 16#00#];
+     [16#3F#, 16#03#, 16#1F#, 16#30#, 16#30#, 16#33#, 16#1E#, 16#00#];
    Digit_6 : constant Display_Cell_Content :=
-     [16#38#, 16#60#, 16#C0#, 16#F8#, 16#CC#, 16#CC#, 16#78#, 16#00#];
+     [16#1C#, 16#06#, 16#03#, 16#1F#, 16#33#, 16#33#, 16#1E#, 16#00#];
    Digit_7 : constant Display_Cell_Content :=
-     [16#FC#, 16#CC#, 16#0C#, 16#18#, 16#30#, 16#30#, 16#30#, 16#00#];
+     [16#3F#, 16#33#, 16#30#, 16#18#, 16#0C#, 16#0C#, 16#0C#, 16#00#];
    Digit_8 : constant Display_Cell_Content :=
-     [16#78#, 16#CC#, 16#CC#, 16#78#, 16#CC#, 16#CC#, 16#78#, 16#00#];
+     [16#1E#, 16#33#, 16#33#, 16#1E#, 16#33#, 16#33#, 16#1E#, 16#00#];
    Digit_9 : constant Display_Cell_Content :=
-     [16#78#, 16#CC#, 16#CC#, 16#7C#, 16#0C#, 16#18#, 16#70#, 16#00#];
+     [16#1E#, 16#33#, 16#33#, 16#3E#, 16#30#, 16#18#, 16#0E#, 16#00#];
    Digit_Colon : constant Display_Cell_Content :=
-     [16#00#, 16#30#, 16#30#, 16#00#, 16#00#, 16#30#, 16#30#, 16#00#];
+     [16#00#, 16#0C#, 16#0C#, 16#00#, 16#00#, 16#0C#, 16#0C#, 16#00#];
    Digit_Minus : constant Display_Cell_Content :=
-     [16#00#, 16#00#, 16#00#, 16#FC#, 16#00#, 16#00#, 16#00#, 16#00#];
+     [16#00#, 16#00#, 16#00#, 16#3F#, 16#00#, 16#00#, 16#00#, 16#00#];
 
    ----------
    -- Draw --
