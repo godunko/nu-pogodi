@@ -18,6 +18,14 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    SSD1683_RES  : constant := 9;   --  PA9
    SSD1683_BUSY : constant := 8;   --  PA8
 
+   Keyboard_UP     : constant := 6;  --  PA6
+   Keyboard_DOWN   : constant := 5;  --  PA5
+   Keyboard_LEFT   : constant := 4;  --  PA4
+   Keyboard_RIGHT  : constant := 3;  --  PA3
+   Keyboard_MIDDLE : constant := 2;  --  PA2
+   Keyboard_SET    : constant := 1;  --  PA1
+   Keyboard_RESET  : constant := 0;  --  PA0
+
    SSD1683_BUSY_Callback : A0B.Callbacks.Callback;
 
    procedure EXTI9_5_Handler
@@ -31,6 +39,54 @@ package body Nu_Pogodi.Hardware.Pin_Control is
 
    procedure SSD1683_BUSY_EXTI_Unmask_Interrupt with Inline;
    --  Unmask interrupt of `SSD1683_BUSY`
+
+   type Pull_Mode is (None, Pull_Up, Pull_Down);
+
+   procedure Configure_Input
+     (GPIO : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
+      Pin  : Natural;
+      Pull : Pull_Mode);
+
+   ---------------------
+   -- Configure_Input --
+   ---------------------
+
+   procedure Configure_Input
+     (GPIO : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
+      Pin  : Natural;
+      Pull : Pull_Mode) is
+   begin
+      GPIO.MODER.Arr (Pin) := 2#00#;  --  00: Input
+      GPIO.PUPDR.Arr (Pin) :=
+         (case Pull is
+            when None => 2#00#,        --  00: No pull-up, pull-down
+            when Pull_Up   => 2#01#,   --  01: Pull-up
+            when Pull_Down => 2#10#);  --  10: Pull-down
+   end Configure_Input;
+
+   -----------------------------
+   -- Configure_Keyboard_Pins --
+   -----------------------------
+
+   procedure Configure_Keyboard_Pins is
+   begin
+      --  Implementation for configuring keyboard pins goes here
+
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_UP, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_DOWN, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_LEFT, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_RIGHT, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_MIDDLE, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_SET, Pull_Up);
+      Configure_Input
+        (A0B.STM32F401.SVD.GPIO.GPIOA_Periph, Keyboard_RESET, Pull_Up);
+   end Configure_Keyboard_Pins;
 
    -------------------------
    -- Configure_MIPI_Pins --
@@ -144,6 +200,69 @@ package body Nu_Pogodi.Hardware.Pin_Control is
          A0B.Callbacks.Emit_Once (SSD1683_BUSY_Callback);
       end if;
    end EXTI9_5_Handler;
+
+   ------------------
+   -- Get_KEY_DOWN --
+   ------------------
+
+   function Get_KEY_DOWN return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_DOWN);
+   end Get_KEY_DOWN;
+
+   ------------------
+   -- Get_KEY_LEFT --
+   ------------------
+
+   function Get_KEY_LEFT return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_LEFT);
+   end Get_KEY_LEFT;
+
+   --------------------
+   -- Get_KEY_MIDDLE --
+   --------------------
+
+   function Get_KEY_MIDDLE return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_MIDDLE);
+   end Get_KEY_MIDDLE;
+
+   -------------------
+   -- Get_KEY_RESET --
+   -------------------
+
+   function Get_KEY_RESET return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_RESET);
+   end Get_KEY_RESET;
+
+   -------------------
+   -- Get_KEY_RIGHT --
+   -------------------
+
+   function Get_KEY_RIGHT return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_RIGHT);
+   end Get_KEY_RIGHT;
+
+   -----------------
+   -- Get_KEY_SET --
+   -----------------
+
+   function Get_KEY_SET return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_SET);
+   end Get_KEY_SET;
+
+   ----------------
+   -- Get_KEY_UP --
+   ----------------
+
+   function Get_KEY_UP return Boolean is
+   begin
+      return A0B.STM32F401.SVD.GPIO.GPIOA_Periph.IDR.IDR.Arr (Keyboard_UP);
+   end Get_KEY_UP;
 
    ----------------------
    -- Get_SSD1683_BUSY --

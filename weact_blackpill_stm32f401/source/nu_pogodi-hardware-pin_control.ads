@@ -14,6 +14,8 @@ package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Configure_MIPI_Pins;
 
+   procedure Configure_Keyboard_Pins;
+
    procedure Set_MIPI_D_C (To : Boolean);
 
    procedure Set_SSD1683_RES (To : Boolean);
@@ -28,5 +30,19 @@ package Nu_Pogodi.Hardware.Pin_Control is
    --  callback execution.
 
    procedure Disable_SSD1683_BUSY;
+
+   function Get_KEY_UP return Boolean;
+
+   function Get_KEY_DOWN return Boolean;
+
+   function Get_KEY_LEFT return Boolean;
+
+   function Get_KEY_RIGHT return Boolean;
+
+   function Get_KEY_MIDDLE return Boolean;
+
+   function Get_KEY_SET return Boolean;
+
+   function Get_KEY_RESET return Boolean;
 
 end Nu_Pogodi.Hardware.Pin_Control;

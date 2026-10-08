@@ -7,6 +7,7 @@
 with A0B.ARMv7M.SysTick_Clock_Timer;
 
 with Nu_Pogodi.Application;
+with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.Pin_Control;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683;
@@ -20,6 +21,7 @@ begin
    Nu_Pogodi.Hardware.RTC.Initialize;
    Nu_Pogodi.Hardware.Pin_Control.Initialize;
    Nu_Pogodi.Hardware.SSD1683.Initialize;
+   Nu_Pogodi.Hardware.Keyboard.Initialize;
 
    Nu_Pogodi.Application.Run;
 end Nu_Pogodi.Driver;
