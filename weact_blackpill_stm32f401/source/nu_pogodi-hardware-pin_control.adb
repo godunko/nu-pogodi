@@ -132,6 +132,24 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.BSRR.BS.Arr (MIPI_D_C) := True;
    end Configure_MIPI_Pins;
 
+   --------------------------------
+   -- Configure_SPI1_MOSI_Input --
+   --------------------------------
+
+   procedure Configure_SPI1_MOSI_Input is
+   begin
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#00#;
+   end Configure_SPI1_MOSI_Input;
+
+   ---------------------------------
+   -- Configure_SPI1_MOSI_Output --
+   ---------------------------------
+
+   procedure Configure_SPI1_MOSI_Output is
+   begin
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#10#;
+   end Configure_SPI1_MOSI_Output;
+
    -------------------------
    -- Configure_SPI1_Pins --
    -------------------------
@@ -152,15 +170,13 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (3) := False;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (3) := 2#01#;
 
-      --  PB5: SPI1_MOSI/SDA, open-drain
-      --  MISO and MOSI share SDA. It is configured as open-drain. This allows
-      --  the display to drive the line without contention, when transmitter
-      --  sends 16#FF# bytes to release SDA while the display drives it.
+      --  PB5: SPI1_MOSI/SDA, push-pull for transmission.
+      --  MISO and MOSI share SDA; MOSI must be released before display reads.
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#10#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (MIPI_SPI_MOSI) := 2#0101#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OSPEEDR.Arr (MIPI_SPI_MOSI) := 2#01#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (MIPI_SPI_MOSI) :=
-        True;
+        False;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MOSI) := 2#01#;
 
       --  PB4: SPI1_MISO/SDA

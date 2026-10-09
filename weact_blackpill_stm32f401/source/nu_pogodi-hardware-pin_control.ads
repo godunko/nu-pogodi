@@ -12,6 +12,12 @@ package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Configure_SPI1_Pins;
 
+   procedure Configure_SPI1_MOSI_Input;
+   --  Release shared SDA before the display starts sending data.
+
+   procedure Configure_SPI1_MOSI_Output;
+   --  Connect the push-pull MOSI output to SPI1 (AF5).
+
    procedure Configure_MIPI_Pins;
 
    procedure Configure_Keyboard_Pins;
