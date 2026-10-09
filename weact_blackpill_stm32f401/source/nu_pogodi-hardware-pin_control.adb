@@ -14,9 +14,11 @@ with A0B.Time.Clock;
 
 package body Nu_Pogodi.Hardware.Pin_Control is
 
-   MIPI_D_C     : constant := 10;  --  PA10
-   SSD1683_RES  : constant := 9;   --  PA9
-   SSD1683_BUSY : constant := 8;   --  PA8
+   MIPI_SPI_MISO : constant := 4;   --  PB4
+   MIPI_SPI_MOSI : constant := 5;   --  PB5
+   MIPI_D_C      : constant := 10;  --  PA10
+   SSD1683_RES   : constant := 9;   --  PA9
+   SSD1683_BUSY  : constant := 8;   --  PA8
 
    Keyboard_UP     : constant := 6;  --  PA6
    Keyboard_DOWN   : constant := 5;  --  PA5
@@ -150,12 +152,21 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (3) := False;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (3) := 2#01#;
 
-      --  PB5: SPI1_MOSI/SDA
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (5) := 2#10#;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (5) := 2#0101#;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OSPEEDR.Arr (5) := 2#01#;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (5) := False;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (5) := 2#01#;
+      --  PB5: SPI1_MOSI/SDA, open-drain
+      --  MISO and MOSI share SDA. It is configured as open-drain. This allows
+      --  the display to drive the line without contention, when transmitter
+      --  sends 16#FF# bytes to release SDA while the display drives it.
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#10#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (MIPI_SPI_MOSI) := 2#0101#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OSPEEDR.Arr (MIPI_SPI_MOSI) := 2#01#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (MIPI_SPI_MOSI) :=
+        True;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MOSI) := 2#01#;
+
+      --  PB4: SPI1_MISO/SDA
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MISO) := 2#10#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (MIPI_SPI_MISO) := 2#0101#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MISO) := 2#00#;
    end Configure_SPI1_Pins;
 
    --------------------------
