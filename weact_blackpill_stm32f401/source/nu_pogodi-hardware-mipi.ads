@@ -10,6 +10,7 @@
 with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types.Enumerable;
+with A0B.Types.Arrays;
 
 package Nu_Pogodi.Hardware.MIPI is
 
@@ -27,5 +28,11 @@ package Nu_Pogodi.Hardware.MIPI is
       Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean);
+
+   procedure Command_Read
+     (Command : Command_Code;
+      Data    : out A0B.Types.Arrays.Unsigned_8_Array;
+      Success : in out Boolean);
+   --  Synchronous read; command and returned bytes use LSB-first encoding.
 
 end Nu_Pogodi.Hardware.MIPI;
