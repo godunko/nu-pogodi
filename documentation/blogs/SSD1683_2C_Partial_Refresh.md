@@ -80,7 +80,7 @@ Skipping temperature and LUT loading on each frame reduces the average refresh e
 
 ## Keeping Analog Power and Clock Active
 
-During active gameplay, frame updates are issued almost continuously. The previous optimization still enables the analog circuitry and clock before every refresh and disables them afterward. Keeping both active between frames lets us remove the shutdown stages from the update sequence.
+During active gameplay, frame updates are issued almost continuously. The previous optimization still enables the analog circuitry and clock before every refresh and disables them afterward. The datasheet repeatedly notes that the oscillator must be enabled to execute certain commands, so let’s try leaving it running between refreshes. Keeping both active between frames lets us remove the shutdown stages from the update sequence.
 
 For the one-time preparation, we send `0x22` with parameter `0xF8` (`1111 1000`), followed by `0x20`. Compared with `0xFB`, this clears `D1` and `D0`: the controller enables the clock and analog circuitry, loads the temperature value and LUT for partial refresh mode, and leaves the clock and analog circuitry active. `D2` remains clear, so this preparation pass does not update the panel. The loaded LUT is retained for subsequent refreshes.
 
