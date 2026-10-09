@@ -214,6 +214,15 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Read Register for Display Option.
 
+   procedure Read_RAM
+     (Data     : in out A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Read data from RAM, selected by `Read_RAM_Option`
+   --
+   --  Note, first dummy byte is ignored. Size of the data to be received
+   --  should be by `Set_Allocation_Length`, or full buffer be filled.
+
    procedure Read_RAM_Option
      (Bank     : RAM_Bank;
       CRC_Mode : CRC_Check_Mode;

@@ -40,6 +40,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
    Write_RAM_Red_Command                          : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
+   Read_RAM_Command                               : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#27#;
    OTP_Register_Read_For_Display_Option_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    --  Load_WS_OTP_Command                          : constant
@@ -545,6 +547,29 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       A0B.Callbacks.Emit (Callback);
    end OTP_Register_Read_For_Display_Option;
+
+   --------------
+   -- Read_RAM --
+   --------------
+
+   procedure Read_RAM
+     (Data     : in out A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      Nu_Pogodi.Hardware.MIPI.Command_Read
+        (Nu_Pogodi.Hardware.MIPI.Command_Code
+           (Reverse_Bits (A0B.Types.Unsigned_8 (Read_RAM_Command))),
+         Data,
+         Success,
+         Ignore_First_Byte => True);
+
+      A0B.Callbacks.Emit (Callback);
+   end Read_RAM;
 
    ---------------------
    -- Read_RAM_Option --
