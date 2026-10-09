@@ -476,6 +476,46 @@ package body Nu_Pogodi.Hardware.SPI is
            BIDIMODE => True,   --  1: 1-line bidirectional data mode selected
            BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
            SPE      => True);  --  1: Peripheral enabled
+
+      if Buffer.Length < 5 then
+         declare
+            use System.Storage_Elements;
+
+            Length : constant A0B.Buffers.Storage_Count := Buffer.Length;
+            Base   : constant System.Address := Buffer.Address;
+
+         begin
+            for Offset in A0B.Buffers.Storage_Count range 0 .. Length - 1 loop
+               declare
+                  Byte : A0B.Types.Unsigned_8
+                    with Import, Address => Base + Storage_Offset (Offset);
+
+               begin
+                  while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+                     null;
+                  end loop;
+
+                  A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+                    (DR             => A0B.Types.Unsigned_16 (Byte),
+                     Reserved_16_31 => 0);
+               end;
+            end loop;
+         end;
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
+
+         return;
+      end if;
+
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
 
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
