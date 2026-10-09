@@ -4,15 +4,13 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
---  SPI peripheral on STM32F401 is not good to receive data in half duplex
---  mode. There are known "workarounds", but non of them is implemented yet.
---  Hope naive implementaion is enough for now.
+--  Reads use full-duplex SPI with MISO and MOSI connected to SDA.
+--  The read path requires MOSI to be released before the display drives SDA.
 
 pragma Ada_2022;
 
 with System.Storage_Elements;
 
-with A0B.ARMv7M.Instructions;
 with A0B.ARMv7M.NVIC_Utilities;
 
 with A0B.STM32F401.SVD.DMA;
@@ -37,6 +35,7 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
         (@ with delta
            BIDIMODE => True,    --  1: 1-line bidirectional data mode selected
+           BIDIOE   => True,    --  1: Output enabled (transmit-only mode)
            CRCEN    => False,   --  0: CRC calculation disabled
            CRCNEXT  => False,
            DFF      => False,
@@ -62,6 +61,7 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
         (@ with delta
            BIDIMODE => True,    --  1: 1-line bidirectional data mode selected
+           BIDIOE   => True,    --  1: Output enabled (transmit-only mode)
            CRCEN    => False,   --  0: CRC calculation disabled
            CRCNEXT  => False,
            DFF      => False,
@@ -88,6 +88,9 @@ package body Nu_Pogodi.Hardware.SPI is
          A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
            (CTCIF3 => True, others => <>);
 
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
+         --  Turn off use of DMA for SPI transmission
+
          --  Sequence below is necessary to complete data transfer from the
          --  shift register.
 
@@ -98,6 +101,9 @@ package body Nu_Pogodi.Hardware.SPI is
          while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
             null;
          end loop;
+
+         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
+         --  Transfer completed, "disconnect" MOSI from SDA line.
 
          --  Now transfer is completed, emit callback.
 
@@ -192,29 +198,30 @@ package body Nu_Pogodi.Hardware.SPI is
      (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
       Ignore_First_Byte : Boolean := False)
    is
-      Interrupt_Mask : Boolean;
-      Discard        : A0B.Types.Unsigned_16;
+      Discard : A0B.Types.Unsigned_16 with Unreferenced;
+
    begin
       if Data'Length = 0 then
          return;
       end if;
 
-      --  Receive-only master mode generates clocks continuously. Prevent
-      --  interrupts from delaying DR reads and causing an overrun.
-      Interrupt_Mask := A0B.ARMv7M.Instructions.Get_PRIMASK;
-      A0B.ARMv7M.Instructions.Disable_Interrupts;
+      --  The command was sent in bidirectional transmit-only mode, so there
+      --  is no command echo to discard. Switch to full duplex with SPI still
+      --  enabled to keep CS low; MOSI is already disconnected from SDA.
 
-      --  Clear any stale receive data before changing the line direction.
-
-      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
-         Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
-      end loop;
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := False;
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.BIDIOE := False;
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
+        (@ with delta
+           BIDIMODE => False,   --  0: 2-line unidirectional data mode selected
+           RXONLY   => False);  --  0: Full duplex (Transmit and receive)
 
       if Ignore_First_Byte then
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+           (DR => 16#FF#, Reserved_16_31 => 0);
+
          while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
             null;
          end loop;
@@ -223,6 +230,13 @@ package body Nu_Pogodi.Hardware.SPI is
       end if;
 
       for Byte of Data loop
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+           (DR => 16#FF#, Reserved_16_31 => 0);
+
          while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
             null;
          end loop;
@@ -231,8 +245,15 @@ package body Nu_Pogodi.Hardware.SPI is
            A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
       end loop;
 
+      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+         null;
+      end loop;
+
+      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+         null;
+      end loop;
+
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
-      A0B.ARMv7M.Instructions.Set_PRIMASK (Interrupt_Mask);
    end Receive;
 
    -------------
@@ -269,6 +290,8 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Transmit (Command : A0B.Types.Unsigned_8) is
    begin
+      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
+
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
         (@ with delta
            BIDIOE => True);  --  1: Output enabled (transmit-only mode)
@@ -287,6 +310,11 @@ package body Nu_Pogodi.Hardware.SPI is
       while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
          null;
       end loop;
+
+      --  Release SDA after every transmission. Keep SPI enabled so that NSS
+      --  remains asserted for the following data transfer.
+
+      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
    end Transmit;
 
    --------------
@@ -310,6 +338,8 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
         (NDT            => A0B.Types.Unsigned_16 (Buffer.Length),
          Reserved_16_31 => 0);
+
+      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
 
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
       A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
