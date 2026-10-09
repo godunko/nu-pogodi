@@ -24,6 +24,9 @@ package body Nu_Pogodi.Hardware.SPI is
    procedure DMA2_Stream3_Handler
      with Export, Convention => C, External_Name => "DMA2_Stream3_Handler";
 
+   Dummy_Byte : aliased constant A0B.Types.Unsigned_8 := 16#FF#;
+   --  Repeated TX DMA source in receive mode.
+
    Transmit_Callback : A0B.Callbacks.Callback;
 
    -----------------------
@@ -120,7 +123,7 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR.DMA2EN := True;
       A0B.STM32F401.SVD.RCC.RCC_Periph.APB2ENR.SPI1EN := True;
 
-      --  Basic configuration of DMA
+      --  Basic configuration of DMA for transmit
 
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
         (@ with delta
@@ -128,7 +131,7 @@ package body Nu_Pogodi.Hardware.SPI is
            DMEIE  => False,    --  0: DME interrupt disabled
            TEIE   => False,    --  0: TE interrupt disabled
            HTIE   => False,    --  0: HT interrupt disabled
-           TCIE   => True,     --  0: TC interrupt enabled
+           TCIE   => False,    --  0: TC interrupt disabled
            PFCTRL => False,    --  0: The DMA is the flow controller
            DIR    => 2#01#,    --  01: Memory-to-peripheral
            CIRC   => False,    --  0: Circular mode disabled
@@ -145,6 +148,35 @@ package body Nu_Pogodi.Hardware.SPI is
            MBURST => 2#00#,    --  00: single transfer
            CHSEL  => 2#011#);  --  011: channel 3 selected
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3PAR :=
+        A0B.Types.Unsigned_32
+          (System.Storage_Elements.To_Integer
+             (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR'Address));
+
+      --  Basic configuration of DMA for receive
+
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR :=
+        (@ with delta
+           EN     => False,    --  0: Stream disabled
+           DMEIE  => False,    --  0: DME interrupt disabled
+           TEIE   => False,    --  0: TE interrupt disabled
+           HTIE   => False,    --  0: HT interrupt disabled
+           TCIE   => False,    --  0: TC interrupt disabled
+           PFCTRL => False,    --  0: The DMA is the flow controller
+           DIR    => 2#00#,    --  00: Peripheral-to-memory
+           CIRC   => False,    --  0: Circular mode disabled
+           PINC   => False,    --  0: Peripheral address pointer is fixed
+           MINC   => True,
+           --  1: Memory address pointer is incremented after each data
+           --  transfer (increment is done according to MSIZE)
+           PSIZE  => 2#00#,    --  00: Byte (8-bit)
+           MSIZE  => 2#00#,    --  00: Byte (8-bit)
+           PL     => 2#10#,    --  10: High
+           DBM    => False,
+           --  0: No buffer switching at the end of transfer
+           PBURST => 2#00#,    --  00: single transfer
+           MBURST => 2#00#,    --  00: single transfer
+           CHSEL  => 2#011#);  --  011: channel 3 selected
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S0PAR :=
         A0B.Types.Unsigned_32
           (System.Storage_Elements.To_Integer
              (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR'Address));
@@ -229,21 +261,72 @@ package body Nu_Pogodi.Hardware.SPI is
          Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
       end if;
 
-      for Byte of Data loop
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+      if Data'Length >= 5 then
+         --  Configure RX DMA to receive data.
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := True;
+               A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+                 (CFEIF0  => True,
+                  CDMEIF0 => True,
+                  CTEIF0  => True,
+                  CHTIF0  => True,
+                  CTCIF0  => True,
+                  others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
+           A0B.Types.Unsigned_32
+             (System.Storage_Elements.To_Integer
+                (Data (Data'First)'Address));
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0NDTR :=
+           (NDT            => A0B.Types.Unsigned_16 (Data'Length),
+            Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR.EN := True;
+
+         --  Configure TX DMA to transfer dummy byte.
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
+               A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+                 (CFEIF3  => True,
+                  CDMEIF3 => True,
+                  CTEIF3  => True,
+                  CHTIF3  => True,
+                  CTCIF3  => True,
+                  others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
+           A0B.Types.Unsigned_32
+             (System.Storage_Elements.To_Integer (Dummy_Byte'Address));
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
+           (NDT            => A0B.Types.Unsigned_16 (Data'Length),
+            Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
+           (@ with delta
+              MINC => False,   --  0: Memory address pointer is fixed
+              TCIE => False,   --  0: TC interrupt disabled
+              EN   => True);   --  1: Stream enabled
+
+         while not A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF0 loop
             null;
          end loop;
 
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
-           (DR => 16#FF#, Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := False;
 
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
-            null;
+      else
+         for Byte of Data loop
+            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+               null;
+            end loop;
+
+            A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+              (DR => 16#FF#, Reserved_16_31 => 0);
+
+            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
+               null;
+            end loop;
+
+            Byte :=
+              A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
          end loop;
-
-         Byte :=
-           A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
-      end loop;
+      end if;
 
       while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
          null;
@@ -349,7 +432,13 @@ package body Nu_Pogodi.Hardware.SPI is
          CHTIF3  => True,
          CTCIF3  => True,
          others  => <>);
-      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR.EN := True;
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
+        (@ with delta
+           MINC => True,
+           --  1: Memory address pointer is incremented after each data
+           --  transfer (increment is done according to MSIZE)
+           TCIE => True,   --  1: TC interrupt enabled
+           EN   => True);  --  1: Stream enabled
    end Transmit;
 
 end Nu_Pogodi.Hardware.SPI;
