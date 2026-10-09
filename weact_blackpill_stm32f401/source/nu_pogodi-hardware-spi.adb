@@ -215,17 +215,6 @@ package body Nu_Pogodi.Hardware.SPI is
    -- Receive --
    -------------
 
-   procedure Receive (Data : out A0B.Types.Unsigned_8) is
-      Bytes : A0B.Types.Arrays.Unsigned_8_Array (1 .. 1);
-   begin
-      Receive (Bytes);
-      Data := Bytes (1);
-   end Receive;
-
-   -------------
-   -- Receive --
-   -------------
-
    procedure Receive
      (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
       Ignore_First_Byte : Boolean := False)

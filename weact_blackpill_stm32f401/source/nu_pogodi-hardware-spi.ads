@@ -25,8 +25,6 @@ package Nu_Pogodi.Hardware.SPI is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
 
-   procedure Receive (Data : out A0B.Types.Unsigned_8);
-
    procedure Receive
      (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
       Ignore_First_Byte : Boolean := False);
