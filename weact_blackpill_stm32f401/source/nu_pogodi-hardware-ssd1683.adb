@@ -44,6 +44,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    --  Load_WS_OTP_Command                          : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
+   Read_RAM_Option_Command                        : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#41#;
    Set_RAM_X_Address_Start_End_Position_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#44#;
    Set_RAM_Y_Address_Start_End_Position_Command   : constant
@@ -60,6 +62,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Auto_Write_BW_RAM_For_Regular_Pattern_Length  : constant := 1;
    Auto_Write_RED_RAM_For_Regular_Pattern_Length : constant := 1;
    Display_Update_Control_1_Parameters_Length    : constant := 2;
+   Read_RAM_Option_Parameters_Length             : constant := 3;
 
    type Auto_Write_BW_RAM_For_Regular_Pattern_Parameters is record
       Value          : A0B.Types.Unsigned_1;
@@ -103,6 +106,22 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       Reserved_1_3_0 at 1 range 0 .. 3;
       Cascade        at 1 range 4 .. 4;
       Reserved_1_7_5 at 1 range 5 .. 7;
+   end record;
+
+   type Read_RAM_Option_Parameters is record
+      Reserved_7_5 : A0B.Types.Reserved_3 := A0B.Types.Zero;
+      CRC_Check    : CRC_Check_Mode;
+      Reserved_3_1 : A0B.Types.Reserved_3 := A0B.Types.Zero;
+      RAM          : RAM_Bank;
+      Length       : A0B.Types.Unsigned_16;
+   end record with Size => 8 * Read_RAM_Option_Parameters_Length;
+
+   for Read_RAM_Option_Parameters use record
+      RAM          at 0 range 0 .. 0;
+      Reserved_3_1 at 0 range 1 .. 3;
+      CRC_Check    at 0 range 4 .. 4;
+      Reserved_7_5 at 0 range 5 .. 7;
+      Length       at 1 range 0 .. 15;
    end record;
 
    procedure On_Timeout;
@@ -526,6 +545,42 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       A0B.Callbacks.Emit (Callback);
    end OTP_Register_Read_For_Display_Option;
+
+   ---------------------
+   -- Read_RAM_Option --
+   ---------------------
+
+   procedure Read_RAM_Option
+     (Bank     : RAM_Bank;
+      CRC_Mode : CRC_Check_Mode;
+      Count    : A0B.Types.Unsigned_16;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Parameters : Read_RAM_Option_Parameters
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length
+           (Read_RAM_Option_Parameters_Length);
+
+         Parameters :=
+           (RAM       => Bank,
+            CRC_Check => CRC_Mode,
+            Length    => Count,
+            others    => <>);
+
+         Reverse_Bits (Parameter_Buffer);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Read_RAM_Option_Command, Parameter_Buffer, Callback, Success);
+   end Read_RAM_Option;
 
    -----------
    -- Reset --

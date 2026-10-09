@@ -131,6 +131,24 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Master_Activation;
 
+   ---------------------
+   -- Read_RAM_Option --
+   ---------------------
+
+   procedure Read_RAM_Option
+     (Bank     : RAM_Bank;
+      CRC_Mode : CRC_Check_Mode;
+      Count    : A0B.Types.Unsigned_16;
+      Success  : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Read_RAM_Option
+        (Bank, CRC_Mode, Count, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Read_RAM_Option;
+
    -----------
    -- Reset --
    -----------

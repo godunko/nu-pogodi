@@ -62,6 +62,10 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Bypass  => 2#0100#,
       Inverse => 2#1000#);
 
+   type RAM_Bank is (Black_White, Red);
+
+   type CRC_Check_Mode is (Window, Counter);
+
    type Width_Pattern_Step is
      (Width_8,
       Width_16,
@@ -209,5 +213,13 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Read Register for Display Option.
+
+   procedure Read_RAM_Option
+     (Bank     : RAM_Bank;
+      CRC_Mode : CRC_Check_Mode;
+      Count    : A0B.Types.Unsigned_16;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Read RAM Option.
 
 end Nu_Pogodi.Hardware.SSD1683;
