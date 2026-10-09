@@ -111,14 +111,6 @@ package body Nu_Pogodi.Hardware.MIPI is
    begin
       Nu_Pogodi.Hardware.Pin_Control.Configure_MIPI_Pins;
       Nu_Pogodi.Hardware.SPI.Initialize;
-
-      --  Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
-      --  Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
-      --  Nu_Pogodi.Hardware.SPI.Transmit (16#F4#);
-      --  Status Bit Read (16#2F# encoded for LSB-first SPI)
-
-      --  Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
-      --  Nu_Pogodi.Hardware.SPI.Receive (Aux);
    end Initialize;
 
    -----------------
