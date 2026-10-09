@@ -26,6 +26,9 @@ package body Nu_Pogodi.Hardware.SPI is
    procedure DMA2_Stream3_Handler
      with Export, Convention => C, External_Name => "DMA2_Stream3_Handler";
 
+   procedure SPI1_Handler
+     with Export, Convention => C, External_Name => "SPI1_Handler";
+
    Dummy_Byte : aliased constant A0B.Types.Unsigned_8 := 16#FF#;
    --  Repeated TX DMA source in receive mode.
 
@@ -127,26 +130,11 @@ package body Nu_Pogodi.Hardware.SPI is
          A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
            (CTCIF3 => True, others => <>);
 
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
-         --  Turn off use of DMA for SPI transmission
-
-         --  Sequence below is necessary to complete data transfer from the
-         --  shift register.
-
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-            null;
-         end loop;
-
-         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-            null;
-         end loop;
-
-         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
-         --  Transfer completed, "disconnect" MOSI from SDA line.
-
-         --  Now transfer is completed, emit callback.
-
-         A0B.Callbacks.Emit_Once (Transfer_Callback);
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
+           (@ with delta
+              TXDMAEN => False,
+              TXEIE   => True);
+         --  DMA has filled DR; SPI completes transmission on the wire.
       end if;
    end DMA2_Stream3_Handler;
 
@@ -247,6 +235,8 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.DMA2_Stream0);
       A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.DMA2_Stream3);
       A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.DMA2_Stream3);
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.SPI1);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.SPI1);
    end Initialize;
 
    -------------
@@ -405,6 +395,28 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
       --  XXX This might be incorrect, TRE/BSY might be needed to check first.
    end Release;
+
+   ------------------
+   -- SPI1_Handler --
+   ------------------
+
+   procedure SPI1_Handler is
+   begin
+      if A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE then
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE := False;
+         --  TXE means the last byte reached the shift register. BSY still
+         --  covers its transmission on the wire.
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
+         --  Transfer completed, "disconnect" MOSI from SDA line.
+
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
+      end if;
+   end SPI1_Handler;
 
    --------------
    -- Transmit --
