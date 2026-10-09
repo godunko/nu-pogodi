@@ -62,12 +62,23 @@ package body Nu_Pogodi.Hardware.MIPI is
          return;
       end if;
 
+      Transfer_Callback := Finished;
+
       Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
+
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);
       Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
+
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
-      Nu_Pogodi.Hardware.SPI.Receive (Buffer, Finished, Ignore_First_Byte);
-      Nu_Pogodi.Hardware.SPI.Release;
+      Nu_Pogodi.Hardware.SPI.Receive
+        (Buffer,
+         On_Transfer_Callbacks.Create_Callback,
+         Success,
+         Ignore_First_Byte);
+
+      if not Success then
+         Nu_Pogodi.Hardware.SPI.Release;
+      end if;
    end Command_Read;
 
    -------------------
@@ -121,7 +132,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    begin
       Nu_Pogodi.Hardware.SPI.Release;
 
-      A0B.Callbacks.Emit (Transfer_Callback);
+      A0B.Callbacks.Emit_Once (Transfer_Callback);
    end On_Transfer;
 
 end Nu_Pogodi.Hardware.MIPI;

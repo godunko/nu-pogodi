@@ -12,7 +12,6 @@ pragma Ada_2022;
 with System.Storage_Elements;
 
 with A0B.ARMv7M.NVIC_Utilities;
-
 with A0B.STM32F401.SVD.DMA;
 with A0B.STM32F401.SVD.RCC;
 with A0B.STM32F401.SVD.SPI;
@@ -21,13 +20,20 @@ with Nu_Pogodi.Hardware.Pin_Control;
 
 package body Nu_Pogodi.Hardware.SPI is
 
+   procedure DMA2_Stream0_Handler
+     with Export, Convention => C, External_Name => "DMA2_Stream0_Handler";
+
    procedure DMA2_Stream3_Handler
      with Export, Convention => C, External_Name => "DMA2_Stream3_Handler";
 
    Dummy_Byte : aliased constant A0B.Types.Unsigned_8 := 16#FF#;
    --  Repeated TX DMA source in receive mode.
 
-   Transmit_Callback : A0B.Callbacks.Callback;
+   type Buffer_Access is access all A0B.Buffers.Abstract_Buffer'Class;
+
+   Receive_Buffer    : Buffer_Access;
+
+   Transfer_Callback : A0B.Callbacks.Callback;
 
    -----------------------
    -- Acquire_MIPI_Read --
@@ -82,6 +88,36 @@ package body Nu_Pogodi.Hardware.SPI is
    end Acquire_MIPI_Write;
 
    --------------------------
+   -- DMA2_Stream0_Handler --
+   --------------------------
+
+   procedure DMA2_Stream0_Handler is
+   begin
+      if A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF0 then
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CTCIF0 => True, CTCIF3 => True, others => <>);
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
+           (@ with delta
+              RXDMAEN => False,
+              TXDMAEN => False);
+         --  Turn off use of DMA for SPI transmission
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Receive_Buffer.Set_Actual_Length (Receive_Buffer.Expected_Length);
+         Receive_Buffer := null;
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
+      end if;
+   end DMA2_Stream0_Handler;
+
+   --------------------------
    -- DMA2_Stream3_Handler --
    --------------------------
 
@@ -110,7 +146,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
          --  Now transfer is completed, emit callback.
 
-         A0B.Callbacks.Emit_Once (Transmit_Callback);
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
       end if;
    end DMA2_Stream3_Handler;
 
@@ -207,6 +243,8 @@ package body Nu_Pogodi.Hardware.SPI is
 
       --  Configure NVIC
 
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.DMA2_Stream0);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.DMA2_Stream0);
       A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.DMA2_Stream3);
       A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.DMA2_Stream3);
    end Initialize;
@@ -216,13 +254,32 @@ package body Nu_Pogodi.Hardware.SPI is
    -------------
 
    procedure Receive
-     (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
+     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Callback          : A0B.Callbacks.Callback;
+      Success           : in out Boolean;
       Ignore_First_Byte : Boolean := False)
    is
+      use System.Storage_Elements;
+      use type A0B.Buffers.Storage_Count;
+
       Discard : A0B.Types.Unsigned_16 with Unreferenced;
 
    begin
-      if Data'Length = 0 then
+      if not Success then
+         return;
+      end if;
+
+      if Buffer.Expected_Length > 65_535 then
+         Success := False;
+
+         return;
+      end if;
+
+      Buffer.Set_Actual_Length (0);
+
+      if Buffer.Expected_Length = 0 then
+         A0B.Callbacks.Emit (Callback);
+
          return;
       end if;
 
@@ -251,7 +308,10 @@ package body Nu_Pogodi.Hardware.SPI is
          Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
       end if;
 
-      if Data'Length >= 5 then
+      if Buffer.Expected_Length >= 5 then
+         Receive_Buffer    := Buffer'Unchecked_Access;
+         Transfer_Callback := Callback;
+
          A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
            (@ with delta
               RXDMAEN => True,   --  1: Rx buffer DMA enabled
@@ -268,12 +328,14 @@ package body Nu_Pogodi.Hardware.SPI is
             others  => <>);
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
            A0B.Types.Unsigned_32
-             (System.Storage_Elements.To_Integer
-                (Data (Data'First)'Address));
+             (System.Storage_Elements.To_Integer (Buffer.Address));
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S0NDTR :=
-           (NDT            => A0B.Types.Unsigned_16 (Data'Length),
+           (NDT            => A0B.Types.Unsigned_16 (Buffer.Expected_Length),
             Reserved_16_31 => 0);
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR.EN := True;
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR :=
+           (@ with delta
+              TCIE => True,   --  1: TC interrupt enabled
+              EN   => True);  --  1: Stream enabled
 
          --  Configure TX DMA to transfer dummy byte.
 
@@ -288,7 +350,7 @@ package body Nu_Pogodi.Hardware.SPI is
            A0B.Types.Unsigned_32
              (System.Storage_Elements.To_Integer (Dummy_Byte'Address));
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
-           (NDT            => A0B.Types.Unsigned_16 (Data'Length),
+           (NDT            => A0B.Types.Unsigned_16 (Buffer.Expected_Length),
             Reserved_16_31 => 0);
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
            (@ with delta
@@ -296,15 +358,10 @@ package body Nu_Pogodi.Hardware.SPI is
               TCIE => False,   --  0: TC interrupt disabled
               EN   => True);   --  1: Stream enabled
 
-         while not A0B.STM32F401.SVD.DMA.DMA2_Periph.LISR.TCIF0 loop
-            null;
-         end loop;
-
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := False;
-
       else
-         for Byte of Data loop
+         for Offset in
+           A0B.Buffers.Storage_Count range 0 .. Buffer.Expected_Length - 1
+         loop
             while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
                null;
             end loop;
@@ -316,38 +373,27 @@ package body Nu_Pogodi.Hardware.SPI is
                null;
             end loop;
 
-            Byte :=
-              A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
+            declare
+               Byte : A0B.Types.Unsigned_8
+                 with Import,
+                      Address => Buffer.Address + Storage_Offset (Offset);
+            begin
+               Byte := A0B.Types.Unsigned_8
+                 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
+            end;
          end loop;
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Buffer.Set_Actual_Length (Buffer.Expected_Length);
+         A0B.Callbacks.Emit (Callback);
       end if;
-
-      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-         null;
-      end loop;
-
-      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-         null;
-      end loop;
-   end Receive;
-
-   -------------
-   -- Receive --
-   -------------
-
-   procedure Receive
-     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
-      Callback          : A0B.Callbacks.Callback;
-      Ignore_First_Byte : Boolean := False)
-   is
-      Length : constant A0B.Buffers.Storage_Count := Buffer.Expected_Length;
-      Data   : A0B.Types.Arrays.Unsigned_8_Array
-        (1 .. A0B.Types.Unsigned_32 (Length))
-          with Import, Address => Buffer.Address;
-
-   begin
-      Receive (Data, Ignore_First_Byte);
-      Buffer.Set_Actual_Length (Length);
-      A0B.Callbacks.Emit (Callback);
    end Receive;
 
    -------------
@@ -416,7 +462,7 @@ package body Nu_Pogodi.Hardware.SPI is
          return;
       end if;
 
-      Transmit_Callback := Callback;
+      Transfer_Callback := Callback;
 
       Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
 
