@@ -232,8 +232,9 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
         (@ with delta
-           BIDIMODE => False,   --  0: 2-line unidirectional data mode selected
-           RXONLY   => False);  --  0: Full duplex (Transmit and receive)
+           BIDIMODE => False,  --  0: 2-line unidirectional data mode selected
+           RXONLY   => False,  --  0: Full duplex (Transmit and receive)
+           SPE      => True);  --  1: Peripheral enabled
 
       if Ignore_First_Byte then
          while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
@@ -251,16 +252,20 @@ package body Nu_Pogodi.Hardware.SPI is
       end if;
 
       if Data'Length >= 5 then
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
+           (@ with delta
+              RXDMAEN => True,   --  1: Rx buffer DMA enabled
+              TXDMAEN => True);  --  1: Tx buffer DMA enabled
+
          --  Configure RX DMA to receive data.
 
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := True;
-               A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
-                 (CFEIF0  => True,
-                  CDMEIF0 => True,
-                  CTEIF0  => True,
-                  CHTIF0  => True,
-                  CTCIF0  => True,
-                  others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CFEIF0  => True,
+            CDMEIF0 => True,
+            CTEIF0  => True,
+            CHTIF0  => True,
+            CTCIF0  => True,
+            others  => <>);
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
            A0B.Types.Unsigned_32
              (System.Storage_Elements.To_Integer
@@ -272,14 +277,13 @@ package body Nu_Pogodi.Hardware.SPI is
 
          --  Configure TX DMA to transfer dummy byte.
 
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
-               A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
-                 (CFEIF3  => True,
-                  CDMEIF3 => True,
-                  CTEIF3  => True,
-                  CHTIF3  => True,
-                  CTCIF3  => True,
-                  others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CFEIF3  => True,
+            CDMEIF3 => True,
+            CTEIF3  => True,
+            CHTIF3  => True,
+            CTCIF3  => True,
+            others  => <>);
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
            A0B.Types.Unsigned_32
              (System.Storage_Elements.To_Integer (Dummy_Byte'Address));
@@ -364,10 +368,9 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
         (@ with delta
-           BIDIOE => True);  --  1: Output enabled (transmit-only mode)
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
-        (@ with delta SPE => True);  --  1: Peripheral enabled
+           BIDIMODE => True,   --  1: 1-line bidirectional data mode selected
+           BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
+           SPE      => True);  --  1: Peripheral enabled
 
       A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
         (DR             => A0B.Types.Unsigned_16 (Command),
@@ -394,13 +397,33 @@ package body Nu_Pogodi.Hardware.SPI is
    procedure Transmit
      (Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean) is
+      Success  : in out Boolean)
+   is
+      use type A0B.Buffers.Storage_Count;
+
    begin
       if not Success then
          return;
       end if;
 
+      if Buffer.Length > 65_535 then
+         --  Buffer is too large to be transferred by single DMA transfer.
+
+         Success := False;
+
+         return;
+      end if;
+
       Transmit_Callback := Callback;
+
+      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
+
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
+        (@ with delta
+           BIDIMODE => True,   --  1: 1-line bidirectional data mode selected
+           BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
+           SPE      => True);  --  1: Peripheral enabled
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
 
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
         A0B.Types.Unsigned_32
@@ -408,10 +431,6 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
         (NDT            => A0B.Types.Unsigned_16 (Buffer.Length),
          Reserved_16_31 => 0);
-
-      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
       A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
         (CFEIF3  => True,
          CDMEIF3 => True,
