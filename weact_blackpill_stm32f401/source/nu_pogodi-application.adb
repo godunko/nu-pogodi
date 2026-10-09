@@ -246,6 +246,27 @@ package body Nu_Pogodi.Application is
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
 
+      --  Check that automatic switching of RAM banks after partial update is
+      --  enabled in the display option registers. Enable it if it is not.
+
+      declare
+         OTP_Options : Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
+         Options     : Nu_Pogodi.Hardware.SSD1683.Display_Option_Registers;
+
+      begin
+         Nu_Pogodi.Hardware.SSD1683.Synchronous.OTP_Read_Display_Option
+           (OTP_Options, Success);
+
+         if Success and then not OTP_Options.RAM_Ping_Pong then
+            Options := Nu_Pogodi.Hardware.SSD1683.Get_Display_Option_Registers
+              (OTP_Options);
+            Options.RAM_Ping_Pong := True;
+
+            Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_Display_Option
+              (Options, Success);
+         end if;
+      end;
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting
         (Nu_Pogodi.Hardware.SSD1683.Increment,
          Nu_Pogodi.Hardware.SSD1683.Increment,
