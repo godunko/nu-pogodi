@@ -112,6 +112,10 @@ package body Nu_Pogodi.Hardware.MIPI is
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
       Nu_Pogodi.Hardware.SPI.Transmit
         (Buffer, On_Transfer_Callbacks.Create_Callback, Success);
+
+      if not Success then
+         Nu_Pogodi.Hardware.SPI.Release;
+      end if;
    end Command_Write;
 
    ----------------
