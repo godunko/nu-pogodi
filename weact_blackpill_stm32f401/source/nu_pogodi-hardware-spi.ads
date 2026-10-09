@@ -32,6 +32,7 @@ package Nu_Pogodi.Hardware.SPI is
 
    procedure Receive
      (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Callback          : A0B.Callbacks.Callback;
       Ignore_First_Byte : Boolean := False);
    --  Read Expected_Length bytes and update the buffer's actual length.
    --  When requested, discard one leading byte without storing it.

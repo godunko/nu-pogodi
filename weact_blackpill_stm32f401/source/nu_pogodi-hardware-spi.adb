@@ -336,6 +336,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Receive
      (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Callback          : A0B.Callbacks.Callback;
       Ignore_First_Byte : Boolean := False)
    is
       Length : constant A0B.Buffers.Storage_Count := Buffer.Expected_Length;
@@ -346,6 +347,7 @@ package body Nu_Pogodi.Hardware.SPI is
    begin
       Receive (Data, Ignore_First_Byte);
       Buffer.Set_Actual_Length (Length);
+      A0B.Callbacks.Emit (Callback);
    end Receive;
 
    -------------

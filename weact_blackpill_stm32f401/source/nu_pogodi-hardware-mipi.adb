@@ -66,10 +66,8 @@ package body Nu_Pogodi.Hardware.MIPI is
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);
       Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
-      Nu_Pogodi.Hardware.SPI.Receive (Buffer, Ignore_First_Byte);
+      Nu_Pogodi.Hardware.SPI.Receive (Buffer, Finished, Ignore_First_Byte);
       Nu_Pogodi.Hardware.SPI.Release;
-
-      A0B.Callbacks.Emit (Finished);
    end Command_Read;
 
    -------------------
