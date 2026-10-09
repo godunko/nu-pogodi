@@ -16,9 +16,16 @@
 
 with A0B.Buffers;
 with A0B.Callbacks;
-with A0B.Types;
+with A0B.Types.Arrays;
 
 package Nu_Pogodi.Hardware.SSD1683 is
+
+   type Display_Option_Registers is
+     new A0B.Types.Arrays.Unsigned_8_Array (1 .. 11);
+   --  1: VCOM OTP selection
+   --  2: VCOM register
+   --  3..7: display mode
+   --  8..11: waveform version
 
    type Update_Sequence is record
       Enable_Clock      : Boolean;
@@ -196,5 +203,11 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Specify the start/end positions of the window address in the Y direction
    --  by an address unit for RAM.
+
+   procedure OTP_Register_Read_For_Display_Option
+     (Data     : out Display_Option_Registers;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Read Register for Display Option.
 
 end Nu_Pogodi.Hardware.SSD1683;

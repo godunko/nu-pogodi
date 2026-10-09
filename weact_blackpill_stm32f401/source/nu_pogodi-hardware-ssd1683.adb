@@ -17,7 +17,6 @@ with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
 with A0B.Timer;
 
-with A0B.Types.Arrays;
 with Nu_Pogodi.Hardware.MIPI;
 with Nu_Pogodi.Hardware.Pin_Control;
 
@@ -41,6 +40,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#24#;
    Write_RAM_Red_Command                          : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
+   OTP_Register_Read_For_Display_Option_Command   : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    --  Load_WS_OTP_Command                          : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
    Set_RAM_X_Address_Start_End_Position_Command   : constant
@@ -497,6 +498,34 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             raise Program_Error;
       end case;
    end On_Timeout;
+
+   ------------------------------------------
+   -- OTP_Register_Read_For_Display_Option --
+   ------------------------------------------
+
+   procedure OTP_Register_Read_For_Display_Option
+     (Data     : out Display_Option_Registers;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      Nu_Pogodi.Hardware.MIPI.Command_Read
+        (Nu_Pogodi.Hardware.MIPI.Command_Code
+           (Reverse_Bits
+              (A0B.Types.Unsigned_8
+                 (OTP_Register_Read_For_Display_Option_Command))),
+         A0B.Types.Arrays.Unsigned_8_Array (Data),
+         Success);
+
+      for Byte of Data loop
+         Byte := Reverse_Bits (Byte);
+      end loop;
+
+      A0B.Callbacks.Emit (Callback);
+   end OTP_Register_Read_For_Display_Option;
 
    -----------
    -- Reset --
