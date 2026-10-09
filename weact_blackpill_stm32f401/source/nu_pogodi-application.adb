@@ -46,10 +46,7 @@ package body Nu_Pogodi.Application is
      (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
       Success : in out Boolean);
 
-   subtype Pixbuf is A0B.Buffers.Static.Static_Buffer (15_000);
-
-   Pixel_Buffer : array (Natural range 0 .. 1) of Pixbuf;
-   Cycle        : Natural := 0;
+   Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
    Wakeup       : Boolean := False with Volatile;
 
    -----------------
@@ -122,14 +119,12 @@ package body Nu_Pogodi.Application is
 
       declare
          Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer (0).Address;
+           with Import, Address => Pixel_Buffer.Address;
 
       begin
          Data := [others => 16#FF#];
-         Pixel_Buffer (0).Set_Actual_Length (15_000);
+         Pixel_Buffer.Set_Actual_Length (15_000);
       end;
-
-      Cycle := @ + 1;
 
       if not Success then
          raise Program_Error;
@@ -142,7 +137,7 @@ package body Nu_Pogodi.Application is
 
    procedure On_Display_Updated is
    begin
-      Cycle := @ + 1;
+      null;
    end On_Display_Updated;
 
    ---------------
@@ -222,8 +217,6 @@ package body Nu_Pogodi.Application is
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation
         (Success);
-
-      Cycle := @ + 1;
    end Partial_Clock;
 
    ---------
@@ -321,9 +314,7 @@ package body Nu_Pogodi.Application is
          Nu_Pogodi.Scene.Update_Physics_Tick (Refresh);
 
          if Refresh then
-            Partial
-              (Pixel_Buffer (Cycle mod 2),
-               Success);
+            Partial (Pixel_Buffer, Success);
          end if;
 
          Next := @ + Tick_Duration;
@@ -348,9 +339,7 @@ package body Nu_Pogodi.Application is
          if Wakeup then
             Wakeup := False;
 
-            Partial_Clock
-              (Pixel_Buffer (Cycle mod 2),
-               Success);
+            Partial_Clock (Pixel_Buffer, Success);
          end if;
       end loop;
    end Run;
