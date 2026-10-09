@@ -38,6 +38,7 @@ package Nu_Pogodi.Hardware.MIPI is
    procedure Command_Read
      (Command           : Command_Code;
       Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Finished          : A0B.Callbacks.Callback;
       Success           : in out Boolean;
       Ignore_First_Byte : Boolean := False);
    --  Synchronous read of Expected_Length bytes in LSB-first encoding.

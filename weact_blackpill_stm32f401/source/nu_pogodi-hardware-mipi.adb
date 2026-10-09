@@ -77,6 +77,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    procedure Command_Read
      (Command           : Command_Code;
       Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Finished          : A0B.Callbacks.Callback;
       Success           : in out Boolean;
       Ignore_First_Byte : Boolean := False) is
    begin
@@ -90,6 +91,8 @@ package body Nu_Pogodi.Hardware.MIPI is
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
       Nu_Pogodi.Hardware.SPI.Receive (Buffer, Ignore_First_Byte);
       Nu_Pogodi.Hardware.SPI.Release;
+
+      A0B.Callbacks.Emit (Finished);
    end Command_Read;
 
    -------------------

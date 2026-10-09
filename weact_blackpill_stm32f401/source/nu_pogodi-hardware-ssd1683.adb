@@ -593,10 +593,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (Nu_Pogodi.Hardware.MIPI.Command_Code
            (Reverse_Bits (A0B.Types.Unsigned_8 (Read_RAM_Command))),
          Data,
+         Callback,
          Success,
          Ignore_First_Byte => True);
-
-      A0B.Callbacks.Emit (Callback);
    end Read_RAM;
 
    ---------------------
