@@ -12,6 +12,7 @@
 pragma Ada_2022;
 
 with A0B;
+with A0B.Buffers.External;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
@@ -141,13 +142,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      new A0B.Callbacks.Generic_Parameterless (On_Busy);
 
    type State_Kind is
-     (Initial,        --  Not initialized
-      Ready,          --  Initialized, ready to execute actions
-      VCI_Wait,       --  Power-on procedure, wait panel to power-on
-      HW_Reset_Low,   --  Push RES to low, and wait 10 milliseconds
-      HW_Reset_High,  --  Push RES to high, wait till BUSY released
-      Command,        --  Execute command
-      Command_Busy);  --  Execute command, wait till BUSY released
+     (Initial,         --  Not initialized
+      Ready,           --  Initialized, ready to execute actions
+      VCI_Wait,        --  Power-on procedure, wait panel to power-on
+      HW_Reset_Low,    --  Push RES to low, and wait 10 milliseconds
+      HW_Reset_High,   --  Push RES to high, wait till BUSY released
+      Command,         --  Execute command
+      Command_Revert,  --  Execute command and reverse bits in external buffer
+      Command_Busy);   --  Execute command, wait till BUSY released
 
    State            : State_Kind := Initial with Atomic, Volatile;
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
@@ -155,6 +157,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Command_Callback : A0B.Callbacks.Callback;
    Parameter_Buffer : A0B.Buffers.Static.Static_Buffer
      (Write_Register_For_Display_Option_Length);
+   External_Buffer  : A0B.Buffers.External.External_Buffer;
 
    package State_Machine_VCI_Wait_State is
 
@@ -207,6 +210,19 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success     : in out Boolean);
 
    end State_Machine_Command_State;
+
+   package State_Machine_Command_Revert_State is
+
+      --  Reads data into External_Buffer and reverses its bits.
+      --
+      --  Emits `Command_Callback` after conversion is completed.
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean);
+
+   end State_Machine_Command_Revert_State;
 
    package State_Machine_Command_Busy_State is
 
@@ -550,30 +566,19 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    procedure OTP_Read_Display_Option
      (Options  : out OTP_Display_Option_Registers;
       Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean)
-   is
-      Data : A0B.Types.Arrays.Unsigned_8_Array
-        (1 .. OTP_Display_Option_Registers_Length)
-           with Import, Address => Options'Address;
-
+      Success  : in out Boolean) is
    begin
       if not Success then
          return;
       end if;
 
-      Nu_Pogodi.Hardware.MIPI.Command_Read
-        (Nu_Pogodi.Hardware.MIPI.Command_Code
-           (Reverse_Bits
-              (A0B.Types.Unsigned_8
-                 (OTP_Register_Read_For_Display_Option_Command))),
-         A0B.Types.Arrays.Unsigned_8_Array (Data),
-         Success);
+      A0B.Buffers.External.Initialize
+        (External_Buffer,
+         Options'Address,
+         OTP_Display_Option_Registers_Length);
 
-      for Byte of Data loop
-         Byte := Reverse_Bits (Byte);
-      end loop;
-
-      A0B.Callbacks.Emit (Callback);
+      State_Machine_Command_Revert_State.Enter
+        (OTP_Register_Read_For_Display_Option_Command, Callback, Success);
    end OTP_Read_Display_Option;
 
    --------------
@@ -918,6 +923,64 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end On_Transfer_Finished;
 
    end State_Machine_Command_Busy_State;
+
+   ----------------------------------------
+   -- State_Machine_Command_Revert_State --
+   ----------------------------------------
+
+   package body State_Machine_Command_Revert_State is
+
+      procedure On_Transfer_Finished;
+
+      package On_Transfer_Finished_Callbacks is
+        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean) is
+      begin
+         State := Command_Revert;
+         Command_Callback := Callback;
+
+         Nu_Pogodi.Hardware.MIPI.Command_Read
+           (Nu_Pogodi.Hardware.MIPI.Command_Code
+              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+            External_Buffer,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            --  XXX Not implemented, MIPI can't start transfer of the command.
+
+            raise Program_Error;
+         end if;
+      end Enter;
+
+      --------------------------
+      -- On_Transfer_Finished --
+      --------------------------
+
+      procedure On_Transfer_Finished is
+      begin
+         --  XXX Transfer error handling is not implemented.
+
+         --  Reverse the bits in the external buffer and drop association
+         --  with storage.
+
+         Reverse_Bits (External_Buffer);
+         External_Buffer.Finalize;
+
+         State := Ready;
+
+         A0B.Callbacks.Emit_Once (Command_Callback);
+      end On_Transfer_Finished;
+
+   end State_Machine_Command_Revert_State;
 
    ---------------------------------
    -- State_Machine_Command_State --
