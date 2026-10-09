@@ -131,6 +131,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Master_Activation;
 
+   -----------------------------
+   -- OTP_Read_Display_Option --
+   -----------------------------
+
+   procedure OTP_Read_Display_Option
+     (Options : out OTP_Display_Option_Registers;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      OTP_Read_Display_Option
+        (Options, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end OTP_Read_Display_Option;
+
    --------------
    -- Read_RAM --
    --------------
