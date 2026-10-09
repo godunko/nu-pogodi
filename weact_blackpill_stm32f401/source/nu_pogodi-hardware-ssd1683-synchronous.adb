@@ -266,6 +266,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Temperature_Sensor_Control;
 
+   --------------------------
+   -- Write_Display_Option --
+   --------------------------
+
+   procedure Write_Display_Option
+     (Options : Display_Option_Registers;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Write_Display_Option
+        (Options, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Write_Display_Option;
+
    ---------------------------
    -- Write_RAM_Black_White --
    ---------------------------

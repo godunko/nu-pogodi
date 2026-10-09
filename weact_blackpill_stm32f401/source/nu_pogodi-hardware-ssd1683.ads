@@ -16,16 +16,9 @@
 
 with A0B.Buffers;
 with A0B.Callbacks;
-with A0B.Types.Arrays;
+with A0B.Types;
 
 package Nu_Pogodi.Hardware.SSD1683 is
-
-   type Display_Option_Registers is
-     new A0B.Types.Arrays.Unsigned_8_Array (1 .. 11);
-   --  1: VCOM OTP selection
-   --  2: VCOM register
-   --  3..7: display mode
-   --  8..11: waveform version
 
    type Update_Sequence is record
       Enable_Clock      : Boolean;
@@ -101,6 +94,58 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Height_128  => 2#100#,
       Height_256  => 2#101#,
       Height_Full => 2#110#);
+
+   Display_Option_Registers_Length     : constant := 10;
+   OTP_Display_Option_Registers_Length : constant := 11;
+
+   type Display_Option_Registers is record
+      Spare_VCOM_OTP : Boolean;
+      Reserved_0_6_0 : A0B.Types.Reserved_7;
+      WS             : A0B.Types.Unsigned_24;
+      Reserved_4     : A0B.Types.Reserved_8;
+      Reserved_5_7   : A0B.Types.Reserved_1;
+      RAM_Ping_Pong  : Boolean;
+      Reserved_5_5_0 : A0B.Types.Unsigned_6;
+      ID_Version     : A0B.Types.Unsigned_32;
+   end record with Size => 8 * Display_Option_Registers_Length;
+
+   for Display_Option_Registers use record
+      Reserved_0_6_0 at 0 range 0 .. 6;
+      Spare_VCOM_OTP at 0 range 7 .. 7;
+      WS             at 1 range 0 .. 23;
+      Reserved_4     at 4 range 0 .. 7;
+      Reserved_5_5_0 at 5 range 0 .. 5;
+      RAM_Ping_Pong  at 5 range 6 .. 6;
+      Reserved_5_7   at 5 range 7 .. 7;
+      ID_Version     at 6 range 0 .. 31;
+   end record;
+
+   type OTP_Display_Option_Registers is record
+      Spare_VCOM_OTP : Boolean;
+      Reserved_0_6_0 : A0B.Types.Reserved_7;
+      VCOM           : A0B.Types.Unsigned_8;
+      WS             : A0B.Types.Unsigned_24;
+      Reserved_5     : A0B.Types.Reserved_8;
+      Reserved_6_7   : A0B.Types.Reserved_1;
+      RAM_Ping_Pong  : Boolean;
+      Reserved_6_5_0 : A0B.Types.Unsigned_6;
+      ID_Version     : A0B.Types.Unsigned_32;
+   end record with Size => 8 * OTP_Display_Option_Registers_Length;
+
+   for OTP_Display_Option_Registers use record
+      Reserved_0_6_0 at 0 range 0 .. 6;
+      Spare_VCOM_OTP at 0 range 7 .. 7;
+      VCOM           at 1 range 0 .. 7;
+      WS             at 2 range 0 .. 23;
+      Reserved_5     at 5 range 0 .. 7;
+      Reserved_6_5_0 at 6 range 0 .. 5;
+      RAM_Ping_Pong  at 6 range 6 .. 6;
+      Reserved_6_7   at 6 range 7 .. 7;
+      ID_Version     at 7 range 0 .. 31;
+   end record;
+
+   function Get_Display_Option_Registers
+     (Item : OTP_Display_Option_Registers) return Display_Option_Registers;
 
    procedure Initialize;
 
@@ -208,12 +253,6 @@ package Nu_Pogodi.Hardware.SSD1683 is
    --  Specify the start/end positions of the window address in the Y direction
    --  by an address unit for RAM.
 
-   procedure OTP_Register_Read_For_Display_Option
-     (Data     : out Display_Option_Registers;
-      Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean);
-   --  Read Register for Display Option.
-
    procedure Read_RAM
      (Data     : in out A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;
@@ -230,5 +269,17 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Read RAM Option.
+
+   procedure OTP_Read_Display_Option
+     (Options  : out OTP_Display_Option_Registers;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Read Register for Display Option.
+
+   procedure Write_Display_Option
+     (Options  : Display_Option_Registers;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Write Register for Display Option.
 
 end Nu_Pogodi.Hardware.SSD1683;

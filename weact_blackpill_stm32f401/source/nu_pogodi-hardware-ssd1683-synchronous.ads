@@ -111,4 +111,9 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
       Success  : in out Boolean);
    --  Read RAM Option.
 
+   procedure Write_Display_Option
+     (Options : Display_Option_Registers;
+      Success : in out Boolean);
+   --  Write Register for Display Option.
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;

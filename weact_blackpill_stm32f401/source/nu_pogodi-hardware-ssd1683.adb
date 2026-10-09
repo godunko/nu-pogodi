@@ -16,6 +16,7 @@ with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
 with A0B.Timer;
+with A0B.Types.Arrays;
 
 with Nu_Pogodi.Hardware.MIPI;
 with Nu_Pogodi.Hardware.Pin_Control;
@@ -46,6 +47,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    --  Load_WS_OTP_Command                          : constant
    --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
+   Write_Register_For_Display_Option_Command      : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#37#;
    Read_RAM_Option_Command                        : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#41#;
    Set_RAM_X_Address_Start_End_Position_Command   : constant
@@ -65,6 +68,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Auto_Write_RED_RAM_For_Regular_Pattern_Length : constant := 1;
    Display_Update_Control_1_Parameters_Length    : constant := 2;
    Read_RAM_Option_Parameters_Length             : constant := 3;
+   Write_Register_For_Display_Option_Length      : constant := 10;
 
    type Auto_Write_BW_RAM_For_Regular_Pattern_Parameters is record
       Value          : A0B.Types.Unsigned_1;
@@ -149,7 +153,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
    Reset_After_VCI  : Boolean := False with Atomic, Volatile;
    Command_Callback : A0B.Callbacks.Callback;
-   Parameter_Buffer : A0B.Buffers.Static.Static_Buffer (4);
+   Parameter_Buffer : A0B.Buffers.Static.Static_Buffer
+     (Write_Register_For_Display_Option_Length);
 
    package State_Machine_VCI_Wait_State is
 
@@ -452,6 +457,24 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success);
    end Display_Update_Control_2;
 
+   ----------------------------------
+   -- Get_Display_Option_Registers --
+   ----------------------------------
+
+   function Get_Display_Option_Registers
+     (Item : OTP_Display_Option_Registers) return Display_Option_Registers is
+   begin
+      return
+        (Spare_VCOM_OTP => Item.Spare_VCOM_OTP,
+         Reserved_0_6_0 => Item.Reserved_0_6_0,
+         WS             => Item.WS,
+         Reserved_4     => Item.Reserved_5,
+         Reserved_5_7   => Item.Reserved_6_7,
+         RAM_Ping_Pong  => Item.RAM_Ping_Pong,
+         Reserved_5_5_0 => Item.Reserved_6_5_0,
+         ID_Version     => Item.ID_Version);
+   end Get_Display_Option_Registers;
+
    ----------------
    -- Initialize --
    ----------------
@@ -520,14 +543,19 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end case;
    end On_Timeout;
 
-   ------------------------------------------
-   -- OTP_Register_Read_For_Display_Option --
-   ------------------------------------------
+   -----------------------------
+   -- OTP_Read_Display_Option --
+   -----------------------------
 
-   procedure OTP_Register_Read_For_Display_Option
-     (Data     : out Display_Option_Registers;
+   procedure OTP_Read_Display_Option
+     (Options  : out OTP_Display_Option_Registers;
       Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean) is
+      Success  : in out Boolean)
+   is
+      Data : A0B.Types.Arrays.Unsigned_8_Array
+        (1 .. OTP_Display_Option_Registers_Length)
+           with Import, Address => Options'Address;
+
    begin
       if not Success then
          return;
@@ -546,7 +574,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end loop;
 
       A0B.Callbacks.Emit (Callback);
-   end OTP_Register_Read_For_Display_Option;
+   end OTP_Read_Display_Option;
 
    --------------
    -- Read_RAM --
@@ -1102,6 +1130,37 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Temperature_Sensor_Control;
+
+   --------------------------
+   -- Write_Display_Option --
+   --------------------------
+
+   procedure Write_Display_Option
+     (Options  : Display_Option_Registers;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Parameters : Display_Option_Registers
+             with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length
+           (Display_Option_Registers_Length);
+
+         Parameters := Options;
+
+         Reverse_Bits (Parameter_Buffer);
+      end;
+
+      State_Machine_Command_State.Enter
+        (Write_Register_For_Display_Option_Command,
+         Parameter_Buffer, Callback, Success);
+   end Write_Display_Option;
 
    ---------------------------
    -- Write_RAM_Black_White --
