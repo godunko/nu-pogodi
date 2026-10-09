@@ -324,8 +324,6 @@ package body Nu_Pogodi.Hardware.SPI is
       while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
          null;
       end loop;
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
    end Receive;
 
    -------------
