@@ -43,9 +43,8 @@ package body Nu_Pogodi.Application is
    procedure Full_Clean;
 
    procedure Partial
-     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success       : in out Boolean);
+     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success : in out Boolean);
 
    subtype Pixbuf is A0B.Buffers.Static.Static_Buffer (15_000);
 
@@ -160,12 +159,11 @@ package body Nu_Pogodi.Application is
    -------------
 
    procedure Partial
-     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success       : in out Boolean)
+     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success : in out Boolean)
    is
-      Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-        with Import, Address => Active_Buffer.Address;
+      Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
+        with Import, Address => Buffer.Address;
 
    begin
       declare
@@ -175,14 +173,13 @@ package body Nu_Pogodi.Application is
       begin
          Data := [others => 16#FF#];
          Nu_Pogodi.Scene.Drawing.Draw (FB);
-         Nu_Pogodi.Clock.Draw (Active_Buffer);
+         Nu_Pogodi.Clock.Draw (Buffer);
       end;
 
-      Active_Buffer.Set_Actual_Length (15_000);
+      Buffer.Set_Actual_Length (15_000);
 
       Nu_Pogodi.Display.Update
-        (Active_Buffer,
-         Backup_Buffer,
+        (Buffer,
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
    end Partial;
@@ -192,12 +189,11 @@ package body Nu_Pogodi.Application is
    -------------------
 
    procedure Partial_Clock
-     (Active_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Backup_Buffer : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success       : in out Boolean)
+     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success : in out Boolean)
    is
       Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-        with Import, Address => Active_Buffer.Address;
+        with Import, Address => Buffer.Address;
 
    begin
       declare
@@ -207,15 +203,13 @@ package body Nu_Pogodi.Application is
       begin
          Data := [others => 16#FF#];
          Nu_Pogodi.Scene.Drawing.Draw (FB);
-         Nu_Pogodi.Clock.Draw (Active_Buffer);
+         Nu_Pogodi.Clock.Draw (Buffer);
       end;
 
-      Active_Buffer.Set_Actual_Length (15_000);
+      Buffer.Set_Actual_Length (15_000);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-        (Active_Buffer, Success);
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Red
-        (Backup_Buffer, Success);
+        (Buffer, Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => True,
           Enable_Analog     => True,
@@ -329,7 +323,6 @@ package body Nu_Pogodi.Application is
          if Refresh then
             Partial
               (Pixel_Buffer (Cycle mod 2),
-               Pixel_Buffer ((Cycle - 1) mod 2),
                Success);
          end if;
 
@@ -357,7 +350,6 @@ package body Nu_Pogodi.Application is
 
             Partial_Clock
               (Pixel_Buffer (Cycle mod 2),
-               Pixel_Buffer ((Cycle - 1) mod 2),
                Success);
          end if;
       end loop;

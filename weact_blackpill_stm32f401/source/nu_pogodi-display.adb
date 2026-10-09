@@ -10,10 +10,9 @@ with Nu_Pogodi.Hardware.SSD1683;
 
 package body Nu_Pogodi.Display is
 
-   type State_Kind is (Initial, Write_Black_White, Write_Red, Activation);
+   type State_Kind is (Initial, Write_Black_White, Activation);
 
    State              : State_Kind := Initial with Volatile;
-   Red_Back_Buffer    : access constant A0B.Buffers.Abstract_Buffer'Class;
    Completed_Callback : A0B.Callbacks.Callback;
 
    procedure On_Completed;
@@ -34,13 +33,6 @@ package body Nu_Pogodi.Display is
             raise Program_Error;
 
          when Write_Black_White =>
-            State := Write_Red;
-            Nu_Pogodi.Hardware.SSD1683.Write_RAM_Red
-              (Red_Back_Buffer.all,
-               On_Completed_Callbacks.Create_Callback,
-               Success);
-
-         when Write_Red =>
             State := Activation;
             Nu_Pogodi.Hardware.SSD1683.Master_Activation
               (On_Completed_Callbacks.Create_Callback, Success);
@@ -56,21 +48,17 @@ package body Nu_Pogodi.Display is
    ------------
 
    procedure Update
-     (New_Buffer : aliased A0B.Buffers.Abstract_Buffer'Class;
-      Old_Buffer : aliased A0B.Buffers.Abstract_Buffer'Class;
-      Callback   : A0B.Callbacks.Callback;
-      Success    : in out Boolean) is
+     (Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
    begin
       pragma Assert (State = Initial);
 
-      Red_Back_Buffer    := Old_Buffer'Unchecked_Access;
       Completed_Callback := Callback;
 
       State := Write_Black_White;
       Nu_Pogodi.Hardware.SSD1683.Write_RAM_Black_White
-        (New_Buffer,
-         On_Completed_Callbacks.Create_Callback,
-         Success);
+        (Buffer, On_Completed_Callbacks.Create_Callback, Success);
    end Update;
 
 end Nu_Pogodi.Display;
