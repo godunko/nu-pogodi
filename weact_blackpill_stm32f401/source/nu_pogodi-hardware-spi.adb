@@ -460,6 +460,11 @@ package body Nu_Pogodi.Hardware.SPI is
          Success := False;
 
          return;
+
+      elsif Buffer.Length = 0 then
+         A0B.Callbacks.Emit (Callback);
+
+         return;
       end if;
 
       Transfer_Callback := Callback;
