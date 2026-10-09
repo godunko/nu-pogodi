@@ -103,3 +103,13 @@ For initialization, we send `0x22` with parameter `0xF8` (`1111 1000`), followed
 For each regular partial refresh, we send `0x22` with parameter `0x0C` (`0000 1100`), followed by `0x20`. Only `D3` and `D2` are set: the controller selects partial refresh mode and executes the display waveform, skipping temperature and LUT loading as well as the clock and analog enable and disable stages. The clock and analog circuitry remain active between frames.
 
 The average activation-to-BUSY-release interval drops to **262.0 ms** (a total saving of **176.6 ms** or **40.3%** compared to standard partial refresh), corresponding to a theoretical refresh rate of approximately **3.8 Hz**. The one-time preparation takes **96.0 ms**.
+
+---
+
+## Conclusion
+
+On the tested panel, separating preparation from regular refreshes reduced the average activation-to-BUSY-release interval from **438.6 ms** to **262.0 ms** — a reduction of **40.3%**, using the manufacturer-provided LUTs and stock booster parameters.
+
+Loading the temperature and LUT once provided only a small improvement. The larger gains came from keeping the clock and analog circuitry active between frames and skipping their repeated enable and disable stages. The key was to configure the update sequence to perform only the work needed for each refresh.
+
+This approach fits continuous gameplay in the same refresh mode and at roughly stable temperature. It still requires occasional full refreshes to clear accumulated ghosting, and the clock and analog circuitry should be disabled when gameplay ends. For this recreation of *Nu, Pogodi!*, the shorter refresh interval makes e-paper a more practical display for animation.
