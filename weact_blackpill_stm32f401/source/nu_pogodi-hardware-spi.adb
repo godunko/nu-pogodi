@@ -4,10 +4,16 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+--  SPI peripheral on STM32F401 is not good to receive data in half duplex
+--  mode. There are known "workarounds", but non of them is implemented yet.
+--  Hope naive implementaion is enough for now.
+
 pragma Ada_2022;
 
-with A0B.ARMv7M.NVIC_Utilities;
 with System.Storage_Elements;
+
+with A0B.ARMv7M.Instructions;
+with A0B.ARMv7M.NVIC_Utilities;
 
 with A0B.STM32F401.SVD.DMA;
 with A0B.STM32F401.SVD.RCC;
@@ -172,19 +178,50 @@ package body Nu_Pogodi.Hardware.SPI is
    -------------
 
    procedure Receive (Data : out A0B.Types.Unsigned_8) is
+      Bytes : A0B.Types.Arrays.Unsigned_8_Array (1 .. 1);
    begin
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
-        (@ with delta
-           BIDIOE => False);  --  0: Output disabled (receive-only mode)
+      Receive (Bytes);
+      Data := Bytes (1);
+   end Receive;
 
-      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
-         null;
+   -------------
+   -- Receive --
+   -------------
+
+   procedure Receive (Data : out A0B.Types.Arrays.Unsigned_8_Array) is
+      Interrupt_Mask : Boolean;
+      Discard        : A0B.Types.Unsigned_16;
+   begin
+      if Data'Length = 0 then
+         return;
+      end if;
+
+      --  Receive-only master mode generates clocks continuously. Prevent
+      --  interrupts from delaying DR reads and causing an overrun.
+      Interrupt_Mask := A0B.ARMv7M.Instructions.Get_PRIMASK;
+      A0B.ARMv7M.Instructions.Disable_Interrupts;
+
+      --  Clear any stale receive data before changing the line direction.
+
+      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
+         Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
       end loop;
 
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
-        (@ with delta SPE => False);  --  0: Peripheral disabled
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := False;
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := False;
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.BIDIOE := False;
 
-      Data := A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
+      for Byte of Data loop
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
+            null;
+         end loop;
+
+         Byte :=
+           A0B.Types.Unsigned_8 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
+      end loop;
+
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
+      A0B.ARMv7M.Instructions.Set_PRIMASK (Interrupt_Mask);
    end Receive;
 
    -------------

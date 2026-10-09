@@ -6,7 +6,7 @@
 
 with A0B.Callbacks;
 with A0B.Buffers;
-with A0B.Types;
+with A0B.Types.Arrays;
 
 package Nu_Pogodi.Hardware.SPI is
 
@@ -26,5 +26,8 @@ package Nu_Pogodi.Hardware.SPI is
       Success  : in out Boolean);
 
    procedure Receive (Data : out A0B.Types.Unsigned_8);
+
+   procedure Receive (Data : out A0B.Types.Arrays.Unsigned_8_Array);
+   --  Read consecutive bytes, keeping CS asserted until the last byte.
 
 end Nu_Pogodi.Hardware.SPI;
