@@ -112,7 +112,7 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
    --  Read RAM Option.
 
    procedure OTP_Read_Display_Option
-     (Options : out OTP_Display_Option_Registers;
+     (Options : aliased out OTP_Display_Option_Registers;
       Success : in out Boolean);
    --  Read Register for Display Option.
 

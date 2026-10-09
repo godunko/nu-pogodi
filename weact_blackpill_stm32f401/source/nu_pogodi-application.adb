@@ -237,7 +237,8 @@ package body Nu_Pogodi.Application is
       --  enabled in the display option registers. Enable it if it is not.
 
       declare
-         OTP_Options : Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
+         OTP_Options : aliased
+           Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
          Options     : Nu_Pogodi.Hardware.SSD1683.Display_Option_Registers;
 
       begin

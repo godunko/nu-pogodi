@@ -136,7 +136,7 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
    -----------------------------
 
    procedure OTP_Read_Display_Option
-     (Options : out OTP_Display_Option_Registers;
+     (Options : aliased out OTP_Display_Option_Registers;
       Success : in out Boolean)
    is
       Await : aliased A0B.Awaits.Await;
