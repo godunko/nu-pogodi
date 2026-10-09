@@ -188,7 +188,10 @@ package body Nu_Pogodi.Hardware.SPI is
    -- Receive --
    -------------
 
-   procedure Receive (Data : out A0B.Types.Arrays.Unsigned_8_Array) is
+   procedure Receive
+     (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
+      Ignore_First_Byte : Boolean := False)
+   is
       Interrupt_Mask : Boolean;
       Discard        : A0B.Types.Unsigned_16;
    begin
@@ -211,6 +214,14 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.RXDMAEN := False;
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.BIDIOE := False;
 
+      if Ignore_First_Byte then
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
+            null;
+         end loop;
+
+         Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
+      end if;
+
       for Byte of Data loop
          while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
             null;
@@ -222,6 +233,24 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
       A0B.ARMv7M.Instructions.Set_PRIMASK (Interrupt_Mask);
+   end Receive;
+
+   -------------
+   -- Receive --
+   -------------
+
+   procedure Receive
+     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Ignore_First_Byte : Boolean := False)
+   is
+      Length : constant A0B.Buffers.Storage_Count := Buffer.Expected_Length;
+      Data   : A0B.Types.Arrays.Unsigned_8_Array
+        (1 .. A0B.Types.Unsigned_32 (Length))
+          with Import, Address => Buffer.Address;
+
+   begin
+      Receive (Data, Ignore_First_Byte);
+      Buffer.Set_Actual_Length (Length);
    end Receive;
 
    -------------

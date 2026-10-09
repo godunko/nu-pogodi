@@ -27,7 +27,15 @@ package Nu_Pogodi.Hardware.SPI is
 
    procedure Receive (Data : out A0B.Types.Unsigned_8);
 
-   procedure Receive (Data : out A0B.Types.Arrays.Unsigned_8_Array);
+   procedure Receive
+     (Data              : out A0B.Types.Arrays.Unsigned_8_Array;
+      Ignore_First_Byte : Boolean := False);
    --  Read consecutive bytes, keeping CS asserted until the last byte.
+
+   procedure Receive
+     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Ignore_First_Byte : Boolean := False);
+   --  Read Expected_Length bytes and update the buffer's actual length.
+   --  When requested, discard one leading byte without storing it.
 
 end Nu_Pogodi.Hardware.SPI;

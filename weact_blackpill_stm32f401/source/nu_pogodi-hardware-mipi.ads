@@ -35,4 +35,11 @@ package Nu_Pogodi.Hardware.MIPI is
       Success : in out Boolean);
    --  Synchronous read; command and returned bytes use LSB-first encoding.
 
+   procedure Command_Read
+     (Command           : Command_Code;
+      Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success           : in out Boolean;
+      Ignore_First_Byte : Boolean := False);
+   --  Synchronous read of Expected_Length bytes in LSB-first encoding.
+
 end Nu_Pogodi.Hardware.MIPI;

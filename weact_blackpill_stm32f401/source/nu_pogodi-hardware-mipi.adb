@@ -70,6 +70,28 @@ package body Nu_Pogodi.Hardware.MIPI is
       Nu_Pogodi.Hardware.SPI.Release;
    end Command_Read;
 
+   ------------------
+   -- Command_Read --
+   ------------------
+
+   procedure Command_Read
+     (Command           : Command_Code;
+      Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Success           : in out Boolean;
+      Ignore_First_Byte : Boolean := False) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
+      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);
+      Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
+      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
+      Nu_Pogodi.Hardware.SPI.Receive (Buffer, Ignore_First_Byte);
+      Nu_Pogodi.Hardware.SPI.Release;
+   end Command_Read;
+
    -------------------
    -- Command_Write --
    -------------------
