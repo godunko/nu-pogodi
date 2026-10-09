@@ -170,19 +170,19 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (3) := False;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (3) := 2#01#;
 
-      --  PB5: SPI1_MOSI/SDA, push-pull for transmission.
-      --  MISO and MOSI share SDA; MOSI must be released before display reads.
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#10#;
+      --  PB5: SPI1_MOSI/SDA, input by default on the shared SDA line.
+      --  Use AF5 with push-pull output only while transmitting.
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MOSI) := 2#00#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (MIPI_SPI_MOSI) := 2#0101#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OSPEEDR.Arr (MIPI_SPI_MOSI) := 2#01#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.OTYPER.OT.Arr (MIPI_SPI_MOSI) :=
         False;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MOSI) := 2#01#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MOSI) := 2#00#;
 
       --  PB4: SPI1_MISO/SDA
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr (MIPI_SPI_MISO) := 2#10#;
       A0B.STM32F401.SVD.GPIO.GPIOB_Periph.AFRL.Arr (MIPI_SPI_MISO) := 2#0101#;
-      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MISO) := 2#00#;
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.PUPDR.Arr (MIPI_SPI_MISO) := 2#01#;
    end Configure_SPI1_Pins;
 
    --------------------------
