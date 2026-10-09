@@ -30,12 +30,6 @@ package Nu_Pogodi.Hardware.MIPI is
       Success  : in out Boolean);
 
    procedure Command_Read
-     (Command : Command_Code;
-      Data    : out A0B.Types.Arrays.Unsigned_8_Array;
-      Success : in out Boolean);
-   --  Synchronous read; command and returned bytes use LSB-first encoding.
-
-   procedure Command_Read
      (Command           : Command_Code;
       Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
       Finished          : A0B.Callbacks.Callback;

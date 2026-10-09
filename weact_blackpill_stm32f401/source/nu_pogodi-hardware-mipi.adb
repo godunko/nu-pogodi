@@ -52,29 +52,6 @@ package body Nu_Pogodi.Hardware.MIPI is
    ------------------
 
    procedure Command_Read
-     (Command : Command_Code;
-      Data    : out A0B.Types.Arrays.Unsigned_8_Array;
-      Success : in out Boolean) is
-   begin
-      Data := (others => 0);
-
-      if not Success then
-         return;
-      end if;
-
-      Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
-      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);
-      Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
-      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
-      Nu_Pogodi.Hardware.SPI.Receive (Data);
-      Nu_Pogodi.Hardware.SPI.Release;
-   end Command_Read;
-
-   ------------------
-   -- Command_Read --
-   ------------------
-
-   procedure Command_Read
      (Command           : Command_Code;
       Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
       Finished          : A0B.Callbacks.Callback;
