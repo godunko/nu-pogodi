@@ -4,6 +4,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+pragma Ada_2022;
+
 with A0B.ARMv7M.NVIC_Utilities;
 with A0B.STM32F401.SVD.GPIO;
 with A0B.STM32F401.SVD.EXTI;
@@ -48,6 +50,52 @@ package body Nu_Pogodi.Hardware.Pin_Control is
      (GPIO : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
       Pin  : Natural;
       Pull : Pull_Mode);
+
+   procedure Configure_Analog_All;
+   --  Switch all GPIO pins into "analog" mode to minimize power consumption,
+   --  with exception of SWDIO/SWCLK tp allow debugging.
+
+   --------------------------
+   -- Configure_Analog_All --
+   --------------------------
+
+   procedure Configure_Analog_All is
+      Dummy : A0B.STM32F401.SVD.RCC.AHB1ENR_Register;
+
+   begin
+      A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR :=
+        (@ with delta
+           GPIOAEN => True,
+           GPIOBEN => True,
+           GPIOCEN => True,
+           GPIODEN => True,
+           GPIOEEN => True,
+           GPIOHEN => True);
+      Dummy := A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR;
+      --  Enable clock of all GPIO peripheral
+
+      --  A0B.STM32F401.SVD.GPIO.GPIOA_Periph.MODER.Arr := [others => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.MODER.Arr :=
+        [13 | 14 => 2#10#,  --  SWDIO, SWCLK: debugger interface
+         others  => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOB_Periph.MODER.Arr := [others => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOC_Periph.MODER.Arr := [others => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOD_Periph.MODER.Arr := [others => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOE_Periph.MODER.Arr := [others => 2#11#];
+      A0B.STM32F401.SVD.GPIO.GPIOH_Periph.MODER.Arr := [others => 2#11#];
+      --  11: Analog mode
+
+      A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR :=
+        (@ with delta
+           GPIOAEN => False,
+           GPIOBEN => False,
+           GPIOCEN => False,
+           GPIODEN => False,
+           GPIOEEN => False,
+           GPIOHEN => False);
+         --  Dummy := A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR;
+      --  Disable clock of all GPIO peripheral
+   end Configure_Analog_All;
 
    ---------------------
    -- Configure_Input --
@@ -306,6 +354,8 @@ package body Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Initialize is
    begin
+      Configure_Analog_All;
+
       A0B.STM32F401.SVD.RCC.RCC_Periph.APB2ENR.SYSCFGEN := True;
 
       A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR.GPIOAEN := True;
@@ -325,12 +375,12 @@ package body Nu_Pogodi.Hardware.Pin_Control is
         (if To
          then
            (BS =>
-              (As_Array => True, Arr => (MIPI_D_C => True, others => False)),
-            BR => (As_Array => True, Arr => (others => False)))
+              (As_Array => True, Arr => [MIPI_D_C => True, others => False]),
+            BR => (As_Array => True, Arr => [others => False]))
          else
-           (BS => (As_Array => True, Arr => (others => False)),
+           (BS => (As_Array => True, Arr => [others => False]),
             BR =>
-              (As_Array => True, Arr => (MIPI_D_C => True, others => False))));
+              (As_Array => True, Arr => [MIPI_D_C => True, others => False])));
    end Set_MIPI_D_C;
 
    ---------------------
@@ -344,13 +394,13 @@ package body Nu_Pogodi.Hardware.Pin_Control is
          then
            (BS =>
               (As_Array => True,
-               Arr      => (SSD1683_RES => True, others => False)),
-            BR => (As_Array => True, Arr => (others => False)))
+               Arr      => [SSD1683_RES => True, others => False]),
+            BR => (As_Array => True, Arr => [others => False]))
          else
-           (BS => (As_Array => True, Arr => (others => False)),
+           (BS => (As_Array => True, Arr => [others => False]),
             BR =>
               (As_Array => True,
-               Arr      => (SSD1683_RES => True, others => False))));
+               Arr      => [SSD1683_RES => True, others => False])));
    end Set_SSD1683_RES;
 
    -------------------------------------
@@ -361,7 +411,7 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    begin
       A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
         (PR             =>
-           (As_Array => True, Arr => (SSD1683_BUSY => True, others => False)),
+           (As_Array => True, Arr => [SSD1683_BUSY => True, others => False]),
          Reserved_23_31 => 0);
       --  Clear pending request unconditionally
    end SSD1683_BUSY_EXTI_Clear_Pending;
