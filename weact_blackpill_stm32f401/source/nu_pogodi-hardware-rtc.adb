@@ -19,7 +19,36 @@ package body Nu_Pogodi.Hardware.RTC is
 
    Clock_Wakeup_Callback : A0B.Callbacks.Callback;
 
+   procedure Clear_Interrupt_Flags
+     (Alarm : Boolean := False;
+      Timer : Boolean := False);
+   --  Clear given flags in status register.
+
    procedure Configure_Alarm;
+
+   ---------------------------
+   -- Clear_Interrupt_Flags --
+   ---------------------------
+
+   procedure Clear_Interrupt_Flags
+     (Alarm : Boolean := False;
+      Timer : Boolean := False) is
+   begin
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR :=
+        (@ with delta
+           ALRAF  => not Alarm,
+           ALRBF  => True,
+           WUTF   => not Timer,
+           TSF    => True,
+           TSOVF  => True,
+           TAMP1F => True,
+           TAMP2F => True,
+           RSF    => True,
+           SHPF   => True);
+      --  Write ones to unrelated rc_w0 flags, including flags asserted
+      --  between the read and write; preserve the current INIT bit.
+      --  These flags [13:8] are not write protected.
+   end Clear_Interrupt_Flags;
 
    -----------
    -- Clock --
@@ -112,7 +141,7 @@ package body Nu_Pogodi.Hardware.RTC is
 
       --  Clear pending alarm flag
 
-      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.ALRAF := False;
+      Clear_Interrupt_Flags (Alarm => True);
 
       --  Configure EXTI to process alarm interrupt
 
@@ -170,10 +199,7 @@ package body Nu_Pogodi.Hardware.RTC is
 
    procedure EXTI17_RTC_Alarm_Handler is
    begin
-      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.ALRAF := False;
-      --  ALRAF is cleared by writing zero. Write ones to the other rc_w0
-      --  flags to preserve them, including flags set during this write.
-      --  Clearing ALRAF does not require unlocking RTC write protection.
+      Clear_Interrupt_Flags (Alarm => True);
 
       A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
         (PR             =>
