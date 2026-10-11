@@ -17,14 +17,29 @@ package body Nu_Pogodi.Hardware.RTC is
    procedure EXTI17_RTC_Alarm_Handler
      with Export, Convention => C, External_Name => "EXTI17_RTC_Alarm_Handler";
 
-   Clock_Wakeup_Callback : A0B.Callbacks.Callback;
+   procedure EXTI22_RTC_WKUP_Handler
+     with Export, Convention => C, External_Name => "EXTI22_RTC_WKUP_Handler";
+
+   Clock_Wakeup_Callback : aliased A0B.Callbacks.Callback;
+   Timer_Wakeup_Callback : aliased A0B.Callbacks.Callback;
 
    procedure Clear_Interrupt_Flags
      (Alarm : Boolean := False;
       Timer : Boolean := False);
    --  Clear given flags in status register.
 
+   procedure Clear_Pending_WKUP_Interrupt;
+   --  Clear pending state of of EXTI22_RTC_WKUP interrupt at all levels:
+   --    * RTC
+   --    * EXTI
+   --    * NVIC
+   --
+   --  RTC write-protection doesn't prevent clear of pending state of
+   --  interrupt.
+
    procedure Configure_Alarm;
+
+   procedure Configure_Timer;
 
    ---------------------------
    -- Clear_Interrupt_Flags --
@@ -49,6 +64,33 @@ package body Nu_Pogodi.Hardware.RTC is
       --  between the read and write; preserve the current INIT bit.
       --  These flags [13:8] are not write protected.
    end Clear_Interrupt_Flags;
+
+   ----------------------------------
+   -- Clear_Pending_WKUP_Interrupt --
+   ----------------------------------
+
+   procedure Clear_Pending_WKUP_Interrupt is
+   begin
+      A0B.STM32F401.SVD.RTC.RTC_Periph.ISR :=
+        (@ with delta
+           ALRAF  => True,
+           ALRBF  => True,
+           WUTF   => False,
+           TSF    => True,
+           TSOVF  => True,
+           TAMP1F => True,
+           TAMP2F => True,
+           RSF    => True,
+           SHPF   => True);
+      --  Write ones to unrelated rc_w0 flags, including flags asserted
+      --  between the read and write; preserve the current INIT bit.
+      --  These flags [13:8] are not write protected.
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
+        (PR => (As_Array => True, Arr => [22 => True, others => False]),
+         others => <>);
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI22_RTC_WKUP);
+   end Clear_Pending_WKUP_Interrupt;
 
    -----------
    -- Clock --
@@ -193,6 +235,49 @@ package body Nu_Pogodi.Hardware.RTC is
            ALRAIE => True);  --  1: Alarm A interrupt enabled
    end Configure_Alarm;
 
+   ---------------------
+   -- Configure_Timer --
+   ---------------------
+
+   procedure Configure_Timer is
+   begin
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
+        (@ with delta
+           WUTE  => False,   --  0: Wakeup timer disabled
+           WUTIE => False);  --  0: Wakeup timer interrupt disabled
+
+      while not A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.WUTWF loop
+         null;
+      end loop;
+
+      --  Clear pending wakeup timer flag
+
+      Clear_Interrupt_Flags (Timer => True);
+
+      --  Configure EXTI to process wakeup timer events
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.RTSR.TR.Arr (22) := True;
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.FTSR.TR.Arr (22) := False;
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
+        (PR => (As_Array => True, Arr => [22 => True, others => False]),
+         others => <>);
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR.MR.Arr (22) := True;
+
+      --  Configure NVIC
+
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending
+        (A0B.STM32F401.EXTI22_RTC_WKUP);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt
+        (A0B.STM32F401.EXTI22_RTC_WKUP);
+
+      --  Configure wakeup timer
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR.WCKSEL := 2#000#;
+      --  000: RTC/16 clock is selected
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WUTR := (WUT => 5, others => <>);
+      --  (5 + 1) * 16 / 32_768 = 2.9296875 ms, approximately 3 ms.
+   end Configure_Timer;
+
    ------------------------------
    -- EXTI17_RTC_Alarm_Handler --
    ------------------------------
@@ -210,6 +295,41 @@ package body Nu_Pogodi.Hardware.RTC is
 
       A0B.Callbacks.Emit (Clock_Wakeup_Callback);
    end EXTI17_RTC_Alarm_Handler;
+
+   -----------------------------
+   -- EXTI22_RTC_WKUP_Handler --
+   -----------------------------
+
+   procedure EXTI22_RTC_WKUP_Handler is
+   begin
+      --  Disable wakeup timer interrupt, keep timer running.
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#CA#, others => <>);
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#53#, others => <>);
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR.WUTIE := False;
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#FF#, others => <>);
+
+      Clear_Pending_WKUP_Interrupt;
+
+      --  Emit callback
+
+      A0B.Callbacks.Emit_Once (Timer_Wakeup_Callback);
+
+      --  If callback doesn't request interrupt after next interval, disable
+      --  wakeup timer.
+
+      if not A0B.STM32F401.SVD.RTC.RTC_Periph.CR.WUTIE then
+         A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#CA#, others => <>);
+         A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#53#, others => <>);
+         A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
+           (@ with delta
+              WUTE  => False,   --  0: Wakeup timer disabled
+              WUTIE => False);  --  0: Wakeup timer interrupt disabled
+         A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#FF#, others => <>);
+
+         Clear_Pending_WKUP_Interrupt;
+      end if;
+   end EXTI22_RTC_WKUP_Handler;
 
    ----------------
    -- Initialize --
@@ -274,6 +394,7 @@ package body Nu_Pogodi.Hardware.RTC is
       A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.INIT := False;
 
       Configure_Alarm;
+      Configure_Timer;
 
       --  Re-lock write protection
 
@@ -288,6 +409,37 @@ package body Nu_Pogodi.Hardware.RTC is
          null;
       end loop;
    end Initialize;
+
+   ---------------------------
+   -- Schedule_Timer_Wakeup --
+   ---------------------------
+
+   procedure Schedule_Timer_Wakeup (Callback : A0B.Callbacks.Callback) is
+   begin
+      if not A0B.STM32F401.SVD.RTC.RTC_Periph.CR.WUTE then
+         --  A stopped counter may still be synchronizing its previous stop.
+
+         while not A0B.STM32F401.SVD.RTC.RTC_Periph.ISR.WUTWF loop
+            null;
+         end loop;
+      end if;
+
+      Timer_Wakeup_Callback := Callback;
+
+      --  Clear pending interrupt state at all levels
+
+      Clear_Pending_WKUP_Interrupt;
+
+      --  Enable timer interrupt, and timer itself, if it was disabled.
+
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#CA#, others => <>);
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#53#, others => <>);
+      A0B.STM32F401.SVD.RTC.RTC_Periph.CR :=
+        (@ with delta
+           WUTE  => True,   --  1: Wakeup timer enabled
+           WUTIE => True);  --  1: Wakeup timer interrupt enabled
+      A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#FF#, others => <>);
+   end Schedule_Timer_Wakeup;
 
    ----------------------
    -- Set_Clock_Wakeup --

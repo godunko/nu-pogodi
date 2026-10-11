@@ -69,4 +69,9 @@ package Nu_Pogodi.Hardware.RTC is
    --  Set callback to be called on clock change from 59 to 00 second, in other
    --  words, every real minute.
 
+   procedure Schedule_Timer_Wakeup (Callback : A0B.Callbacks.Callback);
+   --  Schedule a wakeup after approximately 3 ms. If the counter is already
+   --  running, request its next expiry after the remaining period. Stop
+   --  the counter if its callback makes no new request.
+
 end Nu_Pogodi.Hardware.RTC;
