@@ -346,15 +346,17 @@ package body Nu_Pogodi.Application is
 
       loop
          if Requested /= null then
-            if Requested = Clock'Access then
-               Enter_Clock_State;
+            if not Display_Busy then
+               if Requested = Clock'Access then
+                  Enter_Clock_State;
 
-            elsif Requested = Game'Access then
-               Enter_Game_State;
+               elsif Requested = Game'Access then
+                  Enter_Game_State;
+               end if;
+
+               Requested       := null;
+               Refresh_Pending := True;
             end if;
-
-            Requested       := null;
-            Refresh_Pending := True;
          end if;
 
          Active.Physics_Tick (Refresh_Pending);
