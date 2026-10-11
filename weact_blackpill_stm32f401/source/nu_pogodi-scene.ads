@@ -33,7 +33,7 @@ package Nu_Pogodi.Scene is
 
    procedure Initialize (Mode : Game_Mode);
 
-   procedure Update_Physics_Tick (Refresh : out Boolean);
+   procedure Update_Physics_Tick (Refresh : in out Boolean);
 
    function Is_Game_Over return Boolean;
 

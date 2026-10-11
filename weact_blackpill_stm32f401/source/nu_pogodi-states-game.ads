@@ -18,6 +18,6 @@ private
 
    overriding procedure Physics_Tick
      (Self    : in out Game_State;
-      Refresh : out Boolean);
+      Refresh : in out Boolean);
 
 end Nu_Pogodi.States.Game;

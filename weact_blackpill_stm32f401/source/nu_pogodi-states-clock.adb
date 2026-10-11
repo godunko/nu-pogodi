@@ -16,9 +16,9 @@ package body Nu_Pogodi.States.Clock is
 
    overriding procedure Physics_Tick
      (Self    : in out Clock_State;
-      Refresh : out Boolean) is
+      Refresh : in out Boolean) is
    begin
-      Refresh := False;
+      null;
    end Physics_Tick;
 
    ------------

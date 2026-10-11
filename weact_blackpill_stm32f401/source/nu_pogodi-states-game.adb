@@ -17,7 +17,7 @@ package body Nu_Pogodi.States.Game is
 
    overriding procedure Physics_Tick
      (Self    : in out Game_State;
-      Refresh : out Boolean) is
+      Refresh : in out Boolean) is
    begin
       Nu_Pogodi.Scene.Update_Physics_Tick (Refresh);
    end Physics_Tick;
@@ -38,7 +38,7 @@ package body Nu_Pogodi.States.Game is
       Nu_Pogodi.Clock.Draw (Buffer);
 
       if Nu_Pogodi.Scene.Is_Game_Over then
-         Nu_Pogodi.Application.Enter_Clock_State;
+         Nu_Pogodi.Application.Request_Clock_State;
       end if;
    end Render;
 

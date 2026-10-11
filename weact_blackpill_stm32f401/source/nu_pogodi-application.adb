@@ -51,7 +51,9 @@ package body Nu_Pogodi.Application is
    Game         : aliased Nu_Pogodi.States.Game.Game_State;
    Clock        : aliased Nu_Pogodi.States.Clock.Clock_State;
    Active       : State_Access := null;
+   Requested    : State_Access := null;
 
+   Display_Busy : Boolean := False with Volatile;
    Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
    Wakeup       : Boolean := False with Volatile;
 
@@ -224,7 +226,7 @@ package body Nu_Pogodi.Application is
 
    procedure On_Display_Updated is
    begin
-      null;
+      Display_Busy := False;
    end On_Display_Updated;
 
    ---------------
@@ -259,20 +261,39 @@ package body Nu_Pogodi.Application is
 
       Buffer.Set_Actual_Length (15_000);
 
+      Display_Busy := True;
       Nu_Pogodi.Display.Update
         (Buffer,
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
    end Partial;
 
+   -------------------------
+   -- Request_Clock_State --
+   -------------------------
+
+   procedure Request_Clock_State is
+   begin
+      Requested := Clock'Access;
+   end Request_Clock_State;
+
+   ------------------------
+   -- Request_Game_State --
+   ------------------------
+
+   procedure Request_Game_State is
+   begin
+      Requested := Game'Access;
+   end Request_Game_State;
+
    ---------
    -- Run --
    ---------
 
    procedure Run is
-      Next    : A0B.Time.Monotonic_Time;
-      Refresh : Boolean;
-      Success : Boolean := True;
+      Next            : A0B.Time.Monotonic_Time;
+      Refresh_Pending : Boolean;
+      Success         : Boolean := True;
 
    begin
       Nu_Pogodi.Hardware.RTC.Set_Wakeup (On_Wakeup_Callbacks.Create_Callback);
@@ -316,16 +337,33 @@ package body Nu_Pogodi.Application is
         (Nu_Pogodi.Hardware.SSD1683.Internal, Success);
 
       Full_Clean;
+      Display_Busy    := False;
+      Refresh_Pending := False;
 
-      Enter_Game_State;
+      Request_Game_State;
 
       Next := A0B.Time.Clock;
 
       loop
-         Game.Physics_Tick (Refresh);
+         if Requested /= null then
+            if Requested = Clock'Access then
+               Enter_Clock_State;
 
-         if Refresh or (Active = Clock'Access and Wakeup) then
-            Wakeup := False;
+            elsif Requested = Game'Access then
+               Enter_Game_State;
+            end if;
+
+            Requested       := null;
+            Refresh_Pending := True;
+         end if;
+
+         Active.Physics_Tick (Refresh_Pending);
+
+         if (Refresh_Pending or (Active = Clock'Access and Wakeup))
+           and then not Display_Busy
+         then
+            Wakeup          := False;
+            Refresh_Pending := False;
 
             Partial (Pixel_Buffer, Success);
          end if;

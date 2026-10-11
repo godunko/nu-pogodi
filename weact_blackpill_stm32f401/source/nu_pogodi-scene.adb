@@ -434,14 +434,12 @@ package body Nu_Pogodi.Scene is
    -- Update_Physics_Tick --
    -------------------------
 
-   procedure Update_Physics_Tick (Refresh : out Boolean) is
+   procedure Update_Physics_Tick (Refresh : in out Boolean) is
       use type A0B.Types.Unsigned_32;
 
    begin
       if State.Miss_Count > 3 then
          --  Game over
-
-         Refresh := False;
 
          return;
       end if;
@@ -451,8 +449,6 @@ package body Nu_Pogodi.Scene is
 
       if State.Remain_Ticks /= 0 then
          Update_Input;
-
-         Refresh := False;
 
          return;
       end if;

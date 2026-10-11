@@ -16,7 +16,9 @@ package Nu_Pogodi.States is
 
    not overriding procedure Physics_Tick
      (Self    : in out Abstract_State;
-      Refresh : out Boolean) is abstract;
+      Refresh : in out Boolean) is abstract;
+   --  Do tick of the scene physics. Set `Refresh` to True if the scene needs
+   --  to be redrawn, otherwise leave it unchanged.
 
 private
 
