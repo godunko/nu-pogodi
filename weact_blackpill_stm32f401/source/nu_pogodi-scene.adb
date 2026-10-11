@@ -8,6 +8,7 @@ pragma Ada_2022;
 
 with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
+with Nu_Pogodi.Keyboard;
 
 package body Nu_Pogodi.Scene is
 
@@ -404,13 +405,17 @@ package body Nu_Pogodi.Scene is
    procedure Update_Input is
       use type A0B.Types.Unsigned_32;
 
-      Keys     : constant Nu_Pogodi.Hardware.Keyboard.Keyboard_State :=
+      Keys     : constant Nu_Pogodi.Keyboard.Keyboard_State :=
         Nu_Pogodi.Hardware.Keyboard.Get;
       New_Wolf : constant Wolf_Position :=
-        (if Keys.Left_Top        then (Side => Left, Height => Top)
-         elsif Keys.Right_Top    then (Side => Right, Height => Top)
-         elsif Keys.Left_Bottom  then (Side => Left, Height => Bottom)
-         elsif Keys.Right_Bottom then (Side => Right, Height => Bottom)
+        (if Keys.State (Nu_Pogodi.Keyboard.Left_Top)
+         then (Side => Left, Height => Top)
+         elsif Keys.State (Nu_Pogodi.Keyboard.Right_Top)
+         then (Side => Right, Height => Top)
+         elsif Keys.State (Nu_Pogodi.Keyboard.Left_Bottom)
+         then (Side => Left, Height => Bottom)
+         elsif Keys.State (Nu_Pogodi.Keyboard.Right_Bottom)
+         then (Side => Right, Height => Bottom)
          else Wolf);
 
    begin

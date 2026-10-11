@@ -4,17 +4,12 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-package Nu_Pogodi.Hardware.Keyboard is
+with Nu_Pogodi.Keyboard;
 
-   type Keyboard_State is record
-      Left_Top     : Boolean;
-      Right_Top    : Boolean;
-      Left_Bottom  : Boolean;
-      Right_Bottom : Boolean;
-   end record;
+package Nu_Pogodi.Hardware.Keyboard is
 
    procedure Initialize;
 
-   function Get return Keyboard_State;
+   function Get return Nu_Pogodi.Keyboard.Keyboard_State;
 
 end Nu_Pogodi.Hardware.Keyboard;

@@ -12,13 +12,25 @@ package body Nu_Pogodi.Hardware.Keyboard is
    -- Get --
    ---------
 
-   function Get return Keyboard_State is
+   function Get return Nu_Pogodi.Keyboard.Keyboard_State is
    begin
       return
-        (Left_Top     => not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_UP,
-         Right_Top    => not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_RIGHT,
-         Left_Bottom  => not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_LEFT,
-         Right_Bottom => not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_DOWN);
+         (State =>
+            (Nu_Pogodi.Keyboard.Left_Top     =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_UP,
+             Nu_Pogodi.Keyboard.Right_Top    =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_RIGHT,
+             Nu_Pogodi.Keyboard.Left_Bottom  =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_LEFT,
+             Nu_Pogodi.Keyboard.Right_Bottom =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_DOWN,
+             Nu_Pogodi.Keyboard.Middle       =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_MIDDLE,
+             Nu_Pogodi.Keyboard.Game_A       =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_SET,
+             Nu_Pogodi.Keyboard.Game_B       =>
+                not Nu_Pogodi.Hardware.Pin_Control.Get_KEY_RESET),
+         others => <>);
    end Get;
 
    ----------------
