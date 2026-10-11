@@ -17,7 +17,7 @@ package body Nu_Pogodi.Hardware.RTC is
    procedure EXTI17_RTC_Alarm_Handler
      with Export, Convention => C, External_Name => "EXTI17_RTC_Alarm_Handler";
 
-   Wakeup_Callback : A0B.Callbacks.Callback;
+   Clock_Wakeup_Callback : A0B.Callbacks.Callback;
 
    procedure Configure_Alarm;
 
@@ -182,7 +182,7 @@ package body Nu_Pogodi.Hardware.RTC is
       --  Clear the source before acknowledging EXTI17. PR is write-one-
       --  to-clear, so do not use a read-modify-write of this register.
 
-      A0B.Callbacks.Emit (Wakeup_Callback);
+      A0B.Callbacks.Emit (Clock_Wakeup_Callback);
    end EXTI17_RTC_Alarm_Handler;
 
    ----------------
@@ -263,13 +263,13 @@ package body Nu_Pogodi.Hardware.RTC is
       end loop;
    end Initialize;
 
-   ----------------
-   -- Set_Wakeup --
-   ----------------
+   ----------------------
+   -- Set_Clock_Wakeup --
+   ----------------------
 
-   procedure Set_Wakeup (Callback : A0B.Callbacks.Callback) is
+   procedure Set_Clock_Wakeup (Callback : A0B.Callbacks.Callback) is
    begin
-      Wakeup_Callback := Callback;
-   end Set_Wakeup;
+      Clock_Wakeup_Callback := Callback;
+   end Set_Clock_Wakeup;
 
 end Nu_Pogodi.Hardware.RTC;

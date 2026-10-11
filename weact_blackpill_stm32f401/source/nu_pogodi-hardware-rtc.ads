@@ -65,6 +65,8 @@ package Nu_Pogodi.Hardware.RTC is
 
    function Clock return Time;
 
-   procedure Set_Wakeup (Callback : A0B.Callbacks.Callback);
+   procedure Set_Clock_Wakeup (Callback : A0B.Callbacks.Callback);
+   --  Set callback to be called on clock change from 59 to 00 second, in other
+   --  words, every real minute.
 
 end Nu_Pogodi.Hardware.RTC;

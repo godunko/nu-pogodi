@@ -296,7 +296,8 @@ package body Nu_Pogodi.Application is
       Success         : Boolean := True;
 
    begin
-      Nu_Pogodi.Hardware.RTC.Set_Wakeup (On_Wakeup_Callbacks.Create_Callback);
+      Nu_Pogodi.Hardware.RTC.Set_Clock_Wakeup
+        (On_Wakeup_Callbacks.Create_Callback);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
 
