@@ -274,68 +274,24 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       end if;
    end EXTI1_Handler;
 
-   ------------------
-   -- Get_KEY_DOWN --
-   ------------------
+   ------------------------
+   -- Get_Keyboard_State --
+   ------------------------
 
-   function Get_KEY_DOWN return Boolean is
+   function Get_Keyboard_State return Nu_Pogodi.Keyboard.Key_State is
+      IDR : constant A0B.STM32F401.SVD.GPIO.IDR_Field :=
+        A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR;
+
    begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_DOWN);
-   end Get_KEY_DOWN;
-
-   ------------------
-   -- Get_KEY_LEFT --
-   ------------------
-
-   function Get_KEY_LEFT return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_LEFT);
-   end Get_KEY_LEFT;
-
-   --------------------
-   -- Get_KEY_MIDDLE --
-   --------------------
-
-   function Get_KEY_MIDDLE return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_MIDDLE);
-   end Get_KEY_MIDDLE;
-
-   -------------------
-   -- Get_KEY_RESET --
-   -------------------
-
-   function Get_KEY_RESET return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_RESET);
-   end Get_KEY_RESET;
-
-   -------------------
-   -- Get_KEY_RIGHT --
-   -------------------
-
-   function Get_KEY_RIGHT return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_RIGHT);
-   end Get_KEY_RIGHT;
-
-   -----------------
-   -- Get_KEY_SET --
-   -----------------
-
-   function Get_KEY_SET return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_SET);
-   end Get_KEY_SET;
-
-   ----------------
-   -- Get_KEY_UP --
-   ----------------
-
-   function Get_KEY_UP return Boolean is
-   begin
-      return A0B.STM32F401.SVD.GPIO.GPIOB_Periph.IDR.IDR.Arr (Keyboard_UP);
-   end Get_KEY_UP;
+      return
+        [Nu_Pogodi.Keyboard.Left_Top     => IDR.Arr (Keyboard_UP),
+         Nu_Pogodi.Keyboard.Right_Top    => IDR.Arr (Keyboard_RIGHT),
+         Nu_Pogodi.Keyboard.Left_Bottom  => IDR.Arr (Keyboard_LEFT),
+         Nu_Pogodi.Keyboard.Right_Bottom => IDR.Arr (Keyboard_DOWN),
+         Nu_Pogodi.Keyboard.Middle       => IDR.Arr (Keyboard_MIDDLE),
+         Nu_Pogodi.Keyboard.Game_A       => IDR.Arr (Keyboard_SET),
+         Nu_Pogodi.Keyboard.Game_B       => IDR.Arr (Keyboard_RESET)];
+   end Get_Keyboard_State;
 
    ----------------------
    -- Get_SSD1683_BUSY --

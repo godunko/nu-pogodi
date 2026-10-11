@@ -6,6 +6,8 @@
 
 with A0B.Callbacks;
 
+with Nu_Pogodi.Keyboard;
+
 package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Initialize;
@@ -37,18 +39,6 @@ package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Disable_SSD1683_BUSY;
 
-   function Get_KEY_UP return Boolean;
-
-   function Get_KEY_DOWN return Boolean;
-
-   function Get_KEY_LEFT return Boolean;
-
-   function Get_KEY_RIGHT return Boolean;
-
-   function Get_KEY_MIDDLE return Boolean;
-
-   function Get_KEY_SET return Boolean;
-
-   function Get_KEY_RESET return Boolean;
+   function Get_Keyboard_State return Nu_Pogodi.Keyboard.Key_State;
 
 end Nu_Pogodi.Hardware.Pin_Control;
