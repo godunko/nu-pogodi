@@ -6,7 +6,6 @@
 
 pragma Ada_2022;
 
-with A0B.ARMv7M.Instructions;
 with A0B.Awaits;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time.Clock;
@@ -15,11 +14,12 @@ with A0B.Buffers.Static;
 with A0B.Types.Arrays;
 
 with Nu_Pogodi.Bitmaps;
-with Nu_Pogodi.Clock;
 with Nu_Pogodi.Display;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
-with Nu_Pogodi.Scene.Drawing;
+with Nu_Pogodi.Scene;
+with Nu_Pogodi.States.Clock;
+with Nu_Pogodi.States.Game;
 
 package body Nu_Pogodi.Application is
 
@@ -46,6 +46,12 @@ package body Nu_Pogodi.Application is
      (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
       Success : in out Boolean);
 
+   type State_Access is access all Nu_Pogodi.States.Abstract_State'Class;
+
+   Game         : aliased Nu_Pogodi.States.Game.Game_State;
+   Clock        : aliased Nu_Pogodi.States.Clock.Clock_State;
+   Active       : State_Access := null;
+
    Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
    Wakeup       : Boolean := False with Volatile;
 
@@ -62,6 +68,87 @@ package body Nu_Pogodi.Application is
       A0B.Timer.Enqueue (Timeout, A0B.Awaits.Create_Callback (Await), Time);
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Delay_Until;
+
+   -----------------------
+   -- Enter_Clock_State --
+   -----------------------
+
+   procedure Enter_Clock_State is
+      Success : Boolean := True;
+
+   begin
+      Active := Clock'Access;
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => False,
+          Update_Mode       => False,
+          Update_Display    => False,
+          Disable_Analog    => True,
+          Disable_Clock     => True),
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => True,
+          Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => True,
+          Disable_Analog    => True,
+          Disable_Clock     => True),
+         Success);
+   end Enter_Clock_State;
+
+   ----------------------
+   -- Enter_Game_State --
+   ----------------------
+
+   procedure Enter_Game_State is
+      Success : Boolean := True;
+
+   begin
+      Active := Game'Access;
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => True,
+          Enable_Analog     => True,
+          Load_Temperature  => True,
+          Loat_LUT_From_OTP => True,
+          Update_Mode       => True,
+          Update_Display    => False,
+          Disable_Analog    => False,
+          Disable_Clock     => False),
+         Success);
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
+      --  Enable clock, analog, load temperature and load LUT for partial
+      --  update mode. Don't disable analog and clock at the end of the
+      --  sequence.
+      --
+      --  Execution of the sequence allows to cache some of internal parameters
+      --  and use them, instead of rebuild them by each partial update command.
+      --  It save significant amount of time on each update, thus improve
+      --  refresh rate (single optimized partial update takes about 0.277
+      --  second instead of non optimized 0.450 second).
+
+      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
+        ((Enable_Clock      => False,
+          Enable_Analog     => False,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => False,
+          Update_Mode       => True,
+          Update_Display    => True,
+          Disable_Analog    => False,
+          Disable_Clock     => False),
+         Success);
+      --  Set partial update mode once, to exclude command's transfer time from
+      --  critical path.
+
+      Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
+   end Enter_Game_State;
 
    ----------------
    -- Full_Clean --
@@ -167,8 +254,7 @@ package body Nu_Pogodi.Application is
 
       begin
          Data := [others => 16#FF#];
-         Nu_Pogodi.Scene.Drawing.Draw (FB);
-         Nu_Pogodi.Clock.Draw (Buffer);
+         Active.Render (Buffer);
       end;
 
       Buffer.Set_Actual_Length (15_000);
@@ -178,46 +264,6 @@ package body Nu_Pogodi.Application is
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
    end Partial;
-
-   -------------------
-   -- Partial_Clock --
-   -------------------
-
-   procedure Partial_Clock
-     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success : in out Boolean)
-   is
-      Data  : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-        with Import, Address => Buffer.Address;
-
-   begin
-      declare
-         FB : Nu_Pogodi.Bitmaps.Framebuffer
-           with Import, Address => Data'Address;
-
-      begin
-         Data := [others => 16#FF#];
-         Nu_Pogodi.Scene.Drawing.Draw (FB);
-         Nu_Pogodi.Clock.Draw (Buffer);
-      end;
-
-      Buffer.Set_Actual_Length (15_000);
-
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_RAM_Black_White
-        (Buffer, Success);
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-        ((Enable_Clock      => True,
-          Enable_Analog     => True,
-          Load_Temperature  => True,
-          Loat_LUT_From_OTP => True,
-          Update_Mode       => True,
-          Update_Display    => True,
-          Disable_Analog    => True,
-          Disable_Clock     => True),
-         Success);
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation
-        (Success);
-   end Partial_Clock;
 
    ---------
    -- Run --
@@ -271,77 +317,21 @@ package body Nu_Pogodi.Application is
 
       Full_Clean;
 
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-        ((Enable_Clock      => True,
-          Enable_Analog     => True,
-          Load_Temperature  => True,
-          Loat_LUT_From_OTP => True,
-          Update_Mode       => True,
-          Update_Display    => False,
-          Disable_Analog    => False,
-          Disable_Clock     => False),
-         Success);
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
-      --  Enable clock, analog, load temperature and load LUT for partial
-      --  update mode. Don't disable analog and clock at the end of the
-      --  sequence.
-      --
-      --  Execution of the sequence allows to cache some of internal parameters
-      --  and use them, instead of rebuild them by each partial update command.
-      --  It save significant amount of time on each update, thus improve
-      --  refresh rate (single optimized partial update takes about 0.277
-      --  second instead of non optimized 0.450 second).
-
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-        ((Enable_Clock      => False,
-          Enable_Analog     => False,
-          Load_Temperature  => False,
-          Loat_LUT_From_OTP => False,
-          Update_Mode       => True,
-          Update_Display    => True,
-          Disable_Analog    => False,
-          Disable_Clock     => False),
-         Success);
-      --  Set partial update mode once, to exclude command's transfer time from
-      --  critical path.
-
-      Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
+      Enter_Game_State;
 
       Next := A0B.Time.Clock;
 
       loop
-         exit when Nu_Pogodi.Scene.Is_Game_Over;
+         Game.Physics_Tick (Refresh);
 
-         Nu_Pogodi.Scene.Update_Physics_Tick (Refresh);
+         if Refresh or (Active = Clock'Access and Wakeup) then
+            Wakeup := False;
 
-         if Refresh then
             Partial (Pixel_Buffer, Success);
          end if;
 
          Next := @ + Tick_Duration;
          Delay_Until (Next);
-      end loop;
-
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
-        ((Enable_Clock      => True,
-          Enable_Analog     => True,
-          Load_Temperature  => False,
-          Loat_LUT_From_OTP => False,
-          Update_Mode       => False,
-          Update_Display    => False,
-          Disable_Analog    => True,
-          Disable_Clock     => True),
-         Success);
-      Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
-
-      loop
-         A0B.ARMv7M.Instructions.Wait_For_Interrupt;
-
-         if Wakeup then
-            Wakeup := False;
-
-            Partial_Clock (Pixel_Buffer, Success);
-         end if;
       end loop;
    end Run;
 
