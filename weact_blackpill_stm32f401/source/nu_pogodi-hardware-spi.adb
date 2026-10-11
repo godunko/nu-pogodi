@@ -36,7 +36,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
    Receive_Buffer    : Buffer_Access;
 
-   Transfer_Callback : A0B.Callbacks.Callback;
+   Transfer_Callback : aliased A0B.Callbacks.Callback;
 
    -----------------------
    -- Acquire_MIPI_Read --

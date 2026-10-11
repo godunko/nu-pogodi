@@ -30,7 +30,7 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    Keyboard_SET    : constant := 8;   --  PB8
    Keyboard_RESET  : constant := 9;   --  PB9
 
-   SSD1683_BUSY_Callback : A0B.Callbacks.Callback;
+   SSD1683_BUSY_Callback : aliased A0B.Callbacks.Callback;
 
    procedure EXTI1_Handler
      with Export, Convention => C, External_Name => "EXTI1_Handler";

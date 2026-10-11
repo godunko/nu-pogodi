@@ -21,7 +21,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    package On_Transfer_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Transfer);
 
-   Transfer_Callback : A0B.Callbacks.Callback;
+   Transfer_Callback : aliased A0B.Callbacks.Callback;
 
    -------------
    -- Command --

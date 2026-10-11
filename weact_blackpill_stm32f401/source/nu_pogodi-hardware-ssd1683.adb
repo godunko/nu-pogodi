@@ -154,7 +154,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    State            : State_Kind := Initial with Atomic, Volatile;
    Timeout          : aliased A0B.Timer.Timeout_Control_Block;
    Reset_After_VCI  : Boolean := False with Atomic, Volatile;
-   Command_Callback : A0B.Callbacks.Callback;
+   Command_Callback : aliased A0B.Callbacks.Callback;
    Parameter_Buffer : A0B.Buffers.Static.Static_Buffer
      (Write_Register_For_Display_Option_Length);
    External_Buffer  : A0B.Buffers.External.External_Buffer;
