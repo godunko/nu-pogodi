@@ -164,7 +164,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       HW_Reset_Low,    --  Push RES to low, and wait 10 milliseconds
       HW_Reset_High,   --  Push RES to high, wait till BUSY released
       Command,         --  Execute command
-      Command_Read,
+      Command_Read_External,
       --  Read data using "external buffer". It is used internally for
       --  wrappers of commands which stores received data into objects
       --  provided by subprogram's parameter.
@@ -236,7 +236,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_State;
 
-   package State_Machine_Command_Read_State is
+   package State_Machine_Command_Read_External_State is
 
       --  Reads data into External_Buffer.
       --
@@ -249,7 +249,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Transfer_Finished;
 
-   end State_Machine_Command_Read_State;
+   end State_Machine_Command_Read_External_State;
 
    package State_Machine_Command_Write_External_State is
 
@@ -677,8 +677,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          when Command =>
             State_Machine_Command_State.On_Transfer_Finished;
 
-         when Command_Read =>
-            State_Machine_Command_Read_State.On_Transfer_Finished;
+         when Command_Read_External =>
+            State_Machine_Command_Read_External_State.On_Transfer_Finished;
 
          when Command_Write_External =>
             State_Machine_Command_Write_External_State.On_Transfer_Finished;
@@ -711,7 +711,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       External_Buffer.Set_Allocation_Length
         (OTP_Display_Option_Registers_Length);
 
-      State_Machine_Command_Read_State.Enter
+      State_Machine_Command_Read_External_State.Enter
         (OTP_Register_Read_For_Display_Option_Command, Callback, Success);
    end OTP_Read_Display_Option;
 
@@ -732,7 +732,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (External_Buffer, Temperature'Address, 1);
       External_Buffer.Set_Allocation_Length (1);
 
-      State_Machine_Command_Read_State.Enter
+      State_Machine_Command_Read_External_State.Enter
         (Read_From_Temperature_Register_Command, Callback, Success);
    end Read_From_Temperature_Register;
 
@@ -1098,11 +1098,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_Busy_State;
 
-   --------------------------------------
-   -- State_Machine_Command_Read_State --
-   --------------------------------------
+   -----------------------------------------------
+   -- State_Machine_Command_Read_External_State --
+   -----------------------------------------------
 
-   package body State_Machine_Command_Read_State is
+   package body State_Machine_Command_Read_External_State is
 
       -----------
       -- Enter --
@@ -1113,7 +1113,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
-         State            := Command_Read;
+         State            := Command_Read_External;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.MIPI.Command_Read
@@ -1145,7 +1145,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          A0B.Callbacks.Emit_Once (Command_Callback);
       end On_Transfer_Finished;
 
-   end State_Machine_Command_Read_State;
+   end State_Machine_Command_Read_External_State;
 
    ---------------------------------
    -- State_Machine_Command_State --
