@@ -47,6 +47,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#26#;
    Read_RAM_Command                               : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#27#;
+   Write_VCOM_Register_Command                   : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2C#;
    OTP_Register_Read_For_Display_Option_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    Load_WS_OTP_Command                            : constant
@@ -1462,5 +1464,31 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       State_Machine_Command_State.Enter
         (Write_RAM_Red_Command, Data, Callback, Success);
    end Write_RAM_Red;
+
+   -------------------------
+   -- Write_VCOM_Register --
+   -------------------------
+
+   procedure Write_VCOM_Register
+     (VCOM     : A0B.Types.Unsigned_8;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : A0B.Types.Unsigned_8
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length (1);
+         Data := VCOM;
+      end;
+
+      State_Machine_Command_State.Enter
+        (Write_VCOM_Register_Command, Parameter_Buffer, Callback, Success);
+   end Write_VCOM_Register;
 
 end Nu_Pogodi.Hardware.SSD1683;

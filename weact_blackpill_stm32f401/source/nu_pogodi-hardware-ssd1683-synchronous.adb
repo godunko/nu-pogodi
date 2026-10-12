@@ -405,4 +405,19 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Write_RAM_Red;
 
+   -------------------------
+   -- Write_VCOM_Register --
+   -------------------------
+
+   procedure Write_VCOM_Register
+     (VCOM    : A0B.Types.Unsigned_8;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Write_VCOM_Register (VCOM, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Write_VCOM_Register;
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;

@@ -504,4 +504,10 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Option for LUT end.
 
+   procedure Write_VCOM_Register
+     (VCOM     : A0B.Types.Unsigned_8;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Write VCOM register from MCU interface.
+
 end Nu_Pogodi.Hardware.SSD1683;

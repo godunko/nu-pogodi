@@ -146,4 +146,9 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
    --  Write LUT register from MCU interface [227 bytes], which contains the
    --  content of VS[nX-LUTm], TP[nX], RP[n], SR[nXY], FR and XON[nXY].
 
+   procedure Write_VCOM_Register
+     (VCOM    : A0B.Types.Unsigned_8;
+      Success : in out Boolean);
+   --  Write VCOM register from MCU interface.
+
 end Nu_Pogodi.Hardware.SSD1683.Synchronous;
