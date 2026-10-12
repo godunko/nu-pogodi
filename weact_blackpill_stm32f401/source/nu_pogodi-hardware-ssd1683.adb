@@ -264,8 +264,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Address  : System.Address;
+         Length   : A0B.Buffers.Storage_Count;
          Callback : A0B.Callbacks.Callback;
-         Success  : in out Boolean);
+         Success  : in out Boolean)
+        with Pre => Success;
 
       procedure On_Transfer_Finished;
 
@@ -1213,12 +1216,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Address  : System.Address;
+         Length   : A0B.Buffers.Storage_Count;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
-         if not Success then
-            return;
-         end if;
+         A0B.Buffers.External.Initialize (External_Buffer, Address, Length);
+         External_Buffer.Set_Actual_Length (Length);
 
          State            := Command_Write_External;
          Command_Callback := Callback;
@@ -1453,12 +1457,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          return;
       end if;
 
-      A0B.Buffers.External.Initialize
-        (External_Buffer, LUT'Address, Waveform_LUT_2C_Length);
-      External_Buffer.Set_Actual_Length (Waveform_LUT_2C_Length);
-
       State_Machine_Command_Write_External_State.Enter
-        (Write_LUT_Register_Command, Callback, Success);
+        (Write_LUT_Register_Command,
+         LUT'Address,
+         Waveform_LUT_2C_Length,
+         Callback,
+         Success);
    end Write_LUT_Register;
 
    ---------------------------
