@@ -134,11 +134,16 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    procedure On_Busy;
 
+   procedure On_Transfer_Finished;
+
    package On_Timeout_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Timeout);
 
    package On_Busy_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Busy);
+
+   package On_Transfer_Finished_Callbacks is
+     new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
 
    type State_Kind is
      (Initial,         --  Not initialized
@@ -211,6 +216,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback    : A0B.Callbacks.Callback;
          Success     : in out Boolean);
 
+      procedure On_Transfer_Finished;
+
    end State_Machine_Command_State;
 
    package State_Machine_Command_Read_State is
@@ -223,6 +230,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean);
+
+      procedure On_Transfer_Finished;
 
    end State_Machine_Command_Read_State;
 
@@ -248,6 +257,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success     : in out Boolean);
 
       procedure On_Busy;
+
+      procedure On_Transfer_Finished;
 
    end State_Machine_Command_Busy_State;
 
@@ -570,6 +581,27 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       end case;
    end On_Timeout;
 
+   --------------------------
+   -- On_Transfer_Finished --
+   --------------------------
+
+   procedure On_Transfer_Finished is
+   begin
+      case State is
+         when Command =>
+            State_Machine_Command_State.On_Transfer_Finished;
+
+         when Command_Read =>
+            State_Machine_Command_Read_State.On_Transfer_Finished;
+
+         when Command_Busy =>
+            State_Machine_Command_Busy_State.On_Transfer_Finished;
+
+         when others =>
+            raise Program_Error;
+      end case;
+   end On_Transfer_Finished;
+
    -----------------------------
    -- OTP_Read_Display_Option --
    -----------------------------
@@ -817,11 +849,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    package body State_Machine_Command_Busy_State is
 
-      procedure On_Transfer_Finished;
-
-      package On_Transfer_Finished_Callbacks is
-        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-
       -----------
       -- Enter --
       -----------
@@ -938,11 +965,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    package body State_Machine_Command_Read_State is
 
-      procedure On_Transfer_Finished;
-
-      package On_Transfer_Finished_Callbacks is
-        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
-
       -----------
       -- Enter --
       -----------
@@ -991,11 +1013,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    ---------------------------------
 
    package body State_Machine_Command_State is
-
-      procedure On_Transfer_Finished;
-
-      package On_Transfer_Finished_Callbacks is
-        new A0B.Callbacks.Generic_Parameterless (On_Transfer_Finished);
 
       -----------
       -- Enter --
