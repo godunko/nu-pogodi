@@ -282,4 +282,10 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Write Register for Display Option.
 
+   procedure Load_WS_OTP
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Load OTP of Waveform Setting. Clocks must be enabled by Display Update
+   --  Control 2 command.
+
 end Nu_Pogodi.Hardware.SSD1683;

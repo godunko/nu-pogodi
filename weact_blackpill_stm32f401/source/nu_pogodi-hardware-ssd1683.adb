@@ -46,8 +46,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#27#;
    OTP_Register_Read_For_Display_Option_Command   : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
-   --  Load_WS_OTP_Command                          : constant
-   --    Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
+   Load_WS_OTP_Command                            : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
    Write_Register_For_Display_Option_Command      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#37#;
    Read_RAM_Option_Command                        : constant
@@ -501,6 +501,22 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       State_Machine_VCI_Wait_State.Enter;
    end Initialize;
+
+   -----------------
+   -- Load_WS_OTP --
+   -----------------
+
+   procedure Load_WS_OTP
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      State_Machine_Command_Busy_State.Enter
+        (Load_WS_OTP_Command, Callback, Success);
+   end Load_WS_OTP;
 
    -----------------------
    -- Master_Activation --
