@@ -11,7 +11,6 @@
 
 pragma Ada_2022;
 
-with A0B;
 with A0B.Buffers.External;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
@@ -148,7 +147,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       HW_Reset_Low,    --  Push RES to low, and wait 10 milliseconds
       HW_Reset_High,   --  Push RES to high, wait till BUSY released
       Command,         --  Execute command
-      Command_Revert,  --  Execute command and reverse bits in external buffer
+      Command_Read,
+      --  Read data using "external buffer". It is used internally for wrappers
+      --  of commands which stores received data into objects provided by
+      --  subprogram's parameter.
       Command_Busy);   --  Execute command, wait till BUSY released
 
    State            : State_Kind := Initial with Atomic, Volatile;
@@ -211,18 +213,18 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_State;
 
-   package State_Machine_Command_Revert_State is
+   package State_Machine_Command_Read_State is
 
-      --  Reads data into External_Buffer and reverses its bits.
+      --  Reads data into External_Buffer.
       --
-      --  Emits `Command_Callback` after conversion is completed.
+      --  Emits `Command_Callback` when transfer is completed.
 
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean);
 
-   end State_Machine_Command_Revert_State;
+   end State_Machine_Command_Read_State;
 
    package State_Machine_Command_Busy_State is
 
@@ -276,7 +278,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             Step_Height => Height,
             Step_Width  => Width,
             others      => <>);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_Busy_State.Enter
@@ -313,7 +314,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             Step_Height => Height,
             Step_Width  => Width,
             others      => <>);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_Busy_State.Enter
@@ -349,7 +349,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Data (2) := B2;
          Data (3) := B3;
          Data (4) := B4;
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -395,8 +394,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          if Primary = SSD1683.Y_Axis then
             Data := @ or 2#0000_0100#;
          end if;
-
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -433,7 +430,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             BW_RAM  => BW_RAM,
             Cascade => Cascade,
             others  => <>);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -463,7 +459,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          Parameter_Buffer.Set_Actual_Length (1);
          Code := Sequence;
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -592,8 +587,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (External_Buffer,
          Options'Address,
          OTP_Display_Option_Registers_Length);
+      External_Buffer.Set_Allocation_Length
+        (OTP_Display_Option_Registers_Length);
 
-      State_Machine_Command_Revert_State.Enter
+      State_Machine_Command_Read_State.Enter
         (OTP_Register_Read_For_Display_Option_Command, Callback, Success);
    end OTP_Read_Display_Option;
 
@@ -610,9 +607,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          return;
       end if;
 
+      --  XXX Review !!! Q: Why it doesn't use common template ???
+      --  A: `Command_Read` should have another variant which accepts array of
+      --  buffers, first buffer will have single byte only, and second one -
+      --  to contain the actual data read from RAM.
+
       Nu_Pogodi.Hardware.MIPI.Command_Read
-        (Nu_Pogodi.Hardware.MIPI.Command_Code
-           (Reverse_Bits (A0B.Types.Unsigned_8 (Read_RAM_Command))),
+        (Read_RAM_Command,
          Data,
          Callback,
          Success,
@@ -647,8 +648,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             CRC_Check => CRC_Mode,
             Length    => Count,
             others    => <>);
-
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -705,7 +704,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          Parameter_Buffer.Set_Actual_Length (1);
          Data := A0B.Types.Unsigned_8 (X);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -737,7 +735,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Parameter_Buffer.Set_Actual_Length (2);
          Data (1) := A0B.Types.Unsigned_8 (X_Start);
          Data (2) := A0B.Types.Unsigned_8 (X_End);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -770,7 +767,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Parameter_Buffer.Set_Actual_Length (2);
          Data (1) := A0B.Types.Unsigned_8 (Y mod 256);
          Data (2) := A0B.Types.Unsigned_8 (Y / 256);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -806,7 +802,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Data (2) := A0B.Types.Unsigned_8 (Y_Start / 256);
          Data (3) := A0B.Types.Unsigned_8 (Y_End mod 256);
          Data (4) := A0B.Types.Unsigned_8 (Y_End / 256);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -840,8 +835,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
-           (Nu_Pogodi.Hardware.MIPI.Command_Code
-              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+           (Command,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -871,8 +865,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command
-           (Nu_Pogodi.Hardware.MIPI.Command_Code
-              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+           (Command,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -897,14 +890,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             return;
          end if;
 
-         State := Command_Busy;
+         State            := Command_Busy;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command_Write
-           (Nu_Pogodi.Hardware.MIPI.Command_Code
-              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+           (Command,
             Data_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
@@ -940,11 +932,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_Busy_State;
 
-   ----------------------------------------
-   -- State_Machine_Command_Revert_State --
-   ----------------------------------------
+   --------------------------------------
+   -- State_Machine_Command_Read_State --
+   --------------------------------------
 
-   package body State_Machine_Command_Revert_State is
+   package body State_Machine_Command_Read_State is
 
       procedure On_Transfer_Finished;
 
@@ -960,12 +952,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
-         State := Command_Revert;
+         State            := Command_Read;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.MIPI.Command_Read
-           (Nu_Pogodi.Hardware.MIPI.Command_Code
-              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+           (Command,
             External_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
@@ -985,10 +976,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          --  XXX Transfer error handling is not implemented.
 
-         --  Reverse the bits in the external buffer and drop association
-         --  with storage.
-
-         Reverse_Bits (External_Buffer);
+         --  Drop association with storage before notifying the caller.
          External_Buffer.Finalize;
 
          State := Ready;
@@ -996,7 +984,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          A0B.Callbacks.Emit_Once (Command_Callback);
       end On_Transfer_Finished;
 
-   end State_Machine_Command_Revert_State;
+   end State_Machine_Command_Read_State;
 
    ---------------------------------
    -- State_Machine_Command_State --
@@ -1019,12 +1007,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback    : A0B.Callbacks.Callback;
          Success     : in out Boolean) is
       begin
-         State := SSD1683.Command;
+         State            := SSD1683.Command;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.MIPI.Command_Write
-           (Nu_Pogodi.Hardware.MIPI.Command_Code
-              (Reverse_Bits (A0B.Types.Unsigned_8 (Command))),
+           (Command,
             Data_Buffer,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
@@ -1199,7 +1186,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            (case Sensor is
               when External => 16#48#,
               when Internal => 16#80#);
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
@@ -1231,8 +1217,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
            (Display_Option_Registers_Length);
 
          Parameters := Options;
-
-         Reverse_Bits (Parameter_Buffer);
       end;
 
       State_Machine_Command_State.Enter
