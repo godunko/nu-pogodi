@@ -21,7 +21,7 @@ package Nu_Pogodi.Keyboard is
       State    : Key_State;
       Pressed  : Key_State;
       Released : Key_State;
-   end record with Object_Size => 32;
+   end record with Object_Size => 32, Size => 32;
 
    for Keyboard_State use record
       State    at 0 range 0 .. 6;
