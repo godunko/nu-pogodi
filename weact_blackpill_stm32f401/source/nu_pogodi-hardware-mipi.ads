@@ -4,8 +4,11 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
---  Commands and buffer bytes are transmitted LSB first without conversion.
---  The caller supplies commands and parameters encoded for this bit order.
+--  Commands and buffer bytes are transmitted as-is without any bit order
+--  conversion. It is the caller's responsibility to ensure that commands,
+--  parameters and buffer bytes are encoded correctly for the intended bit
+--  order. Likewise, it is the caller's responsibility to configure underlying
+--  hardware and drivers for the intended bit order to be used on wire(s).
 
 with A0B.Buffers;
 with A0B.Callbacks;
