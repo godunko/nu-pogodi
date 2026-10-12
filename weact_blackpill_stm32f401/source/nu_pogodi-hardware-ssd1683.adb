@@ -47,6 +47,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#2D#;
    Load_WS_OTP_Command                            : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#31#;
+   Write_LUT_Register_Command                     : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#32#;
    Write_Register_For_Display_Option_Command      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#37#;
    Read_RAM_Option_Command                        : constant
@@ -153,9 +155,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       HW_Reset_High,   --  Push RES to high, wait till BUSY released
       Command,         --  Execute command
       Command_Read,
-      --  Read data using "external buffer". It is used internally for wrappers
-      --  of commands which stores received data into objects provided by
-      --  subprogram's parameter.
+      --  Read data using "external buffer". It is used internally for
+      --  wrappers of commands which stores received data into objects
+      --  provided by subprogram's parameter.
+      Command_Write_External,
+      --  Write data using "external buffer". It is used internally for
+      --  wrappers of commands which stores received data into objects
+      --  provided by subprogram's parameter.
       Command_Busy);   --  Execute command, wait till BUSY released
 
    State            : State_Kind := Initial with Atomic, Volatile;
@@ -234,6 +240,21 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Transfer_Finished;
 
    end State_Machine_Command_Read_State;
+
+   package State_Machine_Command_Write_External_State is
+
+      --  Writes data from External_Buffer.
+      --
+      --  Emits `Command_Callback` when transfer is completed.
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean);
+
+      procedure On_Transfer_Finished;
+
+   end State_Machine_Command_Write_External_State;
 
    package State_Machine_Command_Busy_State is
 
@@ -593,6 +614,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
          when Command_Read =>
             State_Machine_Command_Read_State.On_Transfer_Finished;
+
+         when Command_Write_External =>
+            State_Machine_Command_Write_External_State.On_Transfer_Finished;
 
          when Command_Busy =>
             State_Machine_Command_Busy_State.On_Transfer_Finished;
@@ -1055,6 +1079,59 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    end State_Machine_Command_State;
 
+   ------------------------------------------------
+   -- State_Machine_Command_Write_External_State --
+   ------------------------------------------------
+
+   package body State_Machine_Command_Write_External_State is
+
+      -----------
+      -- Enter --
+      -----------
+
+      procedure Enter
+        (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Callback : A0B.Callbacks.Callback;
+         Success  : in out Boolean) is
+      begin
+         if not Success then
+            return;
+         end if;
+
+         State            := Command_Write_External;
+         Command_Callback := Callback;
+
+         Nu_Pogodi.Hardware.MIPI.Command_Write
+           (Command,
+            External_Buffer,
+            On_Transfer_Finished_Callbacks.Create_Callback,
+            Success);
+
+         if not Success then
+            External_Buffer.Finalize;
+            State := Ready;
+            A0B.Callbacks.Unset (Command_Callback);
+         end if;
+      end Enter;
+
+      --------------------------
+      -- On_Transfer_Finished --
+      --------------------------
+
+      procedure On_Transfer_Finished is
+      begin
+         --  XXX Transfer error handling is not implemented.
+
+         --  Drop association with storage before notifying the caller.
+         External_Buffer.Finalize;
+
+         State := Ready;
+
+         A0B.Callbacks.Emit_Once (Command_Callback);
+      end On_Transfer_Finished;
+
+   end State_Machine_Command_Write_External_State;
+
    ---------------------------------------
    -- State_Machine_HW_Reset_High_State --
    ---------------------------------------
@@ -1240,6 +1317,27 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (Write_Register_For_Display_Option_Command,
          Parameter_Buffer, Callback, Success);
    end Write_Display_Option;
+
+   ------------------------
+   -- Write_LUT_Register --
+   ------------------------
+
+   procedure Write_LUT_Register
+     (LUT      : aliased Waveform_LUT_2C;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      A0B.Buffers.External.Initialize
+        (External_Buffer, LUT'Address, Waveform_LUT_2C_Length);
+      External_Buffer.Set_Actual_Length (Waveform_LUT_2C_Length);
+
+      State_Machine_Command_Write_External_State.Enter
+        (Write_LUT_Register_Command, Callback, Success);
+   end Write_LUT_Register;
 
    ---------------------------
    -- Write_RAM_Black_White --
