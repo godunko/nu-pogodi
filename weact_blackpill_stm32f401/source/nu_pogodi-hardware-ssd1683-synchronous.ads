@@ -125,6 +125,11 @@ package Nu_Pogodi.Hardware.SSD1683.Synchronous is
    --  Load OTP of Waveform Setting. Clocks must be enabled by Display Update
    --  Control 2 command.
 
+   procedure End_Option
+     (EOPT    : A0B.Types.Unsigned_8;
+      Success : in out Boolean);
+   --  Option for LUT end.
+
    procedure Write_LUT_Register
      (LUT     : aliased Waveform_LUT_2C;
       Success : in out Boolean);

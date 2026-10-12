@@ -51,6 +51,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#32#;
    Write_Register_For_Display_Option_Command      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#37#;
+   End_Option_Command                            : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#3F#;
    Read_RAM_Option_Command                        : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#41#;
    Set_RAM_X_Address_Start_End_Position_Command   : constant
@@ -499,6 +501,32 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Display_Update_Control_2;
+
+   ----------------
+   -- End_Option --
+   ----------------
+
+   procedure End_Option
+     (EOPT     : A0B.Types.Unsigned_8;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : A0B.Types.Unsigned_8
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length (1);
+         Data := EOPT;
+      end;
+
+      State_Machine_Command_State.Enter
+        (End_Option_Command, Parameter_Buffer, Callback, Success);
+   end End_Option;
 
    ----------------------------------
    -- Get_Display_Option_Registers --

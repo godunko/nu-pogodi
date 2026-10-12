@@ -119,6 +119,21 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Display_Update_Control_2;
 
+   ----------------
+   -- End_Option --
+   ----------------
+
+   procedure End_Option
+     (EOPT    : A0B.Types.Unsigned_8;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      End_Option (EOPT, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end End_Option;
+
    -----------------
    -- Load_WS_OTP --
    -----------------
