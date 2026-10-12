@@ -305,6 +305,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end Set_RAM_Y_Address_Start_End_Position;
 
+   ------------------------------------
+   -- Source_Driving_Voltage_Control --
+   ------------------------------------
+
+   procedure Source_Driving_Voltage_Control
+     (Voltage : Source_Driving_Voltage;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Source_Driving_Voltage_Control
+        (Voltage, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Source_Driving_Voltage_Control;
+
    --------------------------------
    -- Temperature_Sensor_Control --
    --------------------------------

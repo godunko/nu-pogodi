@@ -145,6 +145,7 @@ package Nu_Pogodi.Hardware.SSD1683 is
    Waveform_Sequence_2C_Length             : constant := 42;
    Waveform_LUT_2C_Length                  : constant := 227;
    Gate_Driving_Voltage_Length             : constant := 1;
+   Source_Driving_Voltage_Length           : constant := 3;
    Waveform_Setting_2C_Length              : constant := 233;
    Waveform_Temperature_Range_Length       : constant := 2;
    Waveform_Setting_2C_Array_Length        : constant := 5_592;
@@ -267,13 +268,23 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Reserved_7_5 at 0 range 5 .. 7;
    end record;
 
+   type Source_Driving_Voltage is record
+      VSH1 : A0B.Types.Unsigned_8;
+      VSH2 : A0B.Types.Unsigned_8;
+      VSL  : A0B.Types.Unsigned_8;
+   end record with Size => Source_Driving_Voltage_Length * 8;
+
+   for Source_Driving_Voltage use record
+      VSH1 at 0 range 0 .. 7;
+      VSH2 at 1 range 0 .. 7;
+      VSL  at 2 range 0 .. 7;
+   end record;
+
    type Waveform_Setting_2C is record
       LUT              : Waveform_LUT_2C;
       EOPT             : A0B.Types.Unsigned_8;
       VGH              : Gate_Driving_Voltage;
-      VSH1             : A0B.Types.Unsigned_8;
-      VSH2             : A0B.Types.Unsigned_8;
-      VSL              : A0B.Types.Unsigned_8;
+      VSH1_VSH2_VSL    : Source_Driving_Voltage;
       VCOM             : A0B.Types.Unsigned_8;
    end record with Size => 8 * Waveform_Setting_2C_Length;
    --  SSD1683 Rev 1.0, Figure 6-7. Bytes
@@ -287,9 +298,7 @@ package Nu_Pogodi.Hardware.SSD1683 is
       LUT              at   0 range 0 .. 1815;
       EOPT             at 227 range 0 .. 7;
       VGH              at 228 range 0 .. 7;
-      VSH1             at 229 range 0 .. 7;
-      VSH2             at 230 range 0 .. 7;
-      VSL              at 231 range 0 .. 7;
+      VSH1_VSH2_VSL    at 229 range 0 .. 23;
       VCOM             at 232 range 0 .. 7;
    end record;
 
@@ -482,6 +491,12 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Set gate driving voltage.
+
+   procedure Source_Driving_Voltage_Control
+     (Voltage  : Source_Driving_Voltage;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Set source driving voltage.
 
    procedure End_Option
      (EOPT     : A0B.Types.Unsigned_8;

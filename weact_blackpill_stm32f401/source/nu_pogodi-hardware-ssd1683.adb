@@ -25,6 +25,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    Gate_Driving_Voltage_Control_Command           : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#03#;
+   Source_Driving_Voltage_Control_Command         : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#04#;
    Booster_Soft_Start_Control_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#0C#;
    Data_Entry_Mode_Setting_Command                : constant
@@ -925,6 +927,35 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback,
          Success);
    end Set_RAM_Y_Address_Start_End_Position;
+
+   ------------------------------------
+   -- Source_Driving_Voltage_Control --
+   ------------------------------------
+
+   procedure Source_Driving_Voltage_Control
+     (Voltage  : Source_Driving_Voltage;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      declare
+         Data : Source_Driving_Voltage
+           with Import, Address => Parameter_Buffer.Address;
+
+      begin
+         Parameter_Buffer.Set_Actual_Length (Source_Driving_Voltage_Length);
+         Data := Voltage;
+      end;
+
+      State_Machine_Command_State.Enter
+        (Source_Driving_Voltage_Control_Command,
+         Parameter_Buffer,
+         Callback,
+         Success);
+   end Source_Driving_Voltage_Control;
 
    --------------------------------------
    -- State_Machine_Command_Busy_State --
