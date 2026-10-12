@@ -140,6 +140,181 @@ package Nu_Pogodi.Hardware.SSD1683 is
       ID_Version     at 7 range 0 .. 31;
    end record;
 
+   Waveform_Phase_2C_Length                : constant := 1;
+   Waveform_Group_2C_Length                : constant := 7;
+   Waveform_Sequence_2C_Length             : constant := 42;
+   Waveform_LUT_2C_Length                  : constant := 227;
+   Waveform_Setting_2C_Length              : constant := 233;
+   Waveform_Temperature_Range_Length       : constant := 2;
+   Waveform_Setting_2C_Array_Length        : constant := 5_592;
+   Waveform_Temperature_Range_Array_Length : constant := 48;
+   Waveform_Setting_2C_Mapping_Length      : constant := 5_640;
+
+   type Waveform_Phase_2C is record
+      TP : A0B.Types.Unsigned_6;
+      VS : A0B.Types.Unsigned_2;
+   end record with Size => Waveform_Phase_2C_Length * 8;
+
+   for Waveform_Phase_2C use record
+      TP at 0 range 0 .. 5;
+      VS at 0 range 6 .. 7;
+   end record;
+
+   type Waveform_Group_2C is record
+      RP    : A0B.Types.Unsigned_8;
+      A     : Waveform_Phase_2C;
+      B     : Waveform_Phase_2C;
+      C     : Waveform_Phase_2C;
+      D     : Waveform_Phase_2C;
+      SR_AB : A0B.Types.Unsigned_8;
+      SR_CD : A0B.Types.Unsigned_8;
+   end record with Size => Waveform_Group_2C_Length * 8;
+
+   for Waveform_Group_2C use record
+      RP    at 0 range 0 .. 7;
+      A     at 1 range 0 .. 7;
+      B     at 2 range 0 .. 7;
+      C     at 3 range 0 .. 7;
+      D     at 4 range 0 .. 7;
+      SR_AB at 5 range 0 .. 7;
+      SR_CD at 6 range 0 .. 7;
+   end record;
+
+   type Waveform_Sequence_2C is array (0 .. 5) of Waveform_Group_2C
+     with Component_Size => Waveform_Group_2C_Length * 8,
+          Size           => Waveform_Sequence_2C_Length * 8;
+
+   type Waveform_LUT_2C is record
+      LUTC             : Waveform_Sequence_2C;
+      LUTWW            : Waveform_Sequence_2C;
+      LUTBW            : Waveform_Sequence_2C;
+      LUTWB            : Waveform_Sequence_2C;
+      LUTBB            : Waveform_Sequence_2C;
+      Reserved_210     : A0B.Types.Reserved_8;
+      Reserved_211     : A0B.Types.Reserved_8;
+      Reserved_212     : A0B.Types.Reserved_8;
+      Reserved_213     : A0B.Types.Reserved_8;
+      Reserved_214     : A0B.Types.Reserved_8;
+      Reserved_215     : A0B.Types.Reserved_8;
+      Reserved_216     : A0B.Types.Reserved_8;
+      Reserved_217     : A0B.Types.Reserved_8;
+      Reserved_218     : A0B.Types.Reserved_8;
+      Reserved_219     : A0B.Types.Reserved_8;
+      Reserved_220     : A0B.Types.Reserved_8;
+      Reserved_221     : A0B.Types.Reserved_8;
+      Reserved_222     : A0B.Types.Reserved_8;
+      Reserved_223     : A0B.Types.Reserved_8;
+      FR               : A0B.Types.Unsigned_8;
+      XON0AB           : Boolean;
+      XON0CD           : Boolean;
+      XON1AB           : Boolean;
+      XON1CD           : Boolean;
+      XON2AB           : Boolean;
+      XON2CD           : Boolean;
+      XON3AB           : Boolean;
+      XON3CD           : Boolean;
+      XON4AB           : Boolean;
+      XON4CD           : Boolean;
+      XON5AB           : Boolean;
+      XON5CD           : Boolean;
+      Reserved_226_7_4 : A0B.Types.Reserved_4;
+   end record with Size => Waveform_LUT_2C_Length * 8;
+
+   for Waveform_LUT_2C use record
+      LUTC             at   0 range 0 .. 335;
+      LUTWW            at  42 range 0 .. 335;
+      LUTBW            at  84 range 0 .. 335;
+      LUTWB            at 126 range 0 .. 335;
+      LUTBB            at 168 range 0 .. 335;
+      Reserved_210     at 210 range 0 .. 7;
+      Reserved_211     at 211 range 0 .. 7;
+      Reserved_212     at 212 range 0 .. 7;
+      Reserved_213     at 213 range 0 .. 7;
+      Reserved_214     at 214 range 0 .. 7;
+      Reserved_215     at 215 range 0 .. 7;
+      Reserved_216     at 216 range 0 .. 7;
+      Reserved_217     at 217 range 0 .. 7;
+      Reserved_218     at 218 range 0 .. 7;
+      Reserved_219     at 219 range 0 .. 7;
+      Reserved_220     at 220 range 0 .. 7;
+      Reserved_221     at 221 range 0 .. 7;
+      Reserved_222     at 222 range 0 .. 7;
+      Reserved_223     at 223 range 0 .. 7;
+      FR               at 224 range 0 .. 7;
+      XON0AB           at 225 range 0 .. 0;
+      XON0CD           at 225 range 1 .. 1;
+      XON1AB           at 225 range 2 .. 2;
+      XON1CD           at 225 range 3 .. 3;
+      XON2AB           at 225 range 4 .. 4;
+      XON2CD           at 225 range 5 .. 5;
+      XON3AB           at 225 range 6 .. 6;
+      XON3CD           at 225 range 7 .. 7;
+      XON4AB           at 226 range 0 .. 0;
+      XON4CD           at 226 range 1 .. 1;
+      XON5AB           at 226 range 2 .. 2;
+      XON5CD           at 226 range 3 .. 3;
+      Reserved_226_7_4 at 226 range 4 .. 7;
+   end record;
+
+   type Waveform_Setting_2C is record
+      LUT              : Waveform_LUT_2C;
+      EOPT             : A0B.Types.Unsigned_8;
+      VGH              : A0B.Types.Unsigned_8;
+      VSH1             : A0B.Types.Unsigned_8;
+      VSH2             : A0B.Types.Unsigned_8;
+      VSL              : A0B.Types.Unsigned_8;
+      VCOM             : A0B.Types.Unsigned_8;
+   end record with Size => 8 * Waveform_Setting_2C_Length;
+   --  SSD1683 Rev 1.0, Figure 6-7. Bytes
+   --   *   0 .. 226  belong to register 0x32;
+   --   *     227     EOPT, belong to register 0x3F;
+   --   *     228     VGH, belongs to register 0x03;
+   --   * 229 .. 231  VSH1/VSH2/VSL, belongs to register 0x04;
+   --   *     232     VCOM, belongs to register 0x2C.
+
+   for Waveform_Setting_2C use record
+      LUT              at   0 range 0 .. 1815;
+      EOPT             at 227 range 0 .. 7;
+      VGH              at 228 range 0 .. 7;
+      VSH1             at 229 range 0 .. 7;
+      VSH2             at 230 range 0 .. 7;
+      VSL              at 231 range 0 .. 7;
+      VCOM             at 232 range 0 .. 7;
+   end record;
+
+   type Waveform_Temperature_Range is record
+      Temp_Low  : A0B.Types.Integer_8;
+      Temp_High : A0B.Types.Integer_8;
+   end record with Size => Waveform_Temperature_Range_Length * 8;
+   --  The matching interval is `Temp_Low` < temperature <= `Temp_High`.
+
+   for Waveform_Temperature_Range use record
+      Temp_Low  at 0 range 0 .. 7;
+      Temp_High at 1 range 0 .. 7;
+   end record;
+
+   type Waveform_Setting_Index is range 0 .. 23;
+
+   type Waveform_Setting_2C_Array is
+     array (Waveform_Setting_Index) of Waveform_Setting_2C
+       with Component_Size => Waveform_Setting_2C_Length * 8,
+            Size           => Waveform_Setting_2C_Array_Length * 8;
+
+   type Waveform_Temperature_Range_Array is
+     array (Waveform_Setting_Index) of Waveform_Temperature_Range
+       with Component_Size => Waveform_Temperature_Range_Length * 8,
+            Size           => Waveform_Temperature_Range_Array_Length * 8;
+
+   type Waveform_Setting_2C_Mapping is record
+      WS : Waveform_Setting_2C_Array;
+      TR : Waveform_Temperature_Range_Array;
+   end record with Size => Waveform_Setting_2C_Mapping_Length * 8;
+
+   for Waveform_Setting_2C_Mapping use record
+      WS at 0     range 0 .. 44_735;
+      TR at 5_592 range 0 .. 383;
+   end record;
+
    function Get_Display_Option_Registers
      (Item : OTP_Display_Option_Registers) return Display_Option_Registers;
 
