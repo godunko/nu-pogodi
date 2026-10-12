@@ -22,7 +22,9 @@ package Nu_Pogodi.Hardware.Pin_Control is
 
    procedure Configure_MIPI_Pins;
 
-   procedure Configure_Keyboard_Pins;
+   procedure Configure_Keyboard_Pins (Callback : A0B.Callbacks.Callback);
+   --  Configure keyboard pins and set callback to be emitted when change of
+   --  key state is detected.
 
    procedure Set_MIPI_D_C (To : Boolean);
 
@@ -38,6 +40,18 @@ package Nu_Pogodi.Hardware.Pin_Control is
    --  callback execution.
 
    procedure Disable_SSD1683_BUSY;
+
+   procedure Clear_Keyboard_Pending (Keys : Nu_Pogodi.Keyboard.Key_State);
+   --  Clear interrupt pending state of given keys.
+
+   function Get_Keyboard_Pending return Nu_Pogodi.Keyboard.Key_State;
+   --  Pending edges are retained even while the interrupt is masked.
+
+   procedure Enable_Keyboard_Interrupt;
+   --  Enable key edge detection interrupt
+
+   procedure Disable_Keyboard_Interrupt;
+   --  Disable key edge detection interrupt
 
    function Get_Keyboard_State return Nu_Pogodi.Keyboard.Key_State;
 

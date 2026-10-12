@@ -31,9 +31,16 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    Keyboard_RESET  : constant := 9;   --  PB9
 
    SSD1683_BUSY_Callback : aliased A0B.Callbacks.Callback;
+   Keyboard_Callback     : aliased A0B.Callbacks.Callback;
 
    procedure EXTI1_Handler
      with Export, Convention => C, External_Name => "EXTI1_Handler";
+
+   procedure EXTI9_5_Handler
+     with Export, Convention => C, External_Name => "EXTI9_5_Handler";
+
+   procedure EXTI15_10_Handler
+     with Export, Convention => C, External_Name => "EXTI15_10_Handler";
 
    procedure SSD1683_BUSY_EXTI_Clear_Pending with Inline;
    --  Clear pending status of `SSD1683_BUSY`
@@ -46,14 +53,38 @@ package body Nu_Pogodi.Hardware.Pin_Control is
 
    type Pull_Mode is (None, Pull_Up, Pull_Down);
 
-   procedure Configure_Input
-     (GPIO : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
-      Pin  : Natural;
-      Pull : Pull_Mode);
+   procedure Configure_External_Interrupt
+     (GPIO    : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
+      Pin     : Natural;
+      Pull    : Pull_Mode;
+      Rising  : Boolean;
+      Falling : Boolean);
+   --  Configure pin as external interrupt. Only B peripheral is supported.
 
    procedure Configure_Analog_All;
    --  Switch all GPIO pins into "analog" mode to minimize power consumption,
    --  with exception of SWDIO/SWCLK tp allow debugging.
+
+   ----------------------------
+   -- Clear_Keyboard_Pending --
+   ----------------------------
+
+   procedure Clear_Keyboard_Pending (Keys : Nu_Pogodi.Keyboard.Key_State) is
+   begin
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR :=
+        (PR             =>
+           (As_Array => True,
+            Arr      =>
+              [Keyboard_UP     => Keys (Nu_Pogodi.Keyboard.Left_Top),
+               Keyboard_RIGHT  => Keys (Nu_Pogodi.Keyboard.Right_Top),
+               Keyboard_LEFT   => Keys (Nu_Pogodi.Keyboard.Left_Bottom),
+               Keyboard_DOWN   => Keys (Nu_Pogodi.Keyboard.Right_Bottom),
+               Keyboard_MIDDLE => Keys (Nu_Pogodi.Keyboard.Middle),
+               Keyboard_SET    => Keys (Nu_Pogodi.Keyboard.Game_A),
+               Keyboard_RESET  => Keys (Nu_Pogodi.Keyboard.Game_B),
+               others          => False]),
+         Reserved_23_31 => 0);
+   end Clear_Keyboard_Pending;
 
    --------------------------
    -- Configure_Analog_All --
@@ -97,14 +128,16 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       --  Disable clock of all GPIO peripheral
    end Configure_Analog_All;
 
-   ---------------------
-   -- Configure_Input --
-   ---------------------
+   ----------------------------------
+   -- Configure_External_Interrupt --
+   ----------------------------------
 
-   procedure Configure_Input
-     (GPIO : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
-      Pin  : Natural;
-      Pull : Pull_Mode) is
+   procedure Configure_External_Interrupt
+     (GPIO    : in out A0B.STM32F401.SVD.GPIO.GPIO_Peripheral;
+      Pin     : Natural;
+      Pull    : Pull_Mode;
+      Rising  : Boolean;
+      Falling : Boolean) is
    begin
       GPIO.MODER.Arr (Pin) := 2#00#;  --  00: Input
       GPIO.PUPDR.Arr (Pin) :=
@@ -112,30 +145,59 @@ package body Nu_Pogodi.Hardware.Pin_Control is
             when None => 2#00#,        --  00: No pull-up, pull-down
             when Pull_Up   => 2#01#,   --  01: Pull-up
             when Pull_Down => 2#10#);  --  10: Pull-down
-   end Configure_Input;
+
+      case Pin is
+         when 0 .. 3 =>
+            A0B.STM32F401.SVD.SYSCFG.SYSCFG_Periph.EXTICR1.EXTI.Arr (Pin) :=
+              2#0001#;  --  0000: PB[x] pin
+
+         when 4 .. 7 =>
+            A0B.STM32F401.SVD.SYSCFG.SYSCFG_Periph.EXTICR2.EXTI.Arr (Pin) :=
+              2#0001#;  --  0000: PB[x] pin
+
+         when 8 .. 11 =>
+            A0B.STM32F401.SVD.SYSCFG.SYSCFG_Periph.EXTICR3.EXTI.Arr (Pin) :=
+              2#0001#;  --  0000: PB[x] pin
+
+         when 12 .. 15 =>
+            A0B.STM32F401.SVD.SYSCFG.SYSCFG_Periph.EXTICR4.EXTI.Arr (Pin) :=
+              2#0001#;  --  0000: PB[x] pin
+
+         when others =>
+            raise Program_Error;
+      end case;
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.RTSR.TR.Arr (Pin) := Rising;
+      --  0: Rising trigger disabled (for Event and Interrupt) for input line
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.FTSR.TR.Arr (Pin) := Falling;
+      --  1: Falling trigger enabled (for Event and Interrupt) for input line.
+   end Configure_External_Interrupt;
 
    -----------------------------
    -- Configure_Keyboard_Pins --
    -----------------------------
 
-   procedure Configure_Keyboard_Pins is
-   begin
-      --  Implementation for configuring keyboard pins goes here
+   procedure Configure_Keyboard_Pins (Callback : A0B.Callbacks.Callback) is
+      GPIOB : A0B.STM32F401.SVD.GPIO.GPIO_Peripheral
+        renames A0B.STM32F401.SVD.GPIO.GPIOB_Periph;
 
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_UP, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_DOWN, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_LEFT, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_RIGHT, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_MIDDLE, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_SET, Pull_Up);
-      Configure_Input
-        (A0B.STM32F401.SVD.GPIO.GPIOB_Periph, Keyboard_RESET, Pull_Up);
+   begin
+      Keyboard_Callback := Callback;
+
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_UP, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_DOWN, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_LEFT, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_RIGHT, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_MIDDLE, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_SET, Pull_Up, True, True);
+      Configure_External_Interrupt
+        (GPIOB, Keyboard_RESET, Pull_Up, True, True);
    end Configure_Keyboard_Pins;
 
    -------------------------
@@ -235,6 +297,28 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       A0B.STM32F401.SVD.GPIO.GPIOA_Periph.PUPDR.Arr (MIPI_SPI_MISO) := 2#01#;
    end Configure_SPI1_Pins;
 
+   --------------------------------
+   -- Disable_Keyboard_Interrupt --
+   --------------------------------
+
+   procedure Disable_Keyboard_Interrupt is
+      Aux : A0B.STM32F401.SVD.EXTI.IMR_Register :=
+        A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR;
+
+   begin
+      Aux.MR.Arr :=
+        [@ with delta
+           Keyboard_UP     => False,
+           Keyboard_RIGHT  => False,
+           Keyboard_LEFT   => False,
+           Keyboard_DOWN   => False,
+           Keyboard_MIDDLE => False,
+           Keyboard_SET    => False,
+           Keyboard_RESET  => False];
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR := Aux;
+   end Disable_Keyboard_Interrupt;
+
    --------------------------
    -- Disable_SSD1683_BUSY --
    --------------------------
@@ -250,6 +334,28 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       SSD1683_BUSY_EXTI_Clear_Pending;
    end Disable_SSD1683_BUSY;
 
+   -------------------------------
+   -- Enable_Keyboard_Interrupt --
+   -------------------------------
+
+   procedure Enable_Keyboard_Interrupt is
+      Aux : A0B.STM32F401.SVD.EXTI.IMR_Register :=
+        A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR;
+
+   begin
+      Aux.MR.Arr :=
+        [@ with delta
+           Keyboard_UP     => True,
+           Keyboard_RIGHT  => True,
+           Keyboard_LEFT   => True,
+           Keyboard_DOWN   => True,
+           Keyboard_MIDDLE => True,
+           Keyboard_SET    => True,
+           Keyboard_RESET  => True];
+
+      A0B.STM32F401.SVD.EXTI.EXTI_Periph.IMR := Aux;
+   end Enable_Keyboard_Interrupt;
+
    -------------------------
    -- Enable_SSD1683_BUSY --
    -------------------------
@@ -260,6 +366,15 @@ package body Nu_Pogodi.Hardware.Pin_Control is
       SSD1683_BUSY_EXTI_Clear_Pending;
       SSD1683_BUSY_EXTI_Unmask_Interrupt;
    end Enable_SSD1683_BUSY;
+
+   -----------------------
+   -- EXTI15_10_Handler --
+   -----------------------
+
+   procedure EXTI15_10_Handler is
+   begin
+      A0B.Callbacks.Emit (Keyboard_Callback);
+   end EXTI15_10_Handler;
 
    -------------------
    -- EXTI1_Handler --
@@ -273,6 +388,34 @@ package body Nu_Pogodi.Hardware.Pin_Control is
          A0B.Callbacks.Emit_Once (SSD1683_BUSY_Callback);
       end if;
    end EXTI1_Handler;
+
+   ---------------------
+   -- EXTI9_5_Handler --
+   ---------------------
+
+   procedure EXTI9_5_Handler is
+   begin
+      A0B.Callbacks.Emit (Keyboard_Callback);
+   end EXTI9_5_Handler;
+
+   --------------------------
+   -- Get_Keyboard_Pending --
+   --------------------------
+
+   function Get_Keyboard_Pending return Nu_Pogodi.Keyboard.Key_State is
+      PR : constant A0B.STM32F401.SVD.EXTI.PR_Field :=
+        A0B.STM32F401.SVD.EXTI.EXTI_Periph.PR.PR;
+
+   begin
+      return
+        [Nu_Pogodi.Keyboard.Left_Top     => PR.Arr (Keyboard_UP),
+         Nu_Pogodi.Keyboard.Right_Top    => PR.Arr (Keyboard_RIGHT),
+         Nu_Pogodi.Keyboard.Left_Bottom  => PR.Arr (Keyboard_LEFT),
+         Nu_Pogodi.Keyboard.Right_Bottom => PR.Arr (Keyboard_DOWN),
+         Nu_Pogodi.Keyboard.Middle       => PR.Arr (Keyboard_MIDDLE),
+         Nu_Pogodi.Keyboard.Game_A       => PR.Arr (Keyboard_SET),
+         Nu_Pogodi.Keyboard.Game_B       => PR.Arr (Keyboard_RESET)];
+   end Get_Keyboard_Pending;
 
    ------------------------
    -- Get_Keyboard_State --
@@ -317,6 +460,10 @@ package body Nu_Pogodi.Hardware.Pin_Control is
 
       A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI1);
       A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.EXTI1);
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI9_5);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.EXTI9_5);
+      A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.EXTI15_10);
+      A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.EXTI15_10);
    end Initialize;
 
    ------------------
