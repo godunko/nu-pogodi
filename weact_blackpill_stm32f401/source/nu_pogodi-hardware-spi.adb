@@ -53,7 +53,7 @@ package body Nu_Pogodi.Hardware.SPI is
            DFF      => False,
            --  0: 8-bit data frame format is selected for
            --  transmission/reception
-           LSBFIRST => True,    --  1: LSB transmitted first
+           LSBFIRST => False,   --  0: MSB transmitted first
            SPE      => False,   --  0: Peripheral disabled
            BR       => 2#100#,  --  100: fPCLK/32
            CPOL     => False,   --  0: CK to 0 when idle
@@ -79,7 +79,7 @@ package body Nu_Pogodi.Hardware.SPI is
            DFF      => False,
            --  0: 8-bit data frame format is selected for
            --  transmission/reception
-           LSBFIRST => True,    --  1: LSB transmitted first
+           LSBFIRST => False,   --  0: MSB transmitted first
            SPE      => False,   --  0: Peripheral disabled
            BR       => 2#001#,  --  001: fPCLK/4
            CPOL     => False,   --  0: CK to 0 when idle
