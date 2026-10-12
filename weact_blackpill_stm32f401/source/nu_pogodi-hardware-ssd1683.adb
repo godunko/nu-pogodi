@@ -11,6 +11,8 @@
 
 pragma Ada_2022;
 
+with System;
+
 with A0B.Buffers.External;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
@@ -244,8 +246,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Address  : System.Address;
+         Length   : A0B.Buffers.Storage_Count;
          Callback : A0B.Callbacks.Callback;
-         Success  : in out Boolean);
+         Success  : in out Boolean)
+        with Pre => Success;
 
       procedure On_Transfer_Finished;
 
@@ -704,15 +709,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          return;
       end if;
 
-      A0B.Buffers.External.Initialize
-        (External_Buffer,
-         Options'Address,
-         OTP_Display_Option_Registers_Length);
-      External_Buffer.Set_Allocation_Length
-        (OTP_Display_Option_Registers_Length);
-
       State_Machine_Command_Read_External_State.Enter
-        (OTP_Register_Read_For_Display_Option_Command, Callback, Success);
+        (OTP_Register_Read_For_Display_Option_Command,
+         Options'Address,
+         OTP_Display_Option_Registers_Length,
+         Callback,
+         Success);
    end OTP_Read_Display_Option;
 
    ------------------------------------
@@ -728,12 +730,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          return;
       end if;
 
-      A0B.Buffers.External.Initialize
-        (External_Buffer, Temperature'Address, 1);
-      External_Buffer.Set_Allocation_Length (1);
-
       State_Machine_Command_Read_External_State.Enter
-        (Read_From_Temperature_Register_Command, Callback, Success);
+        (Read_From_Temperature_Register_Command,
+         Temperature'Address,
+         1,
+         Callback,
+         Success);
    end Read_From_Temperature_Register;
 
    --------------
@@ -1110,9 +1112,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
+         Address  : System.Address;
+         Length   : A0B.Buffers.Storage_Count;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
+         A0B.Buffers.External.Initialize (External_Buffer, Address, Length);
+         External_Buffer.Set_Allocation_Length (Length);
+
          State            := Command_Read_External;
          Command_Callback := Callback;
 
@@ -1123,9 +1130,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
             Success);
 
          if not Success then
-            --  XXX Not implemented, MIPI can't start transfer of the command.
-
-            raise Program_Error;
+            External_Buffer.Finalize;
+            State := Ready;
+            A0B.Callbacks.Unset (Command_Callback);
          end if;
       end Enter;
 
