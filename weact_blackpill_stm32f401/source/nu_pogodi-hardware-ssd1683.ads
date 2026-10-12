@@ -144,6 +144,7 @@ package Nu_Pogodi.Hardware.SSD1683 is
    Waveform_Group_2C_Length                : constant := 7;
    Waveform_Sequence_2C_Length             : constant := 42;
    Waveform_LUT_2C_Length                  : constant := 227;
+   Gate_Driving_Voltage_Length             : constant := 1;
    Waveform_Setting_2C_Length              : constant := 233;
    Waveform_Temperature_Range_Length       : constant := 2;
    Waveform_Setting_2C_Array_Length        : constant := 5_592;
@@ -256,10 +257,20 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Reserved_226_7_4 at 226 range 4 .. 7;
    end record;
 
+   type Gate_Driving_Voltage is record
+      VGH          : A0B.Types.Unsigned_5;
+      Reserved_7_5 : A0B.Types.Reserved_3;
+   end record with Size => Gate_Driving_Voltage_Length * 8;
+
+   for Gate_Driving_Voltage use record
+      VGH          at 0 range 0 .. 4;
+      Reserved_7_5 at 0 range 5 .. 7;
+   end record;
+
    type Waveform_Setting_2C is record
       LUT              : Waveform_LUT_2C;
       EOPT             : A0B.Types.Unsigned_8;
-      VGH              : A0B.Types.Unsigned_8;
+      VGH              : Gate_Driving_Voltage;
       VSH1             : A0B.Types.Unsigned_8;
       VSH2             : A0B.Types.Unsigned_8;
       VSL              : A0B.Types.Unsigned_8;
@@ -459,17 +470,23 @@ package Nu_Pogodi.Hardware.SSD1683 is
    --  Load OTP of Waveform Setting. Clocks must be enabled by Display Update
    --  Control 2 command.
 
-   procedure End_Option
-     (EOPT     : A0B.Types.Unsigned_8;
-      Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean);
-   --  Set the LUT end option. SSD1683 Rev 1.0 specifies 16#22#.
-
    procedure Write_LUT_Register
      (LUT      : aliased Waveform_LUT_2C;
       Callback : A0B.Callbacks.Callback;
       Success  : in out Boolean);
    --  Write LUT register from MCU interface [227 bytes], which contains the
    --  content of VS[nX-LUTm], TP[nX], RP[n], SR[nXY], FR and XON[nXY].
+
+   procedure Gate_Driving_Voltage_Control
+     (Voltage  : Gate_Driving_Voltage;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Set gate driving voltage.
+
+   procedure End_Option
+     (EOPT     : A0B.Types.Unsigned_8;
+      Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Option for LUT end.
 
 end Nu_Pogodi.Hardware.SSD1683;

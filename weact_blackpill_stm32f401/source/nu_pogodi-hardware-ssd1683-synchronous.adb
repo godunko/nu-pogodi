@@ -134,6 +134,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end End_Option;
 
+   ----------------------------------
+   -- Gate_Driving_Voltage_Control --
+   ----------------------------------
+
+   procedure Gate_Driving_Voltage_Control
+     (Voltage : Gate_Driving_Voltage;
+      Success : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Gate_Driving_Voltage_Control
+        (Voltage, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Gate_Driving_Voltage_Control;
+
    -----------------
    -- Load_WS_OTP --
    -----------------
