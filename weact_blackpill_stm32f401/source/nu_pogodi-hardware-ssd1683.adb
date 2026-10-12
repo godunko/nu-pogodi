@@ -35,6 +35,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#12#;
    Temperature_Sensor_Control_Command             : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#18#;
+   Read_From_Temperature_Register_Command         : constant
+     Nu_Pogodi.Hardware.MIPI.Command_Code := 16#1B#;
    Master_Activation_Command                      : constant
      Nu_Pogodi.Hardware.MIPI.Command_Code := 16#20#;
    Display_Update_Control_1_Command               : constant
@@ -712,6 +714,27 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       State_Machine_Command_Read_State.Enter
         (OTP_Register_Read_For_Display_Option_Command, Callback, Success);
    end OTP_Read_Display_Option;
+
+   ------------------------------------
+   -- Read_From_Temperature_Register --
+   ------------------------------------
+
+   procedure Read_From_Temperature_Register
+     (Temperature : aliased in out A0B.Types.Integer_8;
+      Callback    : A0B.Callbacks.Callback;
+      Success     : in out Boolean) is
+   begin
+      if not Success then
+         return;
+      end if;
+
+      A0B.Buffers.External.Initialize
+        (External_Buffer, Temperature'Address, 1);
+      External_Buffer.Set_Allocation_Length (1);
+
+      State_Machine_Command_Read_State.Enter
+        (Read_From_Temperature_Register_Command, Callback, Success);
+   end Read_From_Temperature_Register;
 
    --------------
    -- Read_RAM --

@@ -190,6 +190,22 @@ package body Nu_Pogodi.Hardware.SSD1683.Synchronous is
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
    end OTP_Read_Display_Option;
 
+   ------------------------------------
+   -- Read_From_Temperature_Register --
+   ------------------------------------
+
+   procedure Read_From_Temperature_Register
+     (Temperature : aliased in out A0B.Types.Integer_8;
+      Success     : in out Boolean)
+   is
+      Await : aliased A0B.Awaits.Await;
+
+   begin
+      Read_From_Temperature_Register
+        (Temperature, A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+   end Read_From_Temperature_Register;
+
    --------------
    -- Read_RAM --
    --------------

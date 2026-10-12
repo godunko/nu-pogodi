@@ -510,4 +510,10 @@ package Nu_Pogodi.Hardware.SSD1683 is
       Success  : in out Boolean);
    --  Write VCOM register from MCU interface.
 
+   procedure Read_From_Temperature_Register
+     (Temperature : aliased in out A0B.Types.Integer_8;
+      Callback    : A0B.Callbacks.Callback;
+      Success     : in out Boolean);
+   --  Read from temperature register.
+
 end Nu_Pogodi.Hardware.SSD1683;
