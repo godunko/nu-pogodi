@@ -110,31 +110,29 @@ package body Nu_Pogodi.Application is
    ----------------------
 
    procedure Enter_Game_State is
+      Await   : aliased A0B.Awaits.Await;
       Success : Boolean := True;
 
    begin
       Active := Game'Access;
 
+      Nu_Pogodi.Display.Write_Waveform_Setting_For_Fast_Partial_Update
+        (A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => True,
           Enable_Analog     => True,
-          Load_Temperature  => True,
-          Loat_LUT_From_OTP => True,
+          Load_Temperature  => False,
+          Loat_LUT_From_OTP => False,
           Update_Mode       => True,
           Update_Display    => False,
           Disable_Analog    => False,
           Disable_Clock     => False),
          Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Master_Activation (Success);
-      --  Enable clock, analog, load temperature and load LUT for partial
-      --  update mode. Don't disable analog and clock at the end of the
-      --  sequence.
-      --
-      --  Execution of the sequence allows to cache some of internal parameters
-      --  and use them, instead of rebuild them by each partial update command.
-      --  It save significant amount of time on each update, thus improve
-      --  refresh rate (single optimized partial update takes about 0.277
-      --  second instead of non optimized 0.450 second).
+      --  Enable clock, analog, select partial update mode. Don't disable
+      --  analog and clock at the end of the sequence.
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Display_Update_Control_2
         ((Enable_Clock      => False,
@@ -148,6 +146,10 @@ package body Nu_Pogodi.Application is
          Success);
       --  Set partial update mode once, to exclude command's transfer time from
       --  critical path.
+
+      if not Success then
+         raise Program_Error;
+      end if;
 
       Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
    end Enter_Game_State;
@@ -291,6 +293,7 @@ package body Nu_Pogodi.Application is
    ---------
 
    procedure Run is
+      Await           : aliased A0B.Awaits.Await;
       Next            : A0B.Time.Monotonic_Time;
       Refresh_Pending : Boolean;
       Success         : Boolean := True;
@@ -300,29 +303,6 @@ package body Nu_Pogodi.Application is
         (On_Wakeup_Callbacks.Create_Callback);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
-
-      --  Check that automatic switching of RAM banks after partial update is
-      --  enabled in the display option registers. Enable it if it is not.
-
-      declare
-         OTP_Options : aliased
-           Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
-         Options     : Nu_Pogodi.Hardware.SSD1683.Display_Option_Registers;
-
-      begin
-         Nu_Pogodi.Hardware.SSD1683.Synchronous.OTP_Read_Display_Option
-           (OTP_Options, Success);
-
-         if Success and then not OTP_Options.RAM_Ping_Pong then
-            Options := Nu_Pogodi.Hardware.SSD1683.Get_Display_Option_Registers
-              (OTP_Options);
-            Options.RAM_Ping_Pong := True;
-
-            Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_Display_Option
-              (Options, Success);
-         end if;
-      end;
-
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting
         (Nu_Pogodi.Hardware.SSD1683.Increment,
          Nu_Pogodi.Hardware.SSD1683.Increment,
@@ -336,6 +316,40 @@ package body Nu_Pogodi.Application is
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Temperature_Sensor_Control
         (Nu_Pogodi.Hardware.SSD1683.Internal, Success);
+
+      Nu_Pogodi.Display.Read_Factory_Waveforms
+        (A0B.Awaits.Create_Callback (Await), Success);
+      A0B.Awaits.Suspend_Until_Callback (Await, Success);
+
+      --  Check that automatic switching of RAM banks after partial update is
+      --  enabled in the display option registers. Enable it if it is not.
+
+      declare
+         OTP_Options : aliased
+           Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
+         Options     : Nu_Pogodi.Hardware.SSD1683.Display_Option_Registers;
+
+      begin
+         Nu_Pogodi.Hardware.SSD1683.Synchronous.OTP_Read_Display_Option
+           (OTP_Options, Success);
+
+         --  if Success then
+         --     Factory_Modes := OTP_Options.WS;
+         --  end if;
+
+         if Success and then not OTP_Options.RAM_Ping_Pong then
+            Options := Nu_Pogodi.Hardware.SSD1683.Get_Display_Option_Registers
+              (OTP_Options);
+            Options.RAM_Ping_Pong := True;
+
+            Nu_Pogodi.Hardware.SSD1683.Synchronous.Write_Display_Option
+              (Options, Success);
+         end if;
+      end;
+
+      if not Success then
+         raise Program_Error;
+      end if;
 
       Full_Clean;
       Display_Busy    := False;
