@@ -21,6 +21,13 @@ package Nu_Pogodi.Display is
    --
    --  This operation damage content of BW RAM.
 
+   procedure Write_Waveform_Setting_For_Fast_Partial_Update
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean);
+   --  Selects appropriate factory waveforms setting for partial update and
+   --  current temperature, updates refresh frequency, and write waveforms
+   --  setting to display.
+
    procedure Update
      (Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;

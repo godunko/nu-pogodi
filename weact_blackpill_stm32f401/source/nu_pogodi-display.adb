@@ -4,10 +4,13 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+pragma Ada_2022;
+
 with A0B.Buffers.External;
 with A0B.Callbacks.Generic_Parameterless;
+with A0B.Types;
 
-with Nu_Pogodi.Hardware.SSD1683;
+with Nu_Pogodi.Hardware.SSD1683.Utilities;
 
 package body Nu_Pogodi.Display is
 
@@ -29,6 +32,18 @@ package body Nu_Pogodi.Display is
       Read_Waveforms_Disable_Clock_Display_Update_Control_2,
       Read_Waveforms_Disable_Clock_Master_Activate,
 
+      --  Select Waveforms Setting for fast partial update mode, change
+      --  refresh frequency, and load into display.
+
+      Write_Waveforms_Read_Temperature,
+      Write_Waveforms_LUT,
+      Write_Waveforms_End_Option,
+      Write_Waveforms_Gate_Driving_Voltage,
+      Write_Waveforms_Source_Driving_Voltage,
+      Write_Waveforms_VCOM,
+
+      --  Write BW RAM and update panel in preselected update mode.
+
       Update_Write_Black_White,
       Update_Master_Activation);
 
@@ -38,6 +53,10 @@ package body Nu_Pogodi.Display is
      Nu_Pogodi.Hardware.SSD1683.Waveform_Setting_2C_Mapping;
    Factory_Options    : aliased
      Nu_Pogodi.Hardware.SSD1683.OTP_Display_Option_Registers;
+   Temperature        : aliased A0B.Types.Integer_8;
+   Selected_Waveforms : Nu_Pogodi.Hardware.SSD1683.Waveform_Setting_Index;
+   Modified_LUT       : aliased Nu_Pogodi.Hardware.SSD1683.Waveform_LUT_2C;
+
    Buffer             : A0B.Buffers.External.External_Buffer;
 
    procedure On_Completed;
@@ -51,6 +70,7 @@ package body Nu_Pogodi.Display is
 
    procedure On_Completed is
       use type A0B.Buffers.Storage_Count;
+      use type A0B.Types.Unsigned_8;
 
       Success : Boolean := True;
 
@@ -134,6 +154,55 @@ package body Nu_Pogodi.Display is
             State := Initial;
             A0B.Callbacks.Emit (Completed_Callback);
 
+         when Write_Waveforms_Read_Temperature =>
+            State := Write_Waveforms_LUT;
+            Nu_Pogodi.Hardware.SSD1683.Utilities.Select_Partial
+              (Factory_Waveforms.TR,
+               Factory_Options.WS,
+               Temperature,
+               Selected_Waveforms,
+               Success);
+            Modified_LUT := Factory_Waveforms.WS (Selected_Waveforms).LUT;
+            Modified_LUT.FR := (@ and 16#F0#) or 16#04#;
+            --  Preserve the factory waveform except FR[3:0]: 100 Hz.
+
+            Nu_Pogodi.Hardware.SSD1683.Write_LUT_Register
+              (Modified_LUT,
+               On_Completed_Callbacks.Create_Callback,
+               Success);
+
+         when Write_Waveforms_LUT =>
+            State := Write_Waveforms_End_Option;
+            Nu_Pogodi.Hardware.SSD1683.End_Option
+              (Factory_Waveforms.WS (Selected_Waveforms).EOPT,
+               On_Completed_Callbacks.Create_Callback,
+               Success);
+
+         when Write_Waveforms_End_Option =>
+            State := Write_Waveforms_Gate_Driving_Voltage;
+            Nu_Pogodi.Hardware.SSD1683.Gate_Driving_Voltage_Control
+              (Factory_Waveforms.WS (Selected_Waveforms).VGH,
+               On_Completed_Callbacks.Create_Callback,
+               Success);
+
+         when Write_Waveforms_Gate_Driving_Voltage =>
+            State := Write_Waveforms_Source_Driving_Voltage;
+            Nu_Pogodi.Hardware.SSD1683.Source_Driving_Voltage_Control
+              (Factory_Waveforms.WS (Selected_Waveforms).VSH1_VSH2_VSL,
+               On_Completed_Callbacks.Create_Callback,
+               Success);
+
+         when Write_Waveforms_Source_Driving_Voltage =>
+            State := Write_Waveforms_VCOM;
+            Nu_Pogodi.Hardware.SSD1683.Write_VCOM_Register
+              (Factory_Waveforms.WS (Selected_Waveforms).VCOM,
+               On_Completed_Callbacks.Create_Callback,
+               Success);
+
+         when Write_Waveforms_VCOM =>
+            State := Initial;
+            A0B.Callbacks.Emit (Completed_Callback);
+
          when Update_Write_Black_White =>
             State := Update_Master_Activation;
             Nu_Pogodi.Hardware.SSD1683.Master_Activation
@@ -186,5 +255,22 @@ package body Nu_Pogodi.Display is
       Nu_Pogodi.Hardware.SSD1683.Write_RAM_Black_White
         (Buffer, On_Completed_Callbacks.Create_Callback, Success);
    end Update;
+
+   ----------------------------------------------------
+   -- Write_Waveform_Setting_For_Fast_Partial_Update --
+   ----------------------------------------------------
+
+   procedure Write_Waveform_Setting_For_Fast_Partial_Update
+     (Callback : A0B.Callbacks.Callback;
+      Success  : in out Boolean) is
+   begin
+      pragma Assert (State = Initial);
+
+      Completed_Callback := Callback;
+
+      State := Write_Waveforms_Read_Temperature;
+      Nu_Pogodi.Hardware.SSD1683.Read_From_Temperature_Register
+        (Temperature, On_Completed_Callbacks.Create_Callback, Success);
+   end Write_Waveform_Setting_For_Fast_Partial_Update;
 
 end Nu_Pogodi.Display;
