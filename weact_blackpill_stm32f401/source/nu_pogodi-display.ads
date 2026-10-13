@@ -4,7 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
---  Manages update of display RAM and and refresh panel.
+--  Manages various operations on display.
 --
 --  It is expected that implementation is asynchronous as much as possible.
 --  Right now only upload of data to RAM is done synchronously, due to
@@ -14,6 +14,12 @@ with A0B.Buffers;
 with A0B.Callbacks;
 
 package Nu_Pogodi.Display is
+
+   procedure Read_Factory_Waveforms
+     (Callback : A0B.Callbacks.Callback; Success : in out Boolean);
+   --  Read Waveform Setting from display's OTP into MCU's RAM.
+   --
+   --  This operation damage content of BW RAM.
 
    procedure Update
      (Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
