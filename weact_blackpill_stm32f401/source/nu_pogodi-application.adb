@@ -268,6 +268,10 @@ package body Nu_Pogodi.Application is
         (Buffer,
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
+
+      if not Success then
+         Display_Busy := False;
+      end if;
    end Partial;
 
    -------------------------
