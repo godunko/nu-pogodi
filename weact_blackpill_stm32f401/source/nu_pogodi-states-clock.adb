@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with Nu_Pogodi.Application;
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Clock;
 with Nu_Pogodi.Scene.Drawing;
@@ -18,7 +19,9 @@ package body Nu_Pogodi.States.Clock is
      (Self  : in out Clock_State;
       State : Nu_Pogodi.Keyboard.Keyboard_State) is
    begin
-      null;
+      if State.Released (Nu_Pogodi.Keyboard.Game_A) then
+         Nu_Pogodi.Application.Request_Game_State;
+      end if;
    end Keyboard;
 
    ------------------
