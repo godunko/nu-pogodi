@@ -15,6 +15,7 @@ with A0B.Types.Arrays;
 
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Display;
+with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.Scene;
@@ -39,6 +40,11 @@ package body Nu_Pogodi.Application is
    package On_Wakeup_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Wakeup);
 
+   procedure On_Keyboard;
+
+   package On_Keyboard_Callbacks is
+     new A0B.Callbacks.Generic_Parameterless (On_Keyboard);
+
    procedure Delay_Until (Time : A0B.Time.Monotonic_Time);
 
    procedure Full_Clean;
@@ -57,6 +63,7 @@ package body Nu_Pogodi.Application is
    Display_Busy : Boolean := False with Volatile;
    Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
    Wakeup       : Boolean := False with Volatile;
+   Keyboard     : Boolean := False with Volatile;
 
    -----------------
    -- Delay_Until --
@@ -232,6 +239,15 @@ package body Nu_Pogodi.Application is
       Display_Busy := False;
    end On_Display_Updated;
 
+   -----------------
+   -- On_Keyboard --
+   -----------------
+
+   procedure On_Keyboard is
+   begin
+      Keyboard := True;
+   end On_Keyboard;
+
    ---------------
    -- On_Wakeup --
    ---------------
@@ -304,6 +320,8 @@ package body Nu_Pogodi.Application is
       Success         : Boolean := True;
 
    begin
+      Nu_Pogodi.Hardware.Keyboard.Set_State_Changed
+        (On_Keyboard_Callbacks.Create_Callback);
       Nu_Pogodi.Hardware.RTC.Set_Clock_Wakeup
         (On_Wakeup_Callbacks.Create_Callback);
 
@@ -388,6 +406,12 @@ package body Nu_Pogodi.Application is
             Refresh_Pending := False;
 
             Partial (Pixel_Buffer, Success);
+         end if;
+
+         if Keyboard then
+            Keyboard := False;
+
+            Active.Keyboard (Nu_Pogodi.Hardware.Keyboard.Get);
          end if;
 
          Next := @ + Tick_Duration;

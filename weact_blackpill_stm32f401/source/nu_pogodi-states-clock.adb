@@ -10,6 +10,17 @@ with Nu_Pogodi.Scene.Drawing;
 
 package body Nu_Pogodi.States.Clock is
 
+   --------------
+   -- Keyboard --
+   --------------
+
+   overriding procedure Keyboard
+     (Self  : in out Clock_State;
+      State : Nu_Pogodi.Keyboard.Keyboard_State) is
+   begin
+      null;
+   end Keyboard;
+
    ------------------
    -- Physics_Tick --
    ------------------

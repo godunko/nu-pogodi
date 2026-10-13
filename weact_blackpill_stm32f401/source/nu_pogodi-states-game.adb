@@ -11,6 +11,17 @@ with Nu_Pogodi.Scene.Drawing;
 
 package body Nu_Pogodi.States.Game is
 
+   --------------
+   -- Keyboard --
+   --------------
+
+   overriding procedure Keyboard
+     (Self  : in out Game_State;
+      State : Nu_Pogodi.Keyboard.Keyboard_State) is
+   begin
+      null;
+   end Keyboard;
+
    ------------------
    -- Physics_Tick --
    ------------------

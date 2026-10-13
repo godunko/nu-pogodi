@@ -6,6 +6,8 @@
 
 with A0B.Buffers;
 
+with Nu_Pogodi.Keyboard;
+
 package Nu_Pogodi.States is
 
    type Abstract_State is abstract tagged limited private;
@@ -19,6 +21,10 @@ package Nu_Pogodi.States is
       Refresh : in out Boolean) is abstract;
    --  Do tick of the scene physics. Set `Refresh` to True if the scene needs
    --  to be redrawn, otherwise leave it unchanged.
+
+   not overriding procedure Keyboard
+     (Self  : in out Abstract_State;
+      State : Nu_Pogodi.Keyboard.Keyboard_State) is abstract;
 
 private
 

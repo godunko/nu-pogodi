@@ -30,6 +30,8 @@ package body Nu_Pogodi.Hardware.Keyboard is
    --  Keyboard EXTI and RTC wakeup have equal preemption priorities, so their
    --  callbacks serialize access to Active without masking other interrupts.
 
+   State_Changed : A0B.Callbacks.Callback;
+
    procedure On_Edge;
 
    package On_Edge_Callbacks is
@@ -146,6 +148,8 @@ package body Nu_Pogodi.Hardware.Keyboard is
 
             exit when Update_Current_State (Old, Updated);
          end loop;
+
+         A0B.Callbacks.Emit (State_Changed);
       end if;
 
       Active := Changed;
@@ -159,6 +163,15 @@ package body Nu_Pogodi.Hardware.Keyboard is
          Nu_Pogodi.Hardware.Pin_Control.Enable_Keyboard_Interrupt;
       end if;
    end On_Timer;
+
+   -----------------------
+   -- Set_State_Changed --
+   -----------------------
+
+   procedure Set_State_Changed (Callback : A0B.Callbacks.Callback) is
+   begin
+      State_Changed := Callback;
+   end Set_State_Changed;
 
    --------------------------
    -- Update_Current_State --

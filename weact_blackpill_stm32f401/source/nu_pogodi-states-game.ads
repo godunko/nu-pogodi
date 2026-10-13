@@ -20,4 +20,8 @@ private
      (Self    : in out Game_State;
       Refresh : in out Boolean);
 
+   overriding procedure Keyboard
+     (Self  : in out Game_State;
+      State : Nu_Pogodi.Keyboard.Keyboard_State);
+
 end Nu_Pogodi.States.Game;
