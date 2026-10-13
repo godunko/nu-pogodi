@@ -485,14 +485,8 @@ package body Nu_Pogodi.Scene is
       elsif Tens (Previous_Score) /= Tens (State.Current_Score) then
          State.Cycle_Ticks := @ - 1;
 
-         if State.Cycle_Ticks < 8 then  --  Original minimum interval: 7 ticks.
-            --  Value of 8 means 9 ticks, if timer run @32Hz it produce 0.281
-            --  seconds of one cycle. It is a bit more than display refresh
-            --  time.
-            --
-            --  XXX Should be configurable !!!
-
-            State.Cycle_Ticks := 8;
+         if State.Cycle_Ticks < 7 then
+            State.Cycle_Ticks := 7;
          end if;
       end if;
 

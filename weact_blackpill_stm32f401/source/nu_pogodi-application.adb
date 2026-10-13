@@ -25,8 +25,9 @@ package body Nu_Pogodi.Application is
 
    use type A0B.Time.Monotonic_Time;
 
-   Tick_Duration : constant A0B.Time.Duration := 0.031_25;
-   --  Duration of physics update tick, running @32Hz
+   Tick_Duration : constant A0B.Time.Duration := 0.025;
+   --  Duration of physics update tick, running @40Hz. It means minimum game
+   --  tick 0.200 seconds, and maximum game tick 0.800 seconds.
 
    procedure On_Display_Updated;
 
