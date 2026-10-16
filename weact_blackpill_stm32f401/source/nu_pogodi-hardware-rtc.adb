@@ -118,12 +118,12 @@ package body Nu_Pogodi.Hardware.RTC is
               A0B.STM32F401.SVD.RTC.RTC_Periph.DR;
 
          begin
-            Result.Dates_Ones  := Dates_Ones_Type (DR.DT);
-            Result.Dates_Tens  := Dates_Tens_Type (DR.DU);
-            Result.Months_Ones := (if DR.MT then 1 else 0);
-            Result.Months_Tens := Months_Tens_Type (DR.MU);
-            Result.Years_Ones  := Years_Ones_Type (DR.YT);
-            Result.Years_Tens  := Years_Tens_Type (DR.YU);
+            Result.Dates_Ones  := Dates_Ones_Type (DR.DU);
+            Result.Dates_Tens  := Dates_Tens_Type (DR.DT);
+            Result.Months_Ones := Months_Ones_Type (DR.MU);
+            Result.Months_Tens := (if DR.MT then 1 else 0);
+            Result.Years_Ones  := Years_Ones_Type (DR.YU);
+            Result.Years_Tens  := Years_Tens_Type (DR.YT);
          end;
       end return;
    end Clock;
