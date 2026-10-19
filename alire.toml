@@ -1,0 +1,14 @@
+name = "nu_pogodi"
+version = "0.1.0-dev"
+description = "Nu, Pogodi! Game"
+
+authors = ["Vadim Godunko"]
+maintainers = ["Vadim Godunko <vgodunko@gmail.com>"]
+maintainers-logins = ["godunko"]
+licenses = "GPL-3.0-or-later"
+tags = ["game", "nu-pogodi"]
+
+[configuration]
+generate_ada = false
+generate_c = false
+generate_gpr = true

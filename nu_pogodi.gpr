@@ -1,0 +1,21 @@
+--
+--  Copyright (C) 2026, Vadim Godunko <vgodunko@gmail.com>
+--
+--  SPDX-License-Identifier: GPL-3.0-or-later
+--
+
+with "config/nu_pogodi_config.gpr";
+
+project Nu_Pogodi is
+
+   for Object_Dir use ".objs";
+
+   for Source_Dirs use ("source");
+
+   package Compiler is
+      for Switches ("Ada") use Nu_Pogodi_Config.Ada_Compiler_Switches &
+        ("-gnatyo",    --  check subprogram bodies in alphabetical order
+         "-gnaty-B");  --  check no use of AND/OR for boolean expressions
+   end Compiler;
+
+end Nu_Pogodi;
