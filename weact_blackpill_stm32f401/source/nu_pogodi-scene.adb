@@ -6,9 +6,7 @@
 
 pragma Ada_2022;
 
-with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
-with Nu_Pogodi.Keyboard;
 
 package body Nu_Pogodi.Scene is
 
@@ -51,6 +49,8 @@ package body Nu_Pogodi.Scene is
       Right_Top    => (Side => Right, Height => Top),
       Left_Bottom  => (Side => Left,  Height => Bottom),
       Right_Bottom => (Side => Right, Height => Bottom)];
+
+   Keys : Nu_Pogodi.Keyboard.Keyboard_State := (others => [others => False]);
 
    ------------------
    -- Advance_Lane --
@@ -405,8 +405,6 @@ package body Nu_Pogodi.Scene is
    procedure Update_Input is
       use type A0B.Types.Unsigned_32;
 
-      Keys     : constant Nu_Pogodi.Keyboard.Keyboard_State :=
-        Nu_Pogodi.Hardware.Keyboard.Get;
       New_Wolf : constant Wolf_Position :=
         (if Keys.State (Nu_Pogodi.Keyboard.Left_Top)
          then (Side => Left, Height => Top)
@@ -434,6 +432,17 @@ package body Nu_Pogodi.Scene is
          end if;
       end if;
    end Update_Input;
+
+   --------------------------
+   -- Update_Keyboad_State --
+   --------------------------
+
+   procedure Update_Keyboad_State
+     (State : Nu_Pogodi.Keyboard.Keyboard_State) is
+   begin
+      Keys := State;
+      Update_Input;
+   end Update_Keyboad_State;
 
    -------------------------
    -- Update_Physics_Tick --

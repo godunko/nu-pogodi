@@ -8,6 +8,8 @@ pragma Ada_2022;
 
 private with A0B.Types;
 
+with Nu_Pogodi.Keyboard;
+
 package Nu_Pogodi.Scene is
 
    type Game_Mode is (Mode_A, Mode_B);
@@ -34,6 +36,8 @@ package Nu_Pogodi.Scene is
    procedure Initialize (Mode : Game_Mode);
 
    procedure Update_Physics_Tick (Refresh : in out Boolean);
+
+   procedure Update_Keyboad_State (State : Nu_Pogodi.Keyboard.Keyboard_State);
 
    function Is_Game_Over return Boolean;
 

@@ -19,7 +19,7 @@ package body Nu_Pogodi.States.Game is
      (Self  : in out Game_State;
       State : Nu_Pogodi.Keyboard.Keyboard_State) is
    begin
-      null;
+      Nu_Pogodi.Scene.Update_Keyboad_State (State);
    end Keyboard;
 
    ------------------
