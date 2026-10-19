@@ -2323,84 +2323,160 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Descriptors : constant array (Bitmap_Id) of Bitmap_Descriptor :=
-     [G4671 => (X => 176, Y => 8, Width => 32, Height => 24, Data => G4671_Data'Access),
-      G4663 => (X => 216, Y => 8, Width => 16, Height => 48, Data => G4663_Data'Access),
-      G4667 => (X => 264, Y => 16, Width => 16, Height => 32, Data => G4667_Data'Access),
-      G4675 => (X => 120, Y => 48, Width => 32, Height => 48, Data => G4675_Data'Access),
-      G4631 => (X => 56, Y => 176, Width => 40, Height => 40, Data => G4631_Data'Access),
-      G4636 => (X => 304, Y => 184, Width => 40, Height => 32, Data => G4636_Data'Access),
-      G4659 => (X => 72, Y => 216, Width => 64, Height => 24, Data => G4659_Data'Access),
-      G4648 => (X => 256, Y => 216, Width => 72, Height => 24, Data => G4648_Data'Access),
-      G4641 => (X => 336, Y => 232, Width => 56, Height => 16, Data => G4641_Data'Access),
-      G4652 => (X => 8, Y => 232, Width => 56, Height => 16, Data => G4652_Data'Access),
-      G4486 => (X => 176, Y => 32, Width => 32, Height => 24, Data => G4486_Data'Access),
-      Path16 => (X => 120, Y => 8, Width => 32, Height => 24, Data => Path16_Data'Access),
-      Path18 => (X => 240, Y => 8, Width => 16, Height => 8, Data => Path18_Data'Access),
-      Path20 => (X => 288, Y => 8, Width => 16, Height => 8, Data => Path20_Data'Access),
-      Path22 => (X => 320, Y => 8, Width => 16, Height => 8, Data => Path22_Data'Access),
-      Path30 => (X => 296, Y => 8, Width => 8, Height => 24, Data => Path30_Data'Access),
-      Path32 => (X => 248, Y => 8, Width => 16, Height => 24, Data => Path32_Data'Access),
-      Path34 => (X => 280, Y => 8, Width => 16, Height => 24, Data => Path34_Data'Access),
-      Path36 => (X => 328, Y => 8, Width => 16, Height => 24, Data => Path36_Data'Access),
-      Path38 => (X => 312, Y => 8, Width => 16, Height => 24, Data => Path38_Data'Access),
-      Path42 => (X => 144, Y => 16, Width => 24, Height => 32, Data => Path42_Data'Access),
-      Path44 => (X => 240, Y => 24, Width => 16, Height => 16, Data => Path44_Data'Access),
-      Path48 => (X => 232, Y => 32, Width => 16, Height => 24, Data => Path48_Data'Access),
-      Path50 => (X => 280, Y => 32, Width => 8, Height => 24, Data => Path50_Data'Access),
-      Path54 => (X => 312, Y => 32, Width => 8, Height => 24, Data => Path54_Data'Access),
-      Path56 => (X => 288, Y => 32, Width => 16, Height => 24, Data => Path56_Data'Access),
-      Path58 => (X => 320, Y => 32, Width => 16, Height => 24, Data => Path58_Data'Access),
-      Path66 => (X => 232, Y => 40, Width => 24, Height => 16, Data => Path66_Data'Access),
-      Path68 => (X => 280, Y => 40, Width => 16, Height => 16, Data => Path68_Data'Access),
-      Path72 => (X => 312, Y => 48, Width => 16, Height => 8, Data => Path72_Data'Access),
-      Path80 => (X => 272, Y => 56, Width => 40, Height => 40, Data => Path80_Data'Access),
-      Path82 => (X => 208, Y => 56, Width => 40, Height => 40, Data => Path82_Data'Access),
-      Path84 => (X => 240, Y => 56, Width => 40, Height => 40, Data => Path84_Data'Access),
-      Path88 => (X => 360, Y => 72, Width => 24, Height => 16, Data => Path88_Data'Access),
-      Path90 => (X => 32, Y => 72, Width => 16, Height => 16, Data => Path90_Data'Access),
-      Path92 => (X => 344, Y => 72, Width => 24, Height => 24, Data => Path92_Data'Access),
-      Path98 => (X => 40, Y => 80, Width => 24, Height => 16, Data => Path98_Data'Access),
-      Path100 => (X => 328, Y => 88, Width => 24, Height => 16, Data => Path100_Data'Access),
-      Path102 => (X => 56, Y => 88, Width => 16, Height => 16, Data => Path102_Data'Access),
-      Path108 => (X => 88, Y => 88, Width => 72, Height => 72, Data => Path108_Data'Access),
-      Path110 => (X => 312, Y => 96, Width => 24, Height => 16, Data => Path110_Data'Access),
-      Path112 => (X => 64, Y => 96, Width => 24, Height => 16, Data => Path112_Data'Access),
-      Path118 => (X => 256, Y => 104, Width => 64, Height => 64, Data => Path118_Data'Access),
-      Path122 => (X => 304, Y => 104, Width => 24, Height => 24, Data => Path122_Data'Access),
-      Path124 => (X => 80, Y => 104, Width => 24, Height => 24, Data => Path124_Data'Access),
-      Path132 => (X => 24, Y => 128, Width => 16, Height => 24, Data => Path132_Data'Access),
-      Path134 => (X => 360, Y => 128, Width => 16, Height => 24, Data => Path134_Data'Access),
-      Path136 => (X => 40, Y => 136, Width => 16, Height => 24, Data => Path136_Data'Access),
-      Path138 => (X => 344, Y => 136, Width => 16, Height => 24, Data => Path138_Data'Access),
-      Path148 => (X => 56, Y => 144, Width => 16, Height => 24, Data => Path148_Data'Access),
-      Path150 => (X => 328, Y => 144, Width => 24, Height => 24, Data => Path150_Data'Access),
-      Path156 => (X => 64, Y => 152, Width => 24, Height => 24, Data => Path156_Data'Access),
-      Path160 => (X => 312, Y => 152, Width => 24, Height => 24, Data => Path160_Data'Access),
-      Path162 => (X => 80, Y => 152, Width => 80, Height => 64, Data => Path162_Data'Access),
-      Path168 => (X => 248, Y => 160, Width => 72, Height => 56, Data => Path168_Data'Access),
-      Path176 => (X => 80, Y => 160, Width => 24, Height => 24, Data => Path176_Data'Access),
-      Path178 => (X => 304, Y => 168, Width => 16, Height => 16, Data => Path178_Data'Access),
-      Path190 => (X => 352, Y => 200, Width => 24, Height => 32, Data => Path190_Data'Access),
-      Path202 => (X => 80, Y => 208, Width => 40, Height => 40, Data => Path202_Data'Access),
-      Path208 => (X => 272, Y => 216, Width => 40, Height => 32, Data => Path208_Data'Access),
-      Path34_8_63 => (X => 232, Y => 8, Width => 16, Height => 24, Data => Path34_8_63_Data'Access),
-      Path56_3_64 => (X => 248, Y => 32, Width => 8, Height => 24, Data => Path56_3_64_Data'Access),
-      Path44_0_65 => (X => 280, Y => 24, Width => 24, Height => 16, Data => Path44_0_65_Data'Access),
-      Path44_0_1_66 => (X => 312, Y => 24, Width => 24, Height => 16, Data => Path44_0_1_66_Data'Access),
-      Path150_4_67 => (X => 376, Y => 200, Width => 24, Height => 32, Data => Path150_4_67_Data'Access),
-      Path164 => (X => 336, Y => 200, Width => 24, Height => 32, Data => Path164_Data'Access),
-      Path14 => (X => 128, Y => 96, Width => 88, Height => 128, Data => Path14_Data'Access),
-      Path10_3_70 => (X => 200, Y => 96, Width => 72, Height => 128, Data => Path10_3_70_Data'Access),
-      Path30_8_71 => (X => 0, Y => 200, Width => 32, Height => 32, Data => Path30_8_71_Data'Access),
-      Path168_3_72 => (X => 48, Y => 200, Width => 24, Height => 32, Data => Path168_3_72_Data'Access),
-      Path166 => (X => 24, Y => 200, Width => 24, Height => 32, Data => Path166_Data'Access),
-      Path16_9_74 => (X => 48, Y => 0, Width => 80, Height => 80, Data => Path16_9_74_Data'Access)];
+   Descriptors : constant
+     array (Nu_Pogodi.Sprites.Sprite_Id) of Bitmap_Descriptor :=
+     [Nu_Pogodi.Sprites.G4671 =>
+        (X => 176, Y => 8, Width => 32, Height => 24, Data => G4671_Data'Access),
+      Nu_Pogodi.Sprites.G4663 =>
+        (X => 216, Y => 8, Width => 16, Height => 48, Data => G4663_Data'Access),
+      Nu_Pogodi.Sprites.G4667 =>
+        (X => 264, Y => 16, Width => 16, Height => 32, Data => G4667_Data'Access),
+      Nu_Pogodi.Sprites.G4675 =>
+        (X => 120, Y => 48, Width => 32, Height => 48, Data => G4675_Data'Access),
+      Nu_Pogodi.Sprites.G4631 =>
+        (X => 56, Y => 176, Width => 40, Height => 40, Data => G4631_Data'Access),
+      Nu_Pogodi.Sprites.G4636 =>
+        (X => 304, Y => 184, Width => 40, Height => 32, Data => G4636_Data'Access),
+      Nu_Pogodi.Sprites.G4659 =>
+        (X => 72, Y => 216, Width => 64, Height => 24, Data => G4659_Data'Access),
+      Nu_Pogodi.Sprites.G4648 =>
+        (X => 256, Y => 216, Width => 72, Height => 24, Data => G4648_Data'Access),
+      Nu_Pogodi.Sprites.G4641 =>
+        (X => 336, Y => 232, Width => 56, Height => 16, Data => G4641_Data'Access),
+      Nu_Pogodi.Sprites.G4652 =>
+        (X => 8, Y => 232, Width => 56, Height => 16, Data => G4652_Data'Access),
+      Nu_Pogodi.Sprites.G4486 =>
+        (X => 176, Y => 32, Width => 32, Height => 24, Data => G4486_Data'Access),
+      Nu_Pogodi.Sprites.Path16 =>
+        (X => 120, Y => 8, Width => 32, Height => 24, Data => Path16_Data'Access),
+      Nu_Pogodi.Sprites.Path18 =>
+        (X => 240, Y => 8, Width => 16, Height => 8, Data => Path18_Data'Access),
+      Nu_Pogodi.Sprites.Path20 =>
+        (X => 288, Y => 8, Width => 16, Height => 8, Data => Path20_Data'Access),
+      Nu_Pogodi.Sprites.Path22 =>
+        (X => 320, Y => 8, Width => 16, Height => 8, Data => Path22_Data'Access),
+      Nu_Pogodi.Sprites.Path30 =>
+        (X => 296, Y => 8, Width => 8, Height => 24, Data => Path30_Data'Access),
+      Nu_Pogodi.Sprites.Path32 =>
+        (X => 248, Y => 8, Width => 16, Height => 24, Data => Path32_Data'Access),
+      Nu_Pogodi.Sprites.Path34 =>
+        (X => 280, Y => 8, Width => 16, Height => 24, Data => Path34_Data'Access),
+      Nu_Pogodi.Sprites.Path36 =>
+        (X => 328, Y => 8, Width => 16, Height => 24, Data => Path36_Data'Access),
+      Nu_Pogodi.Sprites.Path38 =>
+        (X => 312, Y => 8, Width => 16, Height => 24, Data => Path38_Data'Access),
+      Nu_Pogodi.Sprites.Path42 =>
+        (X => 144, Y => 16, Width => 24, Height => 32, Data => Path42_Data'Access),
+      Nu_Pogodi.Sprites.Path44 =>
+        (X => 240, Y => 24, Width => 16, Height => 16, Data => Path44_Data'Access),
+      Nu_Pogodi.Sprites.Path48 =>
+        (X => 232, Y => 32, Width => 16, Height => 24, Data => Path48_Data'Access),
+      Nu_Pogodi.Sprites.Path50 =>
+        (X => 280, Y => 32, Width => 8, Height => 24, Data => Path50_Data'Access),
+      Nu_Pogodi.Sprites.Path54 =>
+        (X => 312, Y => 32, Width => 8, Height => 24, Data => Path54_Data'Access),
+      Nu_Pogodi.Sprites.Path56 =>
+        (X => 288, Y => 32, Width => 16, Height => 24, Data => Path56_Data'Access),
+      Nu_Pogodi.Sprites.Path58 =>
+        (X => 320, Y => 32, Width => 16, Height => 24, Data => Path58_Data'Access),
+      Nu_Pogodi.Sprites.Path66 =>
+        (X => 232, Y => 40, Width => 24, Height => 16, Data => Path66_Data'Access),
+      Nu_Pogodi.Sprites.Path68 =>
+        (X => 280, Y => 40, Width => 16, Height => 16, Data => Path68_Data'Access),
+      Nu_Pogodi.Sprites.Path72 =>
+        (X => 312, Y => 48, Width => 16, Height => 8, Data => Path72_Data'Access),
+      Nu_Pogodi.Sprites.Path80 =>
+        (X => 272, Y => 56, Width => 40, Height => 40, Data => Path80_Data'Access),
+      Nu_Pogodi.Sprites.Path82 =>
+        (X => 208, Y => 56, Width => 40, Height => 40, Data => Path82_Data'Access),
+      Nu_Pogodi.Sprites.Path84 =>
+        (X => 240, Y => 56, Width => 40, Height => 40, Data => Path84_Data'Access),
+      Nu_Pogodi.Sprites.Path88 =>
+        (X => 360, Y => 72, Width => 24, Height => 16, Data => Path88_Data'Access),
+      Nu_Pogodi.Sprites.Path90 =>
+        (X => 32, Y => 72, Width => 16, Height => 16, Data => Path90_Data'Access),
+      Nu_Pogodi.Sprites.Path92 =>
+        (X => 344, Y => 72, Width => 24, Height => 24, Data => Path92_Data'Access),
+      Nu_Pogodi.Sprites.Path98 =>
+        (X => 40, Y => 80, Width => 24, Height => 16, Data => Path98_Data'Access),
+      Nu_Pogodi.Sprites.Path100 =>
+        (X => 328, Y => 88, Width => 24, Height => 16, Data => Path100_Data'Access),
+      Nu_Pogodi.Sprites.Path102 =>
+        (X => 56, Y => 88, Width => 16, Height => 16, Data => Path102_Data'Access),
+      Nu_Pogodi.Sprites.Path108 =>
+        (X => 88, Y => 88, Width => 72, Height => 72, Data => Path108_Data'Access),
+      Nu_Pogodi.Sprites.Path110 =>
+        (X => 312, Y => 96, Width => 24, Height => 16, Data => Path110_Data'Access),
+      Nu_Pogodi.Sprites.Path112 =>
+        (X => 64, Y => 96, Width => 24, Height => 16, Data => Path112_Data'Access),
+      Nu_Pogodi.Sprites.Path118 =>
+        (X => 256, Y => 104, Width => 64, Height => 64, Data => Path118_Data'Access),
+      Nu_Pogodi.Sprites.Path122 =>
+        (X => 304, Y => 104, Width => 24, Height => 24, Data => Path122_Data'Access),
+      Nu_Pogodi.Sprites.Path124 =>
+        (X => 80, Y => 104, Width => 24, Height => 24, Data => Path124_Data'Access),
+      Nu_Pogodi.Sprites.Path132 =>
+        (X => 24, Y => 128, Width => 16, Height => 24, Data => Path132_Data'Access),
+      Nu_Pogodi.Sprites.Path134 =>
+        (X => 360, Y => 128, Width => 16, Height => 24, Data => Path134_Data'Access),
+      Nu_Pogodi.Sprites.Path136 =>
+        (X => 40, Y => 136, Width => 16, Height => 24, Data => Path136_Data'Access),
+      Nu_Pogodi.Sprites.Path138 =>
+        (X => 344, Y => 136, Width => 16, Height => 24, Data => Path138_Data'Access),
+      Nu_Pogodi.Sprites.Path148 =>
+        (X => 56, Y => 144, Width => 16, Height => 24, Data => Path148_Data'Access),
+      Nu_Pogodi.Sprites.Path150 =>
+        (X => 328, Y => 144, Width => 24, Height => 24, Data => Path150_Data'Access),
+      Nu_Pogodi.Sprites.Path156 =>
+        (X => 64, Y => 152, Width => 24, Height => 24, Data => Path156_Data'Access),
+      Nu_Pogodi.Sprites.Path160 =>
+        (X => 312, Y => 152, Width => 24, Height => 24, Data => Path160_Data'Access),
+      Nu_Pogodi.Sprites.Path162 =>
+        (X => 80, Y => 152, Width => 80, Height => 64, Data => Path162_Data'Access),
+      Nu_Pogodi.Sprites.Path168 =>
+        (X => 248, Y => 160, Width => 72, Height => 56, Data => Path168_Data'Access),
+      Nu_Pogodi.Sprites.Path176 =>
+        (X => 80, Y => 160, Width => 24, Height => 24, Data => Path176_Data'Access),
+      Nu_Pogodi.Sprites.Path178 =>
+        (X => 304, Y => 168, Width => 16, Height => 16, Data => Path178_Data'Access),
+      Nu_Pogodi.Sprites.Path190 =>
+        (X => 352, Y => 200, Width => 24, Height => 32, Data => Path190_Data'Access),
+      Nu_Pogodi.Sprites.Path202 =>
+        (X => 80, Y => 208, Width => 40, Height => 40, Data => Path202_Data'Access),
+      Nu_Pogodi.Sprites.Path208 =>
+        (X => 272, Y => 216, Width => 40, Height => 32, Data => Path208_Data'Access),
+      Nu_Pogodi.Sprites.Path34_8_63 =>
+        (X => 232, Y => 8, Width => 16, Height => 24, Data => Path34_8_63_Data'Access),
+      Nu_Pogodi.Sprites.Path56_3_64 =>
+        (X => 248, Y => 32, Width => 8, Height => 24, Data => Path56_3_64_Data'Access),
+      Nu_Pogodi.Sprites.Path44_0_65 =>
+        (X => 280, Y => 24, Width => 24, Height => 16, Data => Path44_0_65_Data'Access),
+      Nu_Pogodi.Sprites.Path44_0_1_66 =>
+        (X => 312, Y => 24, Width => 24, Height => 16, Data => Path44_0_1_66_Data'Access),
+      Nu_Pogodi.Sprites.Path150_4_67 =>
+        (X => 376, Y => 200, Width => 24, Height => 32, Data => Path150_4_67_Data'Access),
+      Nu_Pogodi.Sprites.Path164 =>
+        (X => 336, Y => 200, Width => 24, Height => 32, Data => Path164_Data'Access),
+      Nu_Pogodi.Sprites.Path14 =>
+        (X => 128, Y => 96, Width => 88, Height => 128, Data => Path14_Data'Access),
+      Nu_Pogodi.Sprites.Path10_3_70 =>
+        (X => 200, Y => 96, Width => 72, Height => 128, Data => Path10_3_70_Data'Access),
+      Nu_Pogodi.Sprites.Path30_8_71 =>
+        (X => 0, Y => 200, Width => 32, Height => 32, Data => Path30_8_71_Data'Access),
+      Nu_Pogodi.Sprites.Path168_3_72 =>
+        (X => 48, Y => 200, Width => 24, Height => 32, Data => Path168_3_72_Data'Access),
+      Nu_Pogodi.Sprites.Path166 =>
+        (X => 24, Y => 200, Width => 24, Height => 32, Data => Path166_Data'Access),
+      Nu_Pogodi.Sprites.Path16_9_74 =>
+        (X => 48, Y => 0, Width => 80, Height => 80, Data => Path16_9_74_Data'Access)];
 
-   function Metadata (Id : Bitmap_Id) return Bitmap_Descriptor is
-     (Descriptors (Id));
+   ----------
+   -- Draw --
+   ----------
 
-   procedure Draw (Buffer : in out Framebuffer; Id : Bitmap_Id) is
+   procedure Draw
+     (Buffer : in out Framebuffer; Id : Nu_Pogodi.Sprites.Sprite_Id)
+   is
       Bitmap : constant Bitmap_Descriptor := Descriptors (Id);
       Bitmap_Row_Bytes : constant Positive := Bitmap.Width / 8;
       Screen_Y, Screen_Byte : Integer;
@@ -2421,11 +2497,25 @@ package body Nu_Pogodi.Bitmaps is
       end loop;
    end Draw;
 
+   -----------------
+   -- Reconstruct --
+   -----------------
+
    procedure Reconstruct (Buffer : out Framebuffer) is
    begin
       Buffer := [others => 16#FF#];
-      for Id in Bitmap_Id loop
+
+      for Id in Nu_Pogodi.Sprites.Sprite_Id loop
          Draw (Buffer, Id);
       end loop;
    end Reconstruct;
+
+   --------------
+   -- Metadata --
+   --------------
+
+   function Metadata
+     (Id : Nu_Pogodi.Sprites.Sprite_Id) return Bitmap_Descriptor is
+     (Descriptors (Id));
+
 end Nu_Pogodi.Bitmaps;
