@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns1="http://www.inkscape.org/namespaces/inkscape" xmlns:ns2="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:ns4="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" version="1.0" width="1963.3057" height="1236.4769" viewBox="0 0 1570.2845 989.1816" preserveAspectRatio="xMidYMid meet" id="svg2" ns1:version="1.1 (c68e22c387, 2021-05-23)" ns2:docname="nupogodi_v2.svg">
+  <defs id="defs242" />
+  <metadata id="metadata4">
+Created by potrace 1.13, written by Peter Selinger 2001-2015
+<rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </ns4:Work>
+    </rdf:RDF>
+  </metadata>
+  <g ns1:groupmode="layer" id="layer1" ns1:label="segs" transform="translate(-91.841245,-170.68358)">
+    <path style="fill:#000000;fill-opacity:0.847059;stroke:none" ns1:connector-curvature="0" id="path156" d="m 371.40551,815.19078 c 5.44871,14.1034 22.08286,31.01478 35.7987,25.48515 12.42283,-8.66552 14.35891,-29.36528 9.22221,-40.52802 -3.64111,-7.42916 -11.48208,-14.89168 -17.8652,-17.04245 -20.69757,-2.82347 -33.63313,12.81986 -27.15571,32.08532 z m 28.64525,-18.17305 c 6.36088,4.95069 9.87022,16.37892 7.50833,24.16041 -1.84839,6.08551 -4.0658,8.26796 -7.96567,8.23698 -11.8536,-1.73797 -23.30807,-23.12172 -16.02244,-30.12294 4.24911,-6.16645 10.91411,-6.61879 16.47978,-2.27445 z" ns2:nodetypes="cccccccccc">
+      <title id="title4329">2.0.1</title>
+    </path>
+  </g>
+</svg>

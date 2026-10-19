@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns1="http://www.inkscape.org/namespaces/inkscape" xmlns:ns2="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:ns4="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" version="1.0" width="1963.3057" height="1236.4769" viewBox="0 0 1570.2845 989.1816" preserveAspectRatio="xMidYMid meet" id="svg2" ns1:version="1.1 (c68e22c387, 2021-05-23)" ns2:docname="nupogodi_v2.svg">
+  <defs id="defs242" />
+  <metadata id="metadata4">
+Created by potrace 1.13, written by Peter Selinger 2001-2015
+<rdf:RDF>
+      <ns4:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </ns4:Work>
+    </rdf:RDF>
+  </metadata>
+  <g ns1:groupmode="layer" id="layer1" ns1:label="segs" transform="translate(-91.841245,-170.68358)">
+    <path style="fill:#000000;fill-opacity:0.847059;stroke:none" ns1:connector-curvature="0" id="path42" d="m 680.39799,253.5941 c -2.01583,1.98405 -2.6309,3.87922 -3.27854,9.87427 -0.54526,5.69585 -1.56985,8.78781 -4.30948,13.76619 -3.24597,5.7744 -3.5539,6.77199 -2.99522,11.97659 1.7522,18.6145 1.73631,20.61444 -0.51366,26.89677 -2.45711,7.18071 -2.68729,10.979 -0.82309,15.49395 3.23714,7.92596 13.80424,12.11003 30.50292,12.34267 13.89877,0.21041 20.41683,-2.03789 34.79581,-11.92399 8.14423,-5.53549 10.88624,-10.81387 10.05061,-18.92077 -0.84199,-7.30692 -2.7189,-10.22192 -11.0678,-16.68844 -6.95689,-5.45543 -12.30826,-11.59813 -15.65414,-18.42492 -3.7419,-7.32994 -6.61798,-10.35288 -12.79395,-13.40203 -3.58559,-1.82854 -7.76084,-4.9618 -10.14011,-7.58078 -5.15297,-5.94112 -10.04408,-7.08001 -13.77335,-3.40951 z m 44.88315,52.65815 c 12.44798,6.59909 3.7299,21.43031 -15.71397,26.87604 -7.31725,2.14194 -20.01843,2.24106 -23.50403,0.41332 -8.40443,-5.47118 -7.48148,-13.94245 -1.65617,-18.11373 4.92844,-3.56096 11.54491,-5.60847 13.13215,-3.99582 0.79362,0.80633 0.38251,2.20311 -1.13968,4.99111 -3.10314,9.43709 9.65933,11.47602 14.32965,8.9141 6.02704,-3.92342 6.87713,-9.70264 1.5048,-13.18846 -4.47762,-2.83566 -4.36888,-3.93483 0.34686,-5.89743 4.31495,-1.86579 9.2148,-1.82687 12.70039,8.7e-4 z" ns2:nodetypes="sccccccccccccsccccsccccc">
+      <title id="title4241">4.2.0</title>
+    </path>
+  </g>
+</svg>
