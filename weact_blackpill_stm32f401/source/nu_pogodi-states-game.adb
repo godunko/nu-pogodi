@@ -7,7 +7,8 @@
 with Nu_Pogodi.Application;
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Clock;
-with Nu_Pogodi.Scene.Drawing;
+with Nu_Pogodi.Scene.Screen;
+with Nu_Pogodi.Sprites;
 
 package body Nu_Pogodi.States.Game is
 
@@ -41,11 +42,13 @@ package body Nu_Pogodi.States.Game is
      (Self   : in out Game_State;
       Buffer : in out A0B.Buffers.Abstract_Buffer'Class)
    is
-      FB : Nu_Pogodi.Bitmaps.Framebuffer
+      FB  : Nu_Pogodi.Bitmaps.Framebuffer
         with Import, Address => Buffer.Address;
+      Set : Nu_Pogodi.Sprites.Sprite_Set;
 
    begin
-      Nu_Pogodi.Scene.Drawing.Draw (FB);
+      Nu_Pogodi.Scene.Screen.Get_Visibility (Set);
+      Nu_Pogodi.Bitmaps.Draw (FB, Set);
       Nu_Pogodi.Clock.Draw (Buffer);
 
       if Nu_Pogodi.Scene.Is_Game_Over then

@@ -32,6 +32,10 @@ package Nu_Pogodi.Bitmaps is
    procedure Draw
      (Buffer : in out Framebuffer; Id : Nu_Pogodi.Sprites.Sprite_Id);
 
+   procedure Draw
+     (Buffer : in out Framebuffer; Set : Nu_Pogodi.Sprites.Sprite_Set);
+
    --  Fill Buffer with white and draw all 72 artwork components.
    procedure Reconstruct (Buffer : out Framebuffer);
+
 end Nu_Pogodi.Bitmaps;

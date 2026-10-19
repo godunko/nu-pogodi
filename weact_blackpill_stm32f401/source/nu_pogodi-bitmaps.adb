@@ -2497,6 +2497,20 @@ package body Nu_Pogodi.Bitmaps is
       end loop;
    end Draw;
 
+   ----------
+   -- Draw --
+   ----------
+
+   procedure Draw
+     (Buffer : in out Framebuffer; Set : Nu_Pogodi.Sprites.Sprite_Set) is
+   begin
+      for Id in Set'Range loop
+         if Set (Id) then
+            Draw (Buffer, Id);
+         end if;
+      end loop;
+   end Draw;
+
    -----------------
    -- Reconstruct --
    -----------------

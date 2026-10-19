@@ -6,9 +6,7 @@
 
 pragma Ada_2022;
 
-with Nu_Pogodi.Sprites;
-
-package body Nu_Pogodi.Scene.Drawing is
+package body Nu_Pogodi.Scene.Screen is
 
    Left_Top_Egg : constant
      array (Lane_Side, Lane_Height, Egg_Step) of Nu_Pogodi.Sprites.Sprite_Id :=
@@ -154,11 +152,11 @@ package body Nu_Pogodi.Scene.Drawing is
       Right_Bottom => Nu_Pogodi.Sprites.Path56_3_64,
       Bottom       => Nu_Pogodi.Sprites.Path66];
 
-   ----------
-   -- Draw --
-   ----------
+   --------------------
+   -- Get_Visibility --
+   --------------------
 
-   procedure Draw (Framebuffer : in out Nu_Pogodi.Bitmaps.Framebuffer) is
+   procedure Get_Visibility (Sprites : in out Nu_Pogodi.Sprites.Sprite_Set) is
 
       use type A0B.Types.Unsigned_32;
 
@@ -176,7 +174,7 @@ package body Nu_Pogodi.Scene.Drawing is
       begin
          for Segment in Indicator_Segment loop
             if Digit_Segments (Value) (Segment) then
-               Nu_Pogodi.Bitmaps.Draw (Framebuffer, Indicator (Segment));
+               Sprites (Indicator (Segment)) := True;
             end if;
          end loop;
       end Draw_Digit;
@@ -184,32 +182,29 @@ package body Nu_Pogodi.Scene.Drawing is
       Even_Cycle : constant Boolean := (State.Current_Cycle mod 2) = 0;
 
    begin
+      Sprites := [others => False];
+
       case Wolf.Side is
          when Left =>
-            Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Sprites.Path14);
+            Sprites (Nu_Pogodi.Sprites.Path14) := True;
 
             case Wolf.Height is
                when Top =>
-                  Nu_Pogodi.Bitmaps.Draw
-                    (Framebuffer, Nu_Pogodi.Sprites.Path108);
+                  Sprites (Nu_Pogodi.Sprites.Path108) := True;
 
                when Bottom =>
-                  Nu_Pogodi.Bitmaps.Draw
-                    (Framebuffer, Nu_Pogodi.Sprites.Path162);
+                  Sprites (Nu_Pogodi.Sprites.Path162) := True;
             end case;
 
          when Right =>
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer, Nu_Pogodi.Sprites.Path10_3_70);
+            Sprites (Nu_Pogodi.Sprites.Path10_3_70) := True;
 
             case Wolf.Height is
                when Top =>
-                  Nu_Pogodi.Bitmaps.Draw
-                    (Framebuffer, Nu_Pogodi.Sprites.Path118);
+                  Sprites (Nu_Pogodi.Sprites.Path118) := True;
 
                when Bottom =>
-                  Nu_Pogodi.Bitmaps.Draw
-                    (Framebuffer, Nu_Pogodi.Sprites.Path168);
+                  Sprites (Nu_Pogodi.Sprites.Path168) := True;
             end case;
       end case;
 
@@ -219,8 +214,7 @@ package body Nu_Pogodi.Scene.Drawing is
          for Height in Lane_Height loop
             for Step in Egg_Step loop
                if Lanes (Side, Height) (Step) then
-                  Nu_Pogodi.Bitmaps.Draw
-                    (Framebuffer, Left_Top_Egg (Side, Height, Step));
+                  Sprites (Left_Top_Egg (Side, Height, Step)) := True;
                end if;
             end loop;
          end loop;
@@ -245,42 +239,44 @@ package body Nu_Pogodi.Scene.Drawing is
             null;
 
          when 1 =>
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.Path30_8_71,
-                   when Right => Nu_Pogodi.Sprites.Path150_4_67));
+            case State.Miss_Animation_Side is
+               when Left =>
+                  Sprites (Nu_Pogodi.Sprites.Path30_8_71) := True;
+
+               when Right =>
+                  Sprites (Nu_Pogodi.Sprites.Path150_4_67) := True;
+            end case;
 
          when 2 =>
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.Path166,
-                   when Right => Nu_Pogodi.Sprites.Path190));
+            case State.Miss_Animation_Side is
+               when Left =>
+                  Sprites (Nu_Pogodi.Sprites.Path166) := True;
+
+               when Right =>
+                  Sprites (Nu_Pogodi.Sprites.Path190) := True;
+            end case;
 
          when 3 =>
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.Path168_3_72,
-                   when Right => Nu_Pogodi.Sprites.Path164));
+            case State.Miss_Animation_Side is
+               when Left =>
+                  Sprites (Nu_Pogodi.Sprites.Path168_3_72) := True;
+
+               when Right =>
+                  Sprites (Nu_Pogodi.Sprites.Path164) := True;
+            end case;
 
          when 4 =>
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.G4631,
-                   when Right => Nu_Pogodi.Sprites.G4636));
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.G4659,
-                   when Right => Nu_Pogodi.Sprites.G4648));
-            Nu_Pogodi.Bitmaps.Draw
-              (Framebuffer,
-               (case State.Miss_Animation_Side is
-                   when Left  => Nu_Pogodi.Sprites.Path202,
-                   when Right => Nu_Pogodi.Sprites.Path208));
+            case State.Miss_Animation_Side is
+               when Left =>
+                  Sprites (Nu_Pogodi.Sprites.G4631)   := True;
+                  Sprites (Nu_Pogodi.Sprites.G4659)   := True;
+                  Sprites (Nu_Pogodi.Sprites.Path202) := True;
+
+               when Right =>
+                  Sprites (Nu_Pogodi.Sprites.G4636)   := True;
+                  Sprites (Nu_Pogodi.Sprites.G4648)   := True;
+                  Sprites (Nu_Pogodi.Sprites.Path208) := True;
+            end case;
 
          when others =>
             raise Program_Error;
@@ -289,7 +285,7 @@ package body Nu_Pogodi.Scene.Drawing is
       --  Rabbit
 
       if State.Rabbit_Visible then
-         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Sprites.Path16_9_74);
+         Sprites (Nu_Pogodi.Sprites.Path16_9_74) := True;
       end if;
 
       --  Miss count
@@ -297,22 +293,20 @@ package body Nu_Pogodi.Scene.Drawing is
       if State.Miss_Count > 0
         and (State.Miss_Count /= 1 or not State.Miss_Half or Even_Cycle)
       then
-         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Sprites.Path80);
+         Sprites (Nu_Pogodi.Sprites.Path80) := True;
       end if;
 
       if State.Miss_Count > 1
         and (State.Miss_Count /= 2 or not State.Miss_Half or Even_Cycle)
       then
-         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Sprites.Path84);
+         Sprites (Nu_Pogodi.Sprites.Path84) := True;
       end if;
 
       if State.Miss_Count > 2
         and (State.Miss_Count /= 3 or not State.Miss_Half or Even_Cycle)
       then
-         Nu_Pogodi.Bitmaps.Draw (Framebuffer, Nu_Pogodi.Sprites.Path82);
+         Sprites (Nu_Pogodi.Sprites.Path82) := True;
       end if;
+   end Get_Visibility;
 
-      --  Nu_Pogodi.Bitmaps.Reconstruct (Framebuffer);
-   end Draw;
-
-end Nu_Pogodi.Scene.Drawing;
+end Nu_Pogodi.Scene.Screen;
