@@ -12,3 +12,9 @@ tags = ["game", "nu-pogodi"]
 generate_ada = false
 generate_c = false
 generate_gpr = true
+
+[[depends-on]]
+a0b_base = "*"
+
+[[pins]]
+a0b_base = { path = "../a0b-base" }
