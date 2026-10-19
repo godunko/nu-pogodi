@@ -4,10 +4,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-with Nu_Pogodi.Sprites;
+pragma Ada_2022;
 
-package Nu_Pogodi.Scene.Screen is
+with Nu_Pogodi.Generic_Scene.Generic_Screen;
 
-   procedure Get_Visibility (Sprites : in out Nu_Pogodi.Sprites.Sprite_Set);
-
-end Nu_Pogodi.Scene.Screen;
+package Nu_Pogodi.Scene.Screen is new Generic_Screen;

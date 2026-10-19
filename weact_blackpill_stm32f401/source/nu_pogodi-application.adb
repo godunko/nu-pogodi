@@ -159,7 +159,7 @@ package body Nu_Pogodi.Application is
          raise Program_Error;
       end if;
 
-      Nu_Pogodi.Scene.Initialize (Nu_Pogodi.Scene.Mode_A);
+      Scene.Initialize (Scene.Mode_A);
    end Enter_Game_State;
 
    ----------------

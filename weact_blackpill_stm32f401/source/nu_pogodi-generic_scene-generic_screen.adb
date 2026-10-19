@@ -6,7 +6,7 @@
 
 pragma Ada_2022;
 
-package body Nu_Pogodi.Scene.Screen is
+package body Nu_Pogodi.Generic_Scene.Generic_Screen is
 
    Left_Top_Egg : constant
      array (Lane_Side, Lane_Height, Egg_Step) of Nu_Pogodi.Sprites.Sprite_Id :=
@@ -309,4 +309,4 @@ package body Nu_Pogodi.Scene.Screen is
       end if;
    end Get_Visibility;
 
-end Nu_Pogodi.Scene.Screen;
+end Nu_Pogodi.Generic_Scene.Generic_Screen;

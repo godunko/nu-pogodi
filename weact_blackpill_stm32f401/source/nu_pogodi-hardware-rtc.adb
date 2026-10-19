@@ -332,6 +332,24 @@ package body Nu_Pogodi.Hardware.RTC is
    end EXTI22_RTC_WKUP_Handler;
 
    ----------------
+   -- Hours_Ones --
+   ----------------
+
+   function Hours_Ones (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Hours_Ones);
+   end Hours_Ones;
+
+   ----------------
+   -- Hours_Tens --
+   ----------------
+
+   function Hours_Tens (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Hours_Tens);
+   end Hours_Tens;
+
+   ----------------
    -- Initialize --
    ----------------
 
@@ -410,6 +428,24 @@ package body Nu_Pogodi.Hardware.RTC is
       end loop;
    end Initialize;
 
+   ------------------
+   -- Minutes_Ones --
+   ------------------
+
+   function Minutes_Ones (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Minutes_Ones);
+   end Minutes_Ones;
+
+   ------------------
+   -- Minutes_Tens --
+   ------------------
+
+   function Minutes_Tens (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Minutes_Tens);
+   end Minutes_Tens;
+
    ---------------------------
    -- Schedule_Timer_Wakeup --
    ---------------------------
@@ -440,6 +476,24 @@ package body Nu_Pogodi.Hardware.RTC is
            WUTIE => True);  --  1: Wakeup timer interrupt enabled
       A0B.STM32F401.SVD.RTC.RTC_Periph.WPR := (16#FF#, others => <>);
    end Schedule_Timer_Wakeup;
+
+   ------------------
+   -- Seconds_Ones --
+   ------------------
+
+   function Seconds_Ones (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Seconds_Ones);
+   end Seconds_Ones;
+
+   ------------------
+   -- Seconds_Tens --
+   ------------------
+
+   function Seconds_Tens (Item : Time) return A0B.Types.Unsigned_4 is
+   begin
+      return A0B.Types.Unsigned_4 (Item.Seconds_Tens);
+   end Seconds_Tens;
 
    ----------------------
    -- Set_Clock_Wakeup --

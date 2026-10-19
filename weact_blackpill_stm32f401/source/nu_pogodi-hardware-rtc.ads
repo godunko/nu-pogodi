@@ -5,6 +5,7 @@
 --
 
 with A0B.Callbacks;
+with A0B.Types;
 
 package Nu_Pogodi.Hardware.RTC is
 
@@ -64,6 +65,18 @@ package Nu_Pogodi.Hardware.RTC is
    function Clock return Date_Time;
 
    function Clock return Time;
+
+   function Seconds_Ones (Item : Time) return A0B.Types.Unsigned_4;
+
+   function Seconds_Tens (Item : Time) return A0B.Types.Unsigned_4;
+
+   function Minutes_Ones (Item : Time) return A0B.Types.Unsigned_4;
+
+   function Minutes_Tens (Item : Time) return A0B.Types.Unsigned_4;
+
+   function Hours_Ones (Item : Time) return A0B.Types.Unsigned_4;
+
+   function Hours_Tens (Item : Time) return A0B.Types.Unsigned_4;
 
    procedure Set_Clock_Wakeup (Callback : A0B.Callbacks.Callback);
    --  Set callback to be called on clock change from 59 to 00 second, in other

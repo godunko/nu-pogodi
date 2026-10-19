@@ -6,10 +6,7 @@
 
 pragma Ada_2022;
 
-with Nu_Pogodi.Hardware.RTC;
-with Nu_Pogodi.Hardware.Timer;
-
-package body Nu_Pogodi.Scene is
+package body Nu_Pogodi.Generic_Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
@@ -231,18 +228,17 @@ package body Nu_Pogodi.Scene is
       procedure Update is
          use type A0B.Types.Unsigned_32;
 
-         Time : constant Nu_Pogodi.Hardware.RTC.Time :=
-           Nu_Pogodi.Hardware.RTC.Clock;
+         T : constant Time := Clock;
 
       begin
          Number_Value :=
-           (A0B.Types.Unsigned_32 (Nu_Pogodi.Hardware.Timer)
-            + A0B.Types.Unsigned_32 (Time.Seconds_Ones)
-            + A0B.Types.Unsigned_32 (Time.Seconds_Tens)
-            + A0B.Types.Unsigned_32 (Time.Minutes_Ones)
-            + A0B.Types.Unsigned_32 (Time.Minutes_Tens)
-            + A0B.Types.Unsigned_32 (Time.Hours_Ones)
-            + A0B.Types.Unsigned_32 (Time.Hours_Tens)
+           (A0B.Types.Unsigned_32 (Timer)
+            + A0B.Types.Unsigned_32 (Seconds_Ones (T))
+            + A0B.Types.Unsigned_32 (Seconds_Tens (T))
+            + A0B.Types.Unsigned_32 (Minutes_Ones (T))
+            + A0B.Types.Unsigned_32 (Minutes_Tens (T))
+            + A0B.Types.Unsigned_32 (Hours_Ones (T))
+            + A0B.Types.Unsigned_32 (Hours_Tens (T))
             + State.Idle_Lane_Count
             + A0B.Types.Unsigned_32 (Hundreds (Records.A))
             + A0B.Types.Unsigned_32 (Tens (Records.A))
@@ -541,4 +537,4 @@ package body Nu_Pogodi.Scene is
       end case;
    end Update_Score;
 
-end Nu_Pogodi.Scene;
+end Nu_Pogodi.Generic_Scene;
