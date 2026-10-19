@@ -7,6 +7,7 @@
 pragma Ada_2022;
 
 with Nu_Pogodi.Hardware.RTC;
+with Nu_Pogodi.Hardware.Timer;
 
 package body Nu_Pogodi.Scene is
 
@@ -235,7 +236,8 @@ package body Nu_Pogodi.Scene is
 
       begin
          Number_Value :=
-           (A0B.Types.Unsigned_32 (Time.Seconds_Ones)
+           (A0B.Types.Unsigned_32 (Nu_Pogodi.Hardware.Timer)
+            + A0B.Types.Unsigned_32 (Time.Seconds_Ones)
             + A0B.Types.Unsigned_32 (Time.Seconds_Tens)
             + A0B.Types.Unsigned_32 (Time.Minutes_Ones)
             + A0B.Types.Unsigned_32 (Time.Minutes_Tens)
