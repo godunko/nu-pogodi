@@ -39,6 +39,10 @@ package body Nu_Pogodi.Hardware.MIPI is
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Ignore_First_Byte  : Boolean;
 
+   Receive_Descriptors : aliased
+     A0B.Asynchronous_Operations.Transfer_Descriptor_Array :=
+       [Command_Descriptor'Access, Data_Descriptor'Access];
+
    -------------
    -- Command --
    -------------
@@ -201,23 +205,27 @@ package body Nu_Pogodi.Hardware.MIPI is
 
             Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
 
+            Data_Descriptor.Buffer := Data_Buffer.Address;
+            Data_Descriptor.Length :=
+              A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
+
             if Ignore_First_Byte then
-               Data_Descriptor.Buffer := Command_Storage'Address;
-               Data_Descriptor.Length := 1;
+               Nu_Pogodi.Hardware.SPI.Receive
+                 (Receive_Descriptors,
+                  On_Transfer_Callbacks.Create_Callback,
+                  Success);
 
             else
-               Data_Descriptor.Buffer := Data_Buffer.Address;
-               Data_Descriptor.Length :=
-                 A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
+               Nu_Pogodi.Hardware.SPI.Receive
+                 (Data_Descriptor,
+                  On_Transfer_Callbacks.Create_Callback,
+                  Success);
             end if;
-
-            Nu_Pogodi.Hardware.SPI.Receive
-              (Data_Descriptor,
-               On_Transfer_Callbacks.Create_Callback,
-               Success);
 
             if not Success then
                State := Inactive;
+
+               Data_Buffer.Set_Actual_Length (0);
 
                Nu_Pogodi.Hardware.SPI.Release;
 
@@ -227,35 +235,12 @@ package body Nu_Pogodi.Hardware.MIPI is
          when Receive_Data =>
             State := Inactive;
 
-            if Ignore_First_Byte then
-               State := Receive_Data;
-               Ignore_First_Byte := False;
+            Data_Buffer.Set_Actual_Length
+              (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
 
-               Data_Descriptor.Buffer := Data_Buffer.Address;
-               Data_Descriptor.Length :=
-                 A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
+            Nu_Pogodi.Hardware.SPI.Release;
 
-               Nu_Pogodi.Hardware.SPI.Receive
-                 (Data_Descriptor,
-                  On_Transfer_Callbacks.Create_Callback,
-                  Success);
-
-               if not Success then
-                  State := Inactive;
-
-                  Nu_Pogodi.Hardware.SPI.Release;
-
-                  A0B.Callbacks.Emit_Once (Transfer_Callback);
-               end if;
-
-            else
-               Data_Buffer.Set_Actual_Length
-                 (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
-
-               Nu_Pogodi.Hardware.SPI.Release;
-
-               A0B.Callbacks.Emit_Once (Transfer_Callback);
-            end if;
+            A0B.Callbacks.Emit_Once (Transfer_Callback);
       end case;
    end On_Transfer;
 
