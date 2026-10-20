@@ -561,38 +561,6 @@ package body Nu_Pogodi.Hardware.SPI is
    -- Transmit --
    --------------
 
-   procedure Transmit (Command : A0B.Types.Unsigned_8) is
-   begin
-      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
-        (@ with delta
-           BIDIMODE => True,   --  1: 1-line bidirectional data mode selected
-           BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
-           SPE      => True);  --  1: Peripheral enabled
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
-        (DR             => A0B.Types.Unsigned_16 (Command),
-         Reserved_16_31 => 0);
-
-      while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-         null;
-      end loop;
-
-      while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-         null;
-      end loop;
-
-      --  Release SDA after every transmission. Keep SPI enabled so that NSS
-      --  remains asserted for the following data transfer.
-
-      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
-   end Transmit;
-
-   --------------
-   -- Transmit --
-   --------------
-
    procedure Transmit
      (Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;

@@ -31,8 +31,6 @@ package Nu_Pogodi.Hardware.SPI is
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean);
 
-   procedure Transmit (Command : A0B.Types.Unsigned_8);
-
    procedure Transmit
      (Buffer   : A0B.Buffers.Abstract_Buffer'Class;
       Callback : A0B.Callbacks.Callback;
