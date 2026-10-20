@@ -39,7 +39,20 @@ package body Nu_Pogodi.Hardware.SPI is
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Receive_Descriptor  : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
+   Receive_Descriptors : access
+     A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+   Receive_Index       : A0B.Types.Unsigned_32;
    Transfer_Callback   : aliased A0B.Callbacks.Callback;
+
+   procedure Continue_Receive;
+
+   function Start_Receive
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Poll       : Boolean) return Boolean;
+   --  True reports a DMA launch even if its interrupt completes the operation
+   --  before this call returns. The caller must not infer this from global
+   --  state, which a completion callback may already have reused.
 
    -----------------------
    -- Acquire_MIPI_Read --
@@ -93,6 +106,30 @@ package body Nu_Pogodi.Hardware.SPI is
            FRF => False);  --  0: SPI Motorola mode
    end Acquire_MIPI_Write;
 
+   ----------------------
+   -- Continue_Receive --
+   ----------------------
+
+   procedure Continue_Receive is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if Receive_Descriptors /= null then
+         while Receive_Index /= Receive_Descriptors'Last loop
+            Receive_Index := Receive_Index + 1;
+            if Start_Receive
+              (Receive_Descriptors (Receive_Index).all, Poll => False)
+            then
+               return;
+            end if;
+         end loop;
+
+         Receive_Descriptors := null;
+      end if;
+
+      A0B.Callbacks.Emit_Once (Transfer_Callback);
+   end Continue_Receive;
+
    --------------------------
    -- DMA2_Stream0_Handler --
    --------------------------
@@ -121,7 +158,7 @@ package body Nu_Pogodi.Hardware.SPI is
          Receive_Descriptor.State := A0B.Asynchronous_Operations.Success;
          Receive_Descriptor := null;
 
-         A0B.Callbacks.Emit_Once (Transfer_Callback);
+         Continue_Receive;
       end if;
    end DMA2_Stream0_Handler;
 
@@ -254,7 +291,6 @@ package body Nu_Pogodi.Hardware.SPI is
       Callback   : A0B.Callbacks.Callback;
       Success    : in out Boolean)
    is
-      use System.Storage_Elements;
       use type A0B.Types.Unsigned_32;
 
    begin
@@ -268,14 +304,119 @@ package body Nu_Pogodi.Hardware.SPI is
          return;
       end if;
 
+      Receive_Descriptors := null;
+      Transfer_Callback   := Callback;
+
+      if not Start_Receive (Descriptor, Poll => True) then
+         Continue_Receive;
+      end if;
+   end Receive;
+
+   -------------
+   -- Receive --
+   -------------
+
+   procedure Receive
+     (Descriptors : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+      Callback    : A0B.Callbacks.Callback;
+      Success     : in out Boolean)
+   is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptors'Length = 0 then
+         A0B.Callbacks.Emit (Callback);
+
+         return;
+      end if;
+
+      --  Check descriptors.
+
+      for Descriptor of Descriptors loop
+         if Descriptor = null or else Descriptor.Length > 65_535 then
+            Success := False;
+
+            return;
+         end if;
+      end loop;
+
+      --  Reset state of all descriptors.
+
+      for Descriptor of Descriptors loop
+         Descriptor.State       := A0B.Asynchronous_Operations.Inactive;
+         Descriptor.Transferred := 0;
+      end loop;
+
+      Receive_Descriptors := Descriptors'Unchecked_Access;
+      Receive_Index       := Descriptors'First;
+      Transfer_Callback := Callback;
+
+      if not Start_Receive (Descriptors (Receive_Index).all, Poll => True) then
+         Continue_Receive;
+      end if;
+   end Receive;
+
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release is
+   begin
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
+      --  XXX This might be incorrect, TRE/BSY might be needed to check first.
+   end Release;
+
+   ------------------
+   -- SPI1_Handler --
+   ------------------
+
+   procedure SPI1_Handler is
+   begin
+      if A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE then
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE := False;
+         --  TXE means the last byte reached the shift register. BSY still
+         --  covers its transmission on the wire.
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
+         --  Transfer completed, "disconnect" MOSI from SDA line.
+
+         Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
+         Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Transmit_Descriptor := null;
+
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
+      end if;
+   end SPI1_Handler;
+
+   -------------------
+   -- Start_Receive --
+   -------------------
+
+   function Start_Receive
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Poll       : Boolean) return Boolean
+   is
+      use System.Storage_Elements;
+      use type A0B.Types.Unsigned_32;
+
+   begin
       Descriptor.Transferred := 0;
       Descriptor.State       := A0B.Asynchronous_Operations.Active;
 
       if Descriptor.Length = 0 then
          Descriptor.State := A0B.Asynchronous_Operations.Success;
-         A0B.Callbacks.Emit (Callback);
 
-         return;
+         return False;
       end if;
 
       --  The command was sent in bidirectional transmit-only mode, so there
@@ -288,7 +429,7 @@ package body Nu_Pogodi.Hardware.SPI is
            RXONLY   => False,  --  0: Full duplex (Transmit and receive)
            SPE      => True);  --  1: Peripheral enabled
 
-      if Descriptor.Length < 5 then
+      if Poll and then Descriptor.Length < 5 then
          for Offset in
            A0B.Types.Unsigned_32 range 0 .. Descriptor.Length - 1
          loop
@@ -323,11 +464,11 @@ package body Nu_Pogodi.Hardware.SPI is
 
          Descriptor.Transferred := Descriptor.Length;
          Descriptor.State       := A0B.Asynchronous_Operations.Success;
-         A0B.Callbacks.Emit (Callback);
+
+         return False;
 
       else
          Receive_Descriptor := Descriptor'Unchecked_Access;
-         Transfer_Callback  := Callback;
 
          A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
            (@ with delta
@@ -374,44 +515,10 @@ package body Nu_Pogodi.Hardware.SPI is
               MINC => False,   --  0: Memory address pointer is fixed
               TCIE => False,   --  0: TC interrupt disabled
               EN   => True);   --  1: Stream enabled
+
+         return True;
       end if;
-   end Receive;
-
-   -------------
-   -- Release --
-   -------------
-
-   procedure Release is
-   begin
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1.SPE := False;
-      --  XXX This might be incorrect, TRE/BSY might be needed to check first.
-   end Release;
-
-   ------------------
-   -- SPI1_Handler --
-   ------------------
-
-   procedure SPI1_Handler is
-   begin
-      if A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE then
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXEIE := False;
-         --  TXE means the last byte reached the shift register. BSY still
-         --  covers its transmission on the wire.
-
-         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-            null;
-         end loop;
-
-         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
-         --  Transfer completed, "disconnect" MOSI from SDA line.
-
-         Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
-         Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
-         Transmit_Descriptor := null;
-
-         A0B.Callbacks.Emit_Once (Transfer_Callback);
-      end if;
-   end SPI1_Handler;
+   end Start_Receive;
 
    --------------
    -- Transmit --
