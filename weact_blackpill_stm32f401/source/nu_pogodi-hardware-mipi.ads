@@ -11,7 +11,6 @@
 --  hardware and drivers for the intended bit order to be used on wire(s).
 
 with A0B.Asynchronous_Operations;
-with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types.Enumerable;
 
@@ -34,10 +33,17 @@ package Nu_Pogodi.Hardware.MIPI is
       Success    : in out Boolean);
 
    procedure Command_Read
-     (Command           : Command_Code;
-      Buffer            : aliased in out A0B.Buffers.Abstract_Buffer'Class;
-      Finished          : A0B.Callbacks.Callback;
-      Success           : in out Boolean;
-      Ignore_First_Byte : Boolean := False);
+     (Command    : Command_Code;
+      Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean);
+
+   procedure Command_Read
+     (Command     : Command_Code;
+      Descriptors : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+      Finished    : A0B.Callbacks.Callback;
+      Success     : in out Boolean);
 
 end Nu_Pogodi.Hardware.MIPI;
