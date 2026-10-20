@@ -184,6 +184,8 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
    begin
       Sprites := [others => False];
 
+      --  Wolf
+
       case Wolf.Side is
          when Left =>
             Sprites (Nu_Pogodi.Sprites.Path14) := True;
@@ -307,6 +309,16 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
       then
          Sprites (Nu_Pogodi.Sprites.Path82) := True;
       end if;
+
+      --  Game mode
+
+      case State.Mode is
+         when Mode_A =>
+            Sprites (Nu_Pogodi.Sprites.G4652) := not Is_Game_Over;
+
+         when Mode_B =>
+            Sprites (Nu_Pogodi.Sprites.G4641) := not Is_Game_Over;
+      end case;
    end Get_Visibility;
 
 end Nu_Pogodi.Generic_Scene.Generic_Screen;
