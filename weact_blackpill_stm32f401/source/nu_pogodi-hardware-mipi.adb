@@ -35,6 +35,8 @@ package body Nu_Pogodi.Hardware.MIPI is
    Command_Descriptor : aliased
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Data_Buffer        : access A0B.Buffers.Abstract_Buffer'Class;
+   Data_Descriptor    : aliased
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
    Ignore_First_Byte  : Boolean;
 
    -------------
@@ -169,8 +171,13 @@ package body Nu_Pogodi.Hardware.MIPI is
             State := Transmit_Data;
 
             Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
+
+            Data_Descriptor.Buffer := Data_Buffer.Address;
+            Data_Descriptor.Length :=
+              A0B.Types.Unsigned_32 (Data_Buffer.Length);
+
             Nu_Pogodi.Hardware.SPI.Transmit
-              (Data_Buffer.all,
+              (Data_Descriptor,
                On_Transfer_Callbacks.Create_Callback,
                Success);
 
