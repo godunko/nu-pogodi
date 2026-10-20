@@ -200,11 +200,24 @@ package body Nu_Pogodi.Hardware.MIPI is
             State := Receive_Data;
 
             Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
-            Nu_Pogodi.Hardware.SPI.Receive
-              (Data_Buffer.all,
-               On_Transfer_Callbacks.Create_Callback,
-               Success,
-               Ignore_First_Byte);
+
+            if Ignore_First_Byte then
+               Nu_Pogodi.Hardware.SPI.Receive
+                 (Data_Buffer.all,
+                  On_Transfer_Callbacks.Create_Callback,
+                  Success,
+                  Ignore_First_Byte);
+
+            else
+               Data_Descriptor.Buffer := Data_Buffer.Address;
+               Data_Descriptor.Length :=
+                 A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
+
+               Nu_Pogodi.Hardware.SPI.Receive
+                 (Data_Descriptor,
+                  On_Transfer_Callbacks.Create_Callback,
+                  Success);
+            end if;
 
             if not Success then
                State := Inactive;
@@ -216,6 +229,11 @@ package body Nu_Pogodi.Hardware.MIPI is
 
          when Receive_Data =>
             State := Inactive;
+
+            if not Ignore_First_Byte then
+               Data_Buffer.Set_Actual_Length
+                 (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
+            end if;
 
             Nu_Pogodi.Hardware.SPI.Release;
 
