@@ -27,13 +27,13 @@ package Nu_Pogodi.Hardware.MIPI is
 
    procedure Command_Write
      (Command  : Command_Code;
-      Buffer   : A0B.Buffers.Abstract_Buffer'Class;
+      Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean);
 
    procedure Command_Read
      (Command           : Command_Code;
-      Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Buffer            : aliased in out A0B.Buffers.Abstract_Buffer'Class;
       Finished          : A0B.Callbacks.Callback;
       Success           : in out Boolean;
       Ignore_First_Byte : Boolean := False);

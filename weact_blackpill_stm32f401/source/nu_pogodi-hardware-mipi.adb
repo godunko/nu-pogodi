@@ -4,7 +4,9 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
---  with A0B.Buffers.Static;
+pragma Ada_2022;
+
+with A0B.Asynchronous_Operations;
 with A0B.Callbacks.Generic_Parameterless;
 
 with Nu_Pogodi.Hardware.Pin_Control;
@@ -12,16 +14,28 @@ with Nu_Pogodi.Hardware.SPI;
 
 package body Nu_Pogodi.Hardware.MIPI is
 
-   --  Aux : A0B.Types.Unsigned_8 with Export, Volatile;
-
-   --  Command_Buffer : A0B.Buffers.Static.Static_Buffer (1);
+   type States is
+     (Inactive,
+      Transmit_Command,
+      Transmit_Command_Transmit_Data,
+      Transmit_Data,
+      Transmit_Command_Receive_Data,
+      Receive_Data);
 
    procedure On_Transfer;
 
    package On_Transfer_Callbacks is
      new A0B.Callbacks.Generic_Parameterless (On_Transfer);
 
+   State : States := Inactive;
+
    Transfer_Callback : aliased A0B.Callbacks.Callback;
+
+   Command_Storage    : aliased A0B.Types.Unsigned_8;
+   Command_Descriptor : aliased
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
+   Data_Buffer        : access A0B.Buffers.Abstract_Buffer'Class;
+   Ignore_First_Byte  : Boolean;
 
    -------------
    -- Command --
@@ -36,15 +50,21 @@ package body Nu_Pogodi.Hardware.MIPI is
          return;
       end if;
 
-      --  XXX Rewrite to use asynchronous SPI transfer, not implemented yet.
-
       Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Write;
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
-      Nu_Pogodi.Hardware.SPI.Transmit
-        (A0B.Types.Unsigned_8 (Command));
-      Nu_Pogodi.Hardware.SPI.Release;
 
-      A0B.Callbacks.Emit (Finished);
+      State := Transmit_Command;
+      Transfer_Callback := Finished;
+      Command_Storage := A0B.Types.Unsigned_8 (Command);
+      Command_Descriptor.Buffer := Command_Storage'Address;
+      Command_Descriptor.Length := 1;
+
+      Nu_Pogodi.Hardware.SPI.Transmit
+        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
+
+      if not Success then
+         Nu_Pogodi.Hardware.SPI.Release;
+      end if;
    end Command;
 
    ------------------
@@ -53,7 +73,7 @@ package body Nu_Pogodi.Hardware.MIPI is
 
    procedure Command_Read
      (Command           : Command_Code;
-      Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
+      Buffer            : aliased in out A0B.Buffers.Abstract_Buffer'Class;
       Finished          : A0B.Callbacks.Callback;
       Success           : in out Boolean;
       Ignore_First_Byte : Boolean := False) is
@@ -62,19 +82,20 @@ package body Nu_Pogodi.Hardware.MIPI is
          return;
       end if;
 
-      Transfer_Callback := Finished;
-
       Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Read;
+      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
 
-      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);
-      Nu_Pogodi.Hardware.SPI.Transmit (A0B.Types.Unsigned_8 (Command));
+      State := Transmit_Command_Receive_Data;
+      Transfer_Callback := Finished;
+      Data_Buffer := Buffer'Unchecked_Access;
+      MIPI.Ignore_First_Byte := Ignore_First_Byte;
 
-      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);
-      Nu_Pogodi.Hardware.SPI.Receive
-        (Buffer,
-         On_Transfer_Callbacks.Create_Callback,
-         Success,
-         Ignore_First_Byte);
+      Command_Storage := A0B.Types.Unsigned_8 (Command);
+      Command_Descriptor.Buffer := Command_Storage'Address;
+      Command_Descriptor.Length := 1;
+
+      Nu_Pogodi.Hardware.SPI.Transmit
+        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
 
       if not Success then
          Nu_Pogodi.Hardware.SPI.Release;
@@ -87,7 +108,7 @@ package body Nu_Pogodi.Hardware.MIPI is
 
    procedure Command_Write
      (Command  : Command_Code;
-      Buffer   : A0B.Buffers.Abstract_Buffer'Class;
+      Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
       Finished : A0B.Callbacks.Callback;
       Success  : in out Boolean)
    is
@@ -96,22 +117,19 @@ package body Nu_Pogodi.Hardware.MIPI is
          return;
       end if;
 
-      Transfer_Callback := Finished;
-
-      --  XXX Rewrite to use asynchronous SPI transfer, not implemented yet.
-      --  Transfer of the buffer is done asynchronously, it might be enough,
-      --  because transfer of single byte of the command with DMA/interrupts
-      --  might take more CPU clock cycles than software polling.
-
       Nu_Pogodi.Hardware.SPI.Acquire_MIPI_Write;
-
       Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (False);  --  Command mode
-      Nu_Pogodi.Hardware.SPI.Transmit
-        (A0B.Types.Unsigned_8 (Command));
 
-      Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
+      State := Transmit_Command_Transmit_Data;
+      Transfer_Callback := Finished;
+      Data_Buffer := Buffer'Unrestricted_Access;
+
+      Command_Storage := A0B.Types.Unsigned_8 (Command);
+      Command_Descriptor.Buffer := Command_Storage'Address;
+      Command_Descriptor.Length := 1;
+
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Buffer, On_Transfer_Callbacks.Create_Callback, Success);
+        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
 
       if not Success then
          Nu_Pogodi.Hardware.SPI.Release;
@@ -133,10 +151,69 @@ package body Nu_Pogodi.Hardware.MIPI is
    -----------------
 
    procedure On_Transfer is
-   begin
-      Nu_Pogodi.Hardware.SPI.Release;
+      Success : Boolean := True;
 
-      A0B.Callbacks.Emit_Once (Transfer_Callback);
+   begin
+      case State is
+         when Inactive =>
+            raise Program_Error;
+
+         when Transmit_Command =>
+            State := Inactive;
+
+            Nu_Pogodi.Hardware.SPI.Release;
+
+            A0B.Callbacks.Emit_Once (Transfer_Callback);
+
+         when Transmit_Command_Transmit_Data =>
+            State := Transmit_Data;
+
+            Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
+            Nu_Pogodi.Hardware.SPI.Transmit
+              (Data_Buffer.all,
+               On_Transfer_Callbacks.Create_Callback,
+               Success);
+
+            if not Success then
+               State := Inactive;
+
+               Nu_Pogodi.Hardware.SPI.Release;
+
+               A0B.Callbacks.Emit_Once (Transfer_Callback);
+            end if;
+
+         when Transmit_Data =>
+            State := Inactive;
+
+            Nu_Pogodi.Hardware.SPI.Release;
+
+            A0B.Callbacks.Emit_Once (Transfer_Callback);
+
+         when Transmit_Command_Receive_Data =>
+            State := Receive_Data;
+
+            Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
+            Nu_Pogodi.Hardware.SPI.Receive
+              (Data_Buffer.all,
+               On_Transfer_Callbacks.Create_Callback,
+               Success,
+               Ignore_First_Byte);
+
+            if not Success then
+               State := Inactive;
+
+               Nu_Pogodi.Hardware.SPI.Release;
+
+               A0B.Callbacks.Emit_Once (Transfer_Callback);
+            end if;
+
+         when Receive_Data =>
+            State := Inactive;
+
+            Nu_Pogodi.Hardware.SPI.Release;
+
+            A0B.Callbacks.Emit_Once (Transfer_Callback);
+      end case;
    end On_Transfer;
 
 end Nu_Pogodi.Hardware.MIPI;
