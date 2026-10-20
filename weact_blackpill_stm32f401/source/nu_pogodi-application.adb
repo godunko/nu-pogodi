@@ -18,7 +18,6 @@ with Nu_Pogodi.Display;
 with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
-with Nu_Pogodi.Scene;
 with Nu_Pogodi.States.Clock;
 with Nu_Pogodi.States.Game;
 
@@ -55,6 +54,7 @@ package body Nu_Pogodi.Application is
 
    type State_Access is access all Nu_Pogodi.States.Abstract_State'Class;
 
+   Mode         : Nu_Pogodi.Scene.Game_Mode := Nu_Pogodi.Scene.Mode_A;
    Game         : aliased Nu_Pogodi.States.Game.Game_State;
    Clock        : aliased Nu_Pogodi.States.Clock.Clock_State;
    Active       : State_Access := null;
@@ -159,7 +159,7 @@ package body Nu_Pogodi.Application is
          raise Program_Error;
       end if;
 
-      Scene.Initialize (Scene.Mode_A);
+      Scene.Initialize (Mode);
    end Enter_Game_State;
 
    ----------------
@@ -304,9 +304,10 @@ package body Nu_Pogodi.Application is
    -- Request_Game_State --
    ------------------------
 
-   procedure Request_Game_State is
+   procedure Request_Game_State (Mode : Nu_Pogodi.Scene.Game_Mode) is
    begin
       Requested := Game'Access;
+      Application.Mode := Mode;
    end Request_Game_State;
 
    ---------
@@ -378,7 +379,7 @@ package body Nu_Pogodi.Application is
       Display_Busy    := False;
       Refresh_Pending := False;
 
-      Request_Game_State;
+      Request_Clock_State;
 
       Next := A0B.Time.Clock;
 

@@ -21,7 +21,10 @@ package body Nu_Pogodi.States.Clock is
       State : Nu_Pogodi.Keyboard.Keyboard_State) is
    begin
       if State.Released (Nu_Pogodi.Keyboard.Game_A) then
-         Nu_Pogodi.Application.Request_Game_State;
+         Nu_Pogodi.Application.Request_Game_State (Nu_Pogodi.Scene.Mode_A);
+
+      elsif State.Released (Nu_Pogodi.Keyboard.Game_B) then
+         Nu_Pogodi.Application.Request_Game_State (Nu_Pogodi.Scene.Mode_B);
       end if;
    end Keyboard;
 

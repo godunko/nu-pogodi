@@ -85,7 +85,7 @@ private
 
       Current_Lane         : Lane                  := Left_Top;
       Current_Score        : Score                 := 0;
-      Miss_Count           : Natural               := 0;
+      Miss_Count           : Natural               := 4;
       Miss_Half            : Boolean               := False;
       Random_Seed          : A0B.Types.Unsigned_32 := 0;
       Idle_Lane_Count      : A0B.Types.Unsigned_32 := 0;
