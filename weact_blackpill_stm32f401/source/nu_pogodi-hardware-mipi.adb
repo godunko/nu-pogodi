@@ -157,6 +157,22 @@ package body Nu_Pogodi.Hardware.MIPI is
    -----------------
 
    procedure On_Transfer is
+
+      procedure Finish;
+
+      ------------
+      -- Finish --
+      ------------
+
+      procedure Finish is
+      begin
+         State := Inactive;
+
+         Nu_Pogodi.Hardware.SPI.Release;
+
+         A0B.Callbacks.Emit_Once (Transfer_Callback);
+      end Finish;
+
       Success : Boolean := True;
 
    begin
@@ -165,11 +181,7 @@ package body Nu_Pogodi.Hardware.MIPI is
             raise Program_Error;
 
          when Transmit_Command =>
-            State := Inactive;
-
-            Nu_Pogodi.Hardware.SPI.Release;
-
-            A0B.Callbacks.Emit_Once (Transfer_Callback);
+            Finish;
 
          when Transmit_Command_Transmit_Data =>
             State := Transmit_Data;
@@ -186,19 +198,11 @@ package body Nu_Pogodi.Hardware.MIPI is
                Success);
 
             if not Success then
-               State := Inactive;
-
-               Nu_Pogodi.Hardware.SPI.Release;
-
-               A0B.Callbacks.Emit_Once (Transfer_Callback);
+               Finish;
             end if;
 
          when Transmit_Data =>
-            State := Inactive;
-
-            Nu_Pogodi.Hardware.SPI.Release;
-
-            A0B.Callbacks.Emit_Once (Transfer_Callback);
+            Finish;
 
          when Transmit_Command_Receive_Data =>
             State := Receive_Data;
@@ -223,24 +227,14 @@ package body Nu_Pogodi.Hardware.MIPI is
             end if;
 
             if not Success then
-               State := Inactive;
-
                Data_Buffer.Set_Actual_Length (0);
-
-               Nu_Pogodi.Hardware.SPI.Release;
-
-               A0B.Callbacks.Emit_Once (Transfer_Callback);
+               Finish;
             end if;
 
          when Receive_Data =>
-            State := Inactive;
-
             Data_Buffer.Set_Actual_Length
               (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
-
-            Nu_Pogodi.Hardware.SPI.Release;
-
-            A0B.Callbacks.Emit_Once (Transfer_Callback);
+            Finish;
       end case;
    end On_Transfer;
 
