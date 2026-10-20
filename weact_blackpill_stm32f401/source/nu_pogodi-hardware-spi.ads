@@ -9,7 +9,7 @@
 --  operations, only the first array element may use polling for 1-4 bytes;
 --  subsequent nonempty segments use DMA, for both receive and transmit.
 
-with A0B.Asynchronous_Operations;
+with A0B.Asynchronous_Transfers;
 with A0B.Callbacks;
 
 package Nu_Pogodi.Hardware.SPI is
@@ -24,26 +24,26 @@ package Nu_Pogodi.Hardware.SPI is
 
    procedure Transmit
      (Descriptors : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
       Finished    : A0B.Callbacks.Callback;
       Success     : in out Boolean);
    --  The array contract is the same as for Receive below.
 
    procedure Transmit
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean);
 
    procedure Receive
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Callback   : A0B.Callbacks.Callback;
       Success    : in out Boolean);
 
    procedure Receive
      (Descriptors : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
       Callback    : A0B.Callbacks.Callback;
       Success     : in out Boolean);
    --  The array must remain available and unchanged until completion, and

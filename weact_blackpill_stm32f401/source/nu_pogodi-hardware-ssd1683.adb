@@ -11,9 +11,9 @@
 
 pragma Ada_2022;
 
-with System;
+with System.Storage_Elements;
 
-with A0B.Asynchronous_Operations;
+with A0B.Asynchronous_Transfers;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time;
@@ -179,12 +179,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Parameter_Buffer : A0B.Buffers.Static.Static_Buffer
      (Write_Register_For_Display_Option_Length);
    Data_Descriptor  : aliased
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Dummy_Byte       : aliased A0B.Types.Unsigned_8;
    Dummy_Descriptor : aliased
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Descriptors      : aliased
-     A0B.Asynchronous_Operations.Transfer_Descriptor_Array :=
+     A0B.Asynchronous_Transfers.Transfer_Descriptor_Array :=
        [Dummy_Descriptor'Access, Data_Descriptor'Access];
    Data_Buffer      : access A0B.Buffers.Abstract_Buffer'Class;
 
@@ -260,7 +260,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (Command           : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Ignore_First_Byte : Boolean;
          Address           : System.Address;
-         Length            : A0B.Buffers.Storage_Count;
+         Length            : System.Storage_Elements.Storage_Count;
          Callback          : A0B.Callbacks.Callback;
          Success           : in out Boolean)
         with Pre => Success;
@@ -278,7 +278,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Address  : System.Address;
-         Length   : A0B.Buffers.Storage_Count;
+         Length   : System.Storage_Elements.Storage_Count;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean)
         with Pre => Success;
@@ -1075,7 +1075,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Command_Callback := Callback;
 
          Data_Descriptor.Buffer := Data_Buffer.Address;
-         Data_Descriptor.Length := A0B.Types.Unsigned_32 (Data_Buffer.Length);
+         Data_Descriptor.Length := Data_Buffer.Length;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
@@ -1140,8 +1140,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success           : in out Boolean) is
       begin
          Data_Descriptor.Buffer := Buffer.Address;
-         Data_Descriptor.Length :=
-           A0B.Types.Unsigned_32 (Buffer.Expected_Length);
+         Data_Descriptor.Length := Buffer.Expected_Length;
          Data_Buffer := Buffer'Unchecked_Access;
 
          Start (Command, Callback, Success, Ignore_First_Byte);
@@ -1155,12 +1154,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
         (Command           : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Ignore_First_Byte : Boolean;
          Address           : System.Address;
-         Length            : A0B.Buffers.Storage_Count;
+         Length            : System.Storage_Elements.Storage_Count;
          Callback          : A0B.Callbacks.Callback;
          Success           : in out Boolean) is
       begin
          Data_Descriptor.Buffer := Address;
-         Data_Descriptor.Length := A0B.Types.Unsigned_32 (Length);
+         Data_Descriptor.Length := Length;
          Data_Buffer := null;
 
          Start (Command, Callback, Success, Ignore_First_Byte);
@@ -1171,13 +1170,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       --------------------------
 
       procedure On_Transfer_Finished is
-         use type A0B.Asynchronous_Operations.Operation_State;
+         use type A0B.Asynchronous_Transfers.Operation_State;
 
       begin
          if Data_Buffer /= null then
-            if Data_Descriptor.State = A0B.Asynchronous_Operations.Success then
-               Data_Buffer.Set_Actual_Length
-                 (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
+            if Data_Descriptor.State = A0B.Asynchronous_Transfers.Success then
+               Data_Buffer.Set_Actual_Length (Data_Descriptor.Transferred);
 
             else
                Data_Buffer.Set_Actual_Length (0);
@@ -1250,7 +1248,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Command_Callback := Callback;
 
          Data_Descriptor.Buffer := Data_Buffer.Address;
-         Data_Descriptor.Length := A0B.Types.Unsigned_32 (Data_Buffer.Length);
+         Data_Descriptor.Length := Data_Buffer.Length;
 
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
@@ -1293,12 +1291,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure Enter
         (Command  : Nu_Pogodi.Hardware.MIPI.Command_Code;
          Address  : System.Address;
-         Length   : A0B.Buffers.Storage_Count;
+         Length   : System.Storage_Elements.Storage_Count;
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
          Data_Descriptor.Buffer := Address;
-         Data_Descriptor.Length := A0B.Types.Unsigned_32 (Length);
+         Data_Descriptor.Length := Length;
 
          State            := Command_Write_External;
          Command_Callback := Callback;

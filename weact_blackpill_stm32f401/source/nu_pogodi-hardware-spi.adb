@@ -34,14 +34,14 @@ package body Nu_Pogodi.Hardware.SPI is
    --  Repeated TX DMA source in receive mode.
 
    Transmit_Descriptor  : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Transmit_Descriptors : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
    Transmit_Index       : A0B.Types.Unsigned_32;
    Receive_Descriptor   : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Receive_Descriptors  : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
    Receive_Index        : A0B.Types.Unsigned_32;
    Transfer_Callback    : aliased A0B.Callbacks.Callback;
 
@@ -51,7 +51,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
    function Start_Receive
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean;
    --  True reports a DMA launch even if its interrupt completes the operation
    --  before this call returns. The caller must not infer this from global
@@ -59,7 +59,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
    function Start_Transmit
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean;
    --  The result has the same meaning as for Start_Receive.
 
@@ -188,7 +188,7 @@ package body Nu_Pogodi.Hardware.SPI is
          end loop;
 
          Receive_Descriptor.Transferred := Receive_Descriptor.Length;
-         Receive_Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Receive_Descriptor.State := A0B.Asynchronous_Transfers.Success;
          Receive_Descriptor := null;
 
          Continue_Receive;
@@ -320,11 +320,11 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Receive
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Callback   : A0B.Callbacks.Callback;
       Success    : in out Boolean)
    is
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       if not Success then
@@ -351,11 +351,11 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Receive
      (Descriptors : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
       Callback    : A0B.Callbacks.Callback;
       Success     : in out Boolean)
    is
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       if not Success then
@@ -381,7 +381,7 @@ package body Nu_Pogodi.Hardware.SPI is
       --  Reset state of all descriptors.
 
       for Descriptor of Descriptors loop
-         Descriptor.State       := A0B.Asynchronous_Operations.Inactive;
+         Descriptor.State       := A0B.Asynchronous_Transfers.Inactive;
          Descriptor.Transferred := 0;
       end loop;
 
@@ -423,7 +423,7 @@ package body Nu_Pogodi.Hardware.SPI is
          --  Transfer completed, "disconnect" MOSI from SDA line.
 
          Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
-         Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Transmit_Descriptor.State := A0B.Asynchronous_Transfers.Success;
          Transmit_Descriptor := null;
 
          Continue_Transmit;
@@ -436,18 +436,17 @@ package body Nu_Pogodi.Hardware.SPI is
 
    function Start_Receive
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean
    is
-      use System.Storage_Elements;
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       Descriptor.Transferred := 0;
-      Descriptor.State       := A0B.Asynchronous_Operations.Active;
+      Descriptor.State       := A0B.Asynchronous_Transfers.Active;
 
       if Descriptor.Length = 0 then
-         Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Descriptor.State := A0B.Asynchronous_Transfers.Success;
 
          return False;
       end if;
@@ -463,8 +462,7 @@ package body Nu_Pogodi.Hardware.SPI is
            SPE      => True);  --  1: Peripheral enabled
 
       if Poll and then Descriptor.Length < 5 then
-         for Offset in
-           A0B.Types.Unsigned_32 range 0 .. Descriptor.Length - 1
+         for Offset in 0 .. Descriptor.Length - 1
          loop
             while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
                null;
@@ -479,8 +477,8 @@ package body Nu_Pogodi.Hardware.SPI is
 
             declare
                Byte : A0B.Types.Unsigned_8
-                 with Import,
-                      Address => Descriptor.Buffer + Storage_Offset (Offset);
+                 with Import, Address => Descriptor.Buffer + Offset;
+
             begin
                Byte := A0B.Types.Unsigned_8
                  (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
@@ -496,7 +494,7 @@ package body Nu_Pogodi.Hardware.SPI is
          end loop;
 
          Descriptor.Transferred := Descriptor.Length;
-         Descriptor.State       := A0B.Asynchronous_Operations.Success;
+         Descriptor.State       := A0B.Asynchronous_Transfers.Success;
 
          return False;
 
@@ -559,17 +557,17 @@ package body Nu_Pogodi.Hardware.SPI is
 
    function Start_Transmit
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean
    is
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       Descriptor.Transferred := 0;
-      Descriptor.State       := A0B.Asynchronous_Operations.Active;
+      Descriptor.State       := A0B.Asynchronous_Transfers.Active;
 
       if Descriptor.Length = 0 then
-         Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Descriptor.State := A0B.Asynchronous_Transfers.Success;
 
          return False;
       end if;
@@ -586,11 +584,12 @@ package body Nu_Pogodi.Hardware.SPI is
          declare
             use System.Storage_Elements;
 
-            Length : constant A0B.Types.Unsigned_32 := Descriptor.Length;
+            Length : constant System.Storage_Elements.Storage_Count :=
+              Descriptor.Length;
             Base   : constant System.Address := Descriptor.Buffer;
 
          begin
-            for Offset in A0B.Types.Unsigned_32 range 0 .. Length - 1 loop
+            for Offset in 0 .. Length - 1 loop
                declare
                   Byte : A0B.Types.Unsigned_8
                     with Import, Address => Base + Storage_Offset (Offset);
@@ -618,7 +617,7 @@ package body Nu_Pogodi.Hardware.SPI is
          Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
 
          Descriptor.Transferred := Descriptor.Length;
-         Descriptor.State       := A0B.Asynchronous_Operations.Success;
+         Descriptor.State       := A0B.Asynchronous_Transfers.Success;
 
          return False;
 
@@ -658,11 +657,11 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Transmit
      (Descriptors : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
       Finished    : A0B.Callbacks.Callback;
       Success     : in out Boolean)
    is
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       if not Success then
@@ -688,7 +687,7 @@ package body Nu_Pogodi.Hardware.SPI is
       --  Reset state of all descriptors.
 
       for Descriptor of Descriptors loop
-         Descriptor.State       := A0B.Asynchronous_Operations.Inactive;
+         Descriptor.State       := A0B.Asynchronous_Transfers.Inactive;
          Descriptor.Transferred := 0;
       end loop;
 
@@ -708,11 +707,11 @@ package body Nu_Pogodi.Hardware.SPI is
 
    procedure Transmit
      (Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean)
    is
-      use type A0B.Types.Unsigned_32;
+      use type System.Storage_Elements.Storage_Count;
 
    begin
       if not Success then

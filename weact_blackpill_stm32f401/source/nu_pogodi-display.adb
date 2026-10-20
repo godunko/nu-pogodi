@@ -11,6 +11,7 @@ with A0B.Callbacks.Generic_Parameterless;
 with A0B.Types;
 
 with Nu_Pogodi.Hardware.SSD1683.Utilities;
+with System.Storage_Elements;
 
 package body Nu_Pogodi.Display is
 
@@ -69,7 +70,7 @@ package body Nu_Pogodi.Display is
    ------------------
 
    procedure On_Completed is
-      use type A0B.Buffers.Storage_Count;
+      use type System.Storage_Elements.Storage_Count;
       use type A0B.Types.Unsigned_8;
 
       Success : Boolean := True;

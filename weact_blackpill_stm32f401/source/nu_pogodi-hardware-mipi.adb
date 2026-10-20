@@ -32,11 +32,11 @@ package body Nu_Pogodi.Hardware.MIPI is
 
    Command_Storage    : aliased A0B.Types.Unsigned_8;
    Command_Descriptor : aliased
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Data_Descriptor    : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
    Data_Descriptors   : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+     A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
 
    -------------
    -- Command --
@@ -75,7 +75,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    procedure Command_Read
      (Command    : Command_Code;
       Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean) is
    begin
@@ -112,7 +112,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    procedure Command_Read
      (Command     : Command_Code;
       Descriptors : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
       Finished    : A0B.Callbacks.Callback;
       Success     : in out Boolean) is
    begin
@@ -149,7 +149,7 @@ package body Nu_Pogodi.Hardware.MIPI is
    procedure Command_Write
      (Command    : Command_Code;
       Descriptor : aliased in out
-        A0B.Asynchronous_Operations.Transfer_Descriptor;
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean) is
    begin
@@ -257,13 +257,13 @@ package body Nu_Pogodi.Hardware.MIPI is
                   for Descriptor of Data_Descriptors.all loop
                      if Descriptor /= null then
                         Descriptor.State :=
-                          A0B.Asynchronous_Operations.Failure;
+                          A0B.Asynchronous_Transfers.Failure;
                         Descriptor.Transferred := 0;
                      end if;
                   end loop;
 
                else
-                  Data_Descriptor.State := A0B.Asynchronous_Operations.Failure;
+                  Data_Descriptor.State := A0B.Asynchronous_Transfers.Failure;
                   Data_Descriptor.Transferred := 0;
                end if;
 
