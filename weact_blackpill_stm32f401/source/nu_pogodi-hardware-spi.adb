@@ -15,6 +15,7 @@ with A0B.ARMv7M.NVIC_Utilities;
 with A0B.STM32F401.SVD.DMA;
 with A0B.STM32F401.SVD.RCC;
 with A0B.STM32F401.SVD.SPI;
+with A0B.Types;
 
 with Nu_Pogodi.Hardware.Pin_Control;
 
@@ -36,7 +37,9 @@ package body Nu_Pogodi.Hardware.SPI is
 
    --  Transmit_Descriptors : access
    --    A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
-   Transmit_Descriptor  : access
+   Transmit_Descriptor : access
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
+   Receive_Descriptor  : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Receive_Buffer    : Buffer_Access;
 
@@ -118,8 +121,17 @@ package body Nu_Pogodi.Hardware.SPI is
             null;
          end loop;
 
-         Receive_Buffer.Set_Actual_Length (Receive_Buffer.Expected_Length);
-         Receive_Buffer := null;
+         if Receive_Descriptor /= null then
+            Receive_Descriptor.Transferred := Receive_Descriptor.Length;
+            Receive_Descriptor.State := A0B.Asynchronous_Operations.Success;
+            Receive_Descriptor := null;
+         end if;
+
+         if Receive_Buffer /= null then
+            Receive_Buffer.Set_Actual_Length (Receive_Buffer.Expected_Length);
+            Receive_Buffer := null;
+         end if;
+
          A0B.Callbacks.Emit_Once (Transfer_Callback);
       end if;
    end DMA2_Stream0_Handler;
@@ -242,6 +254,139 @@ package body Nu_Pogodi.Hardware.SPI is
       A0B.ARMv7M.NVIC_Utilities.Clear_Pending (A0B.STM32F401.SPI1);
       A0B.ARMv7M.NVIC_Utilities.Enable_Interrupt (A0B.STM32F401.SPI1);
    end Initialize;
+
+   -------------
+   -- Receive --
+   -------------
+
+   procedure Receive
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Callback   : A0B.Callbacks.Callback;
+      Success    : in out Boolean)
+   is
+      use System.Storage_Elements;
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptor.Length > 65_535 then
+         Success := False;
+
+         return;
+      end if;
+
+      Descriptor.Transferred := 0;
+      Descriptor.State       := A0B.Asynchronous_Operations.Active;
+
+      if Descriptor.Length = 0 then
+         Descriptor.State := A0B.Asynchronous_Operations.Success;
+         A0B.Callbacks.Emit (Callback);
+
+         return;
+      end if;
+
+      --  The command was sent in bidirectional transmit-only mode, so there
+      --  is no command echo to discard. Switch to full duplex with SPI still
+      --  enabled to keep CS low; MOSI is already disconnected from SDA.
+
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
+        (@ with delta
+           BIDIMODE => False,  --  0: 2-line unidirectional data mode selected
+           RXONLY   => False,  --  0: Full duplex (Transmit and receive)
+           SPE      => True);  --  1: Peripheral enabled
+
+      if Descriptor.Length < 5 then
+         for Offset in
+           A0B.Types.Unsigned_32 range 0 .. Descriptor.Length - 1
+         loop
+            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+               null;
+            end loop;
+
+            A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+              (DR => 16#FF#, Reserved_16_31 => 0);
+
+            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
+               null;
+            end loop;
+
+            declare
+               Byte : A0B.Types.Unsigned_8
+                 with Import,
+                      Address => Descriptor.Buffer + Storage_Offset (Offset);
+            begin
+               Byte := A0B.Types.Unsigned_8
+                 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
+            end;
+         end loop;
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Descriptor.Transferred := Descriptor.Length;
+         Descriptor.State       := A0B.Asynchronous_Operations.Success;
+         A0B.Callbacks.Emit (Callback);
+
+      else
+         Receive_Descriptor := Descriptor'Unchecked_Access;
+         Transfer_Callback  := Callback;
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
+           (@ with delta
+              RXDMAEN => True,   --  1: Rx buffer DMA enabled
+              TXDMAEN => True);  --  1: Tx buffer DMA enabled
+
+         --  Configure RX DMA to receive data.
+
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CFEIF0  => True,
+            CDMEIF0 => True,
+            CTEIF0  => True,
+            CHTIF0  => True,
+            CTCIF0  => True,
+            others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
+           A0B.Types.Unsigned_32
+             (System.Storage_Elements.To_Integer (Descriptor.Buffer));
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0NDTR :=
+           (NDT            => A0B.Types.Unsigned_16 (Descriptor.Length),
+            Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR :=
+           (@ with delta
+              TCIE => True,   --  1: TC interrupt enabled
+              EN   => True);  --  1: Stream enabled
+
+         --  Configure TX DMA to transfer dummy byte.
+
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CFEIF3  => True,
+            CDMEIF3 => True,
+            CTEIF3  => True,
+            CHTIF3  => True,
+            CTCIF3  => True,
+            others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
+           A0B.Types.Unsigned_32
+             (System.Storage_Elements.To_Integer (Dummy_Byte'Address));
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
+           (NDT            => A0B.Types.Unsigned_16 (Descriptor.Length),
+            Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
+           (@ with delta
+              MINC => False,   --  0: Memory address pointer is fixed
+              TCIE => False,   --  0: TC interrupt disabled
+              EN   => True);   --  1: Stream enabled
+      end if;
+   end Receive;
 
    -------------
    -- Receive --

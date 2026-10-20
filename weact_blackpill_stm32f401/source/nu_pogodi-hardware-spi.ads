@@ -31,6 +31,12 @@ package Nu_Pogodi.Hardware.SPI is
       Success    : in out Boolean);
 
    procedure Receive
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Callback   : A0B.Callbacks.Callback;
+      Success    : in out Boolean);
+
+   procedure Receive
      (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
       Callback          : A0B.Callbacks.Callback;
       Success           : in out Boolean;
