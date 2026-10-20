@@ -13,6 +13,7 @@ pragma Ada_2022;
 
 with System;
 
+with A0B.Asynchronous_Operations;
 with A0B.Buffers.External;
 with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
@@ -171,9 +172,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       --  wrappers of commands which stores received data into objects
       --  provided by subprogram's parameter.
       Command_Write_External,
-      --  Write data using "external buffer". It is used internally for
-      --  wrappers of commands which stores received data into objects
-      --  provided by subprogram's parameter.
+      --  Write data from storage provided by subprogram's parameter.
       Command_Busy);   --  Execute command, wait till BUSY released
 
    State            : State_Kind := Initial with Atomic, Volatile;
@@ -183,6 +182,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
    Parameter_Buffer : A0B.Buffers.Static.Static_Buffer
      (Write_Register_For_Display_Option_Length);
    External_Buffer  : A0B.Buffers.External.External_Buffer;
+   Write_Descriptor : aliased
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
 
    package State_Machine_VCI_Wait_State is
 
@@ -258,7 +259,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    package State_Machine_Command_Write_External_State is
 
-      --  Writes data from External_Buffer.
+      --  Writes data from external storage.
       --
       --  Emits `Command_Callback` when transfer is completed.
 
@@ -1064,11 +1065,14 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State            := Command_Busy;
          Command_Callback := Callback;
 
+         Write_Descriptor.Buffer := Data_Buffer.Address;
+         Write_Descriptor.Length := A0B.Types.Unsigned_32 (Data_Buffer.Length);
+
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create_Callback);
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
-            Data_Buffer,
+            Write_Descriptor,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -1176,9 +1180,12 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State            := SSD1683.Command;
          Command_Callback := Callback;
 
+         Write_Descriptor.Buffer := Data_Buffer.Address;
+         Write_Descriptor.Length := A0B.Types.Unsigned_32 (Data_Buffer.Length);
+
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
-            Data_Buffer,
+            Write_Descriptor,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
@@ -1221,20 +1228,19 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
-         A0B.Buffers.External.Initialize (External_Buffer, Address, Length);
-         External_Buffer.Set_Actual_Length (Length);
+         Write_Descriptor.Buffer := Address;
+         Write_Descriptor.Length := A0B.Types.Unsigned_32 (Length);
 
          State            := Command_Write_External;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
-            External_Buffer,
+            Write_Descriptor,
             On_Transfer_Finished_Callbacks.Create_Callback,
             Success);
 
          if not Success then
-            External_Buffer.Finalize;
             State := Ready;
             A0B.Callbacks.Unset (Command_Callback);
          end if;
@@ -1247,9 +1253,6 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       procedure On_Transfer_Finished is
       begin
          --  XXX Transfer error handling is not implemented.
-
-         --  Drop association with storage before notifying the caller.
-         External_Buffer.Finalize;
 
          State := Ready;
 
