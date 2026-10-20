@@ -6,7 +6,6 @@
 
 pragma Ada_2022;
 
-with A0B.Asynchronous_Operations;
 with A0B.Callbacks.Generic_Parameterless;
 
 with Nu_Pogodi.Hardware.Pin_Control;
@@ -36,6 +35,8 @@ package body Nu_Pogodi.Hardware.MIPI is
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Data_Buffer        : access A0B.Buffers.Abstract_Buffer'Class;
    Data_Descriptor    : aliased
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
+   Write_Descriptor   : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Ignore_First_Byte  : Boolean;
 
@@ -113,11 +114,11 @@ package body Nu_Pogodi.Hardware.MIPI is
    -------------------
 
    procedure Command_Write
-     (Command  : Command_Code;
-      Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
-      Finished : A0B.Callbacks.Callback;
-      Success  : in out Boolean)
-   is
+     (Command    : Command_Code;
+      Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean) is
    begin
       if not Success then
          return;
@@ -128,7 +129,7 @@ package body Nu_Pogodi.Hardware.MIPI is
 
       State := Transmit_Command_Transmit_Data;
       Transfer_Callback := Finished;
-      Data_Buffer := Buffer'Unrestricted_Access;
+      Write_Descriptor := Descriptor'Unchecked_Access;
 
       Command_Storage := A0B.Types.Unsigned_8 (Command);
       Command_Descriptor.Buffer := Command_Storage'Address;
@@ -188,12 +189,8 @@ package body Nu_Pogodi.Hardware.MIPI is
 
             Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
 
-            Data_Descriptor.Buffer := Data_Buffer.Address;
-            Data_Descriptor.Length :=
-              A0B.Types.Unsigned_32 (Data_Buffer.Length);
-
             Nu_Pogodi.Hardware.SPI.Transmit
-              (Data_Descriptor,
+              (Write_Descriptor.all,
                On_Transfer_Callbacks.Create_Callback,
                Success);
 

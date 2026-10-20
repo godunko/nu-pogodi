@@ -10,6 +10,7 @@
 --  order. Likewise, it is the caller's responsibility to configure underlying
 --  hardware and drivers for the intended bit order to be used on wire(s).
 
+with A0B.Asynchronous_Operations;
 with A0B.Buffers;
 with A0B.Callbacks;
 with A0B.Types.Enumerable;
@@ -26,10 +27,11 @@ package Nu_Pogodi.Hardware.MIPI is
       Success  : in out Boolean);
 
    procedure Command_Write
-     (Command  : Command_Code;
-      Buffer   : aliased A0B.Buffers.Abstract_Buffer'Class;
-      Finished : A0B.Callbacks.Callback;
-      Success  : in out Boolean);
+     (Command    : Command_Code;
+      Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean);
 
    procedure Command_Read
      (Command           : Command_Code;
