@@ -22,11 +22,12 @@ package Nu_Pogodi.Hardware.SPI is
 
    procedure Release;
 
-   --  procedure Transmit
-   --    (Descriptors : aliased in out
-   --       A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
-   --     Finished    : A0B.Callbacks.Callback;
-   --     Success     : in out Boolean);
+   procedure Transmit
+     (Descriptors : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+      Finished    : A0B.Callbacks.Callback;
+      Success     : in out Boolean);
+   --  The array contract is the same as for Receive below.
 
    procedure Transmit
      (Descriptor : aliased in out

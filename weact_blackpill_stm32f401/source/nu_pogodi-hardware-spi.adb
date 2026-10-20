@@ -33,18 +33,21 @@ package body Nu_Pogodi.Hardware.SPI is
    Dummy_Byte : aliased constant A0B.Types.Unsigned_8 := 16#FF#;
    --  Repeated TX DMA source in receive mode.
 
-   --  Transmit_Descriptors : access
-   --    A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
-   Transmit_Descriptor : access
+   Transmit_Descriptor  : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
-   Receive_Descriptor  : access
-     A0B.Asynchronous_Operations.Transfer_Descriptor;
-   Receive_Descriptors : access
+   Transmit_Descriptors : access
      A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
-   Receive_Index       : A0B.Types.Unsigned_32;
-   Transfer_Callback   : aliased A0B.Callbacks.Callback;
+   Transmit_Index       : A0B.Types.Unsigned_32;
+   Receive_Descriptor   : access
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
+   Receive_Descriptors  : access
+     A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+   Receive_Index        : A0B.Types.Unsigned_32;
+   Transfer_Callback    : aliased A0B.Callbacks.Callback;
 
    procedure Continue_Receive;
+
+   procedure Continue_Transmit;
 
    function Start_Receive
      (Descriptor : aliased in out
@@ -53,6 +56,12 @@ package body Nu_Pogodi.Hardware.SPI is
    --  True reports a DMA launch even if its interrupt completes the operation
    --  before this call returns. The caller must not infer this from global
    --  state, which a completion callback may already have reused.
+
+   function Start_Transmit
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Poll       : Boolean) return Boolean;
+   --  The result has the same meaning as for Start_Receive.
 
    -----------------------
    -- Acquire_MIPI_Read --
@@ -129,6 +138,30 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.Callbacks.Emit_Once (Transfer_Callback);
    end Continue_Receive;
+
+   -----------------------
+   -- Continue_Transmit --
+   -----------------------
+
+   procedure Continue_Transmit is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if Transmit_Descriptors /= null then
+         while Transmit_Index /= Transmit_Descriptors'Last loop
+            Transmit_Index := Transmit_Index + 1;
+            if Start_Transmit
+              (Transmit_Descriptors (Transmit_Index).all, Poll => False)
+            then
+               return;
+            end if;
+         end loop;
+
+         Transmit_Descriptors := null;
+      end if;
+
+      A0B.Callbacks.Emit_Once (Transfer_Callback);
+   end Continue_Transmit;
 
    --------------------------
    -- DMA2_Stream0_Handler --
@@ -393,7 +426,7 @@ package body Nu_Pogodi.Hardware.SPI is
          Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
          Transmit_Descriptor := null;
 
-         A0B.Callbacks.Emit_Once (Transfer_Callback);
+         Continue_Transmit;
       end if;
    end SPI1_Handler;
 
@@ -520,56 +553,25 @@ package body Nu_Pogodi.Hardware.SPI is
       end if;
    end Start_Receive;
 
-   --------------
-   -- Transmit --
-   --------------
+   --------------------
+   -- Start_Transmit --
+   --------------------
 
-   --  procedure Transmit
-   --    (Descriptors : aliased in out
-   --       A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
-   --     Finished    : A0B.Callbacks.Callback;
-   --     Success     : in out Boolean) is
-   --  begin
-   --     if not Success then
-   --        return;
-   --     end if;
-   --
-   --     Transmit_Descriptors := Descriptors'Unchecked_Access;
-   --  end Transmit;
-
-   --------------
-   -- Transmit --
-   --------------
-
-   procedure Transmit
+   function Start_Transmit
      (Descriptor : aliased in out
         A0B.Asynchronous_Operations.Transfer_Descriptor;
-      Finished   : A0B.Callbacks.Callback;
-      Success    : in out Boolean)
+      Poll       : Boolean) return Boolean
    is
       use type A0B.Types.Unsigned_32;
 
    begin
-      if not Success then
-         return;
-      end if;
-
-      if Descriptor.Length > 65_535 then
-         --  Buffer is too large to be transferred by single DMA transfer.
-
-         Success := False;
-
-         return;
-      end if;
-
       Descriptor.Transferred := 0;
       Descriptor.State       := A0B.Asynchronous_Operations.Active;
 
       if Descriptor.Length = 0 then
          Descriptor.State := A0B.Asynchronous_Operations.Success;
-         A0B.Callbacks.Emit (Finished);
 
-         return;
+         return False;
       end if;
 
       Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
@@ -580,7 +582,7 @@ package body Nu_Pogodi.Hardware.SPI is
            BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
            SPE      => True);  --  1: Peripheral enabled
 
-      if Descriptor.Length < 5 then
+      if Poll and then Descriptor.Length < 5 then
          declare
             use System.Storage_Elements;
 
@@ -618,11 +620,10 @@ package body Nu_Pogodi.Hardware.SPI is
          Descriptor.Transferred := Descriptor.Length;
          Descriptor.State       := A0B.Asynchronous_Operations.Success;
 
-         A0B.Callbacks.Emit (Finished);
+         return False;
 
       else
          Transmit_Descriptor := Descriptor'Unchecked_Access;
-         Transfer_Callback   := Finished;
 
          A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
 
@@ -646,6 +647,89 @@ package body Nu_Pogodi.Hardware.SPI is
               --  transfer (increment is done according to MSIZE)
               TCIE => True,   --  1: TC interrupt enabled
               EN   => True);  --  1: Stream enabled
+
+         return True;
+      end if;
+   end Start_Transmit;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit
+     (Descriptors : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+      Finished    : A0B.Callbacks.Callback;
+      Success     : in out Boolean)
+   is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptors'Length = 0 then
+         A0B.Callbacks.Emit (Finished);
+
+         return;
+      end if;
+
+      --  Check descriptors.
+
+      for Descriptor of Descriptors loop
+         if Descriptor = null or else Descriptor.Length > 65_535 then
+            Success := False;
+
+            return;
+         end if;
+      end loop;
+
+      --  Reset state of all descriptors.
+
+      for Descriptor of Descriptors loop
+         Descriptor.State       := A0B.Asynchronous_Operations.Inactive;
+         Descriptor.Transferred := 0;
+      end loop;
+
+      Transmit_Descriptors := Descriptors'Unchecked_Access;
+      Transmit_Index       := Descriptors'First;
+      Transfer_Callback    := Finished;
+
+      if not Start_Transmit (Descriptors (Transmit_Index).all, Poll => True)
+      then
+         Continue_Transmit;
+      end if;
+   end Transmit;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean)
+   is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptor.Length > 65_535 then
+         Success := False;
+
+         return;
+      end if;
+
+      Transmit_Descriptors := null;
+      Transfer_Callback    := Finished;
+
+      if not Start_Transmit (Descriptor, Poll => True) then
+         Continue_Transmit;
       end if;
    end Transmit;
 
