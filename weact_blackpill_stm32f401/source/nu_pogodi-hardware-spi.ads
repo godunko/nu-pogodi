@@ -7,7 +7,6 @@
 with A0B.Asynchronous_Operations;
 with A0B.Callbacks;
 with A0B.Buffers;
-with A0B.Types;
 
 package Nu_Pogodi.Hardware.SPI is
 
@@ -30,11 +29,6 @@ package Nu_Pogodi.Hardware.SPI is
         A0B.Asynchronous_Operations.Transfer_Descriptor;
       Finished   : A0B.Callbacks.Callback;
       Success    : in out Boolean);
-
-   procedure Transmit
-     (Buffer   : A0B.Buffers.Abstract_Buffer'Class;
-      Callback : A0B.Callbacks.Callback;
-      Success  : in out Boolean);
 
    procedure Receive
      (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
