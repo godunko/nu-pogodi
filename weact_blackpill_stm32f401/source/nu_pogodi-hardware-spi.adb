@@ -34,6 +34,10 @@ package body Nu_Pogodi.Hardware.SPI is
 
    type Buffer_Access is access all A0B.Buffers.Abstract_Buffer'Class;
 
+   --  Transmit_Descriptors : access
+   --    A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+   Transmit_Descriptor  : access
+     A0B.Asynchronous_Operations.Transfer_Descriptor;
    Receive_Buffer    : Buffer_Access;
 
    Transfer_Callback : aliased A0B.Callbacks.Callback;
@@ -414,9 +418,144 @@ package body Nu_Pogodi.Hardware.SPI is
          Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
          --  Transfer completed, "disconnect" MOSI from SDA line.
 
+         if Transmit_Descriptor /= null then
+            Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
+            Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
+            Transmit_Descriptor := null;
+         end if;
+
          A0B.Callbacks.Emit_Once (Transfer_Callback);
       end if;
    end SPI1_Handler;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   --  procedure Transmit
+   --    (Descriptors : aliased in out
+   --       A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+   --     Finished    : A0B.Callbacks.Callback;
+   --     Success     : in out Boolean) is
+   --  begin
+   --     if not Success then
+   --        return;
+   --     end if;
+   --
+   --     Transmit_Descriptors := Descriptors'Unchecked_Access;
+   --  end Transmit;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean)
+   is
+      use type A0B.Types.Unsigned_32;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptor.Length > 65_535 then
+         --  Buffer is too large to be transferred by single DMA transfer.
+
+         Success := False;
+
+         return;
+      end if;
+
+      Descriptor.Transferred := 0;
+      Descriptor.State       := A0B.Asynchronous_Operations.Active;
+
+      if Descriptor.Length = 0 then
+         Descriptor.State := A0B.Asynchronous_Operations.Success;
+         A0B.Callbacks.Emit (Finished);
+
+         return;
+      end if;
+
+      Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Output;
+
+      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
+        (@ with delta
+           BIDIMODE => True,   --  1: 1-line bidirectional data mode selected
+           BIDIOE   => True,   --  1: Output enabled (transmit-only mode)
+           SPE      => True);  --  1: Peripheral enabled
+
+      if Descriptor.Length < 5 then
+         declare
+            use System.Storage_Elements;
+
+            Length : constant A0B.Types.Unsigned_32 := Descriptor.Length;
+            Base   : constant System.Address := Descriptor.Buffer;
+
+         begin
+            for Offset in A0B.Types.Unsigned_32 range 0 .. Length - 1 loop
+               declare
+                  Byte : A0B.Types.Unsigned_8
+                    with Import, Address => Base + Storage_Offset (Offset);
+
+               begin
+                  while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+                     null;
+                  end loop;
+
+                  A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
+                    (DR             => A0B.Types.Unsigned_16 (Byte),
+                     Reserved_16_31 => 0);
+               end;
+            end loop;
+         end;
+
+         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
+            null;
+         end loop;
+
+         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
+            null;
+         end loop;
+
+         Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
+
+         Descriptor.Transferred := Descriptor.Length;
+         Descriptor.State       := A0B.Asynchronous_Operations.Success;
+
+         A0B.Callbacks.Emit (Finished);
+
+      else
+         Transmit_Descriptor := Descriptor'Unchecked_Access;
+         Transfer_Callback   := Finished;
+
+         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2.TXDMAEN := True;
+
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
+           A0B.Types.Unsigned_32
+             (System.Storage_Elements.To_Integer (Descriptor.Buffer));
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
+           (NDT            => A0B.Types.Unsigned_16 (Descriptor.Length),
+            Reserved_16_31 => 0);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
+           (CFEIF3  => True,
+            CDMEIF3 => True,
+            CTEIF3  => True,
+            CHTIF3  => True,
+            CTCIF3  => True,
+            others  => <>);
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
+           (@ with delta
+              MINC => True,
+              --  1: Memory address pointer is incremented after each data
+              --  transfer (increment is done according to MSIZE)
+              TCIE => True,   --  1: TC interrupt enabled
+              EN   => True);  --  1: Stream enabled
+      end if;
+   end Transmit;
 
    --------------
    -- Transmit --

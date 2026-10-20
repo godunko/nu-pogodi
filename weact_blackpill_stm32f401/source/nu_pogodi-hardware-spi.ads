@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Asynchronous_Operations;
 with A0B.Callbacks;
 with A0B.Buffers;
 with A0B.Types;
@@ -17,6 +18,18 @@ package Nu_Pogodi.Hardware.SPI is
    procedure Acquire_MIPI_Write;
 
    procedure Release;
+
+   --  procedure Transmit
+   --    (Descriptors : aliased in out
+   --       A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
+   --     Finished    : A0B.Callbacks.Callback;
+   --     Success     : in out Boolean);
+
+   procedure Transmit
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Operations.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean);
 
    procedure Transmit (Command : A0B.Types.Unsigned_8);
 

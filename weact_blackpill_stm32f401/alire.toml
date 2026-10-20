@@ -26,6 +26,7 @@ command = ["arm-eabi-objcopy", "-O", "binary", "../bin/nu_pogodi_weact_blackpill
 
 [[depends-on]]
 nu_pogodi = "*"
+a0b_asynchronous_operations = "*"
 a0b_armv7m_systick_clock_timer = "*"
 a0b_buffers = "*"
 a0b_stm32f401 = "*"
@@ -38,6 +39,7 @@ a0b_tools = "*"
 nu_pogodi = { path = ".." }
 #a0b_stm32f401 = { path = "../../a0b-stm32f401" }
 a0b_armv7m = { path = "../../a0b-armv7m" }
+a0b_asynchronous_operations = { path='../../a0b-asynchronous_operations' }
 a0b_buffers = { path = "../../a0b-buffers" }
 a0b_callbacks = { path = "../../a0b-callbacks" }
 a0b_time = { path = "../../a0b-time" }
