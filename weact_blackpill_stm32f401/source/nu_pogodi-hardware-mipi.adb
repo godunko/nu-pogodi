@@ -202,22 +202,19 @@ package body Nu_Pogodi.Hardware.MIPI is
             Nu_Pogodi.Hardware.Pin_Control.Set_MIPI_D_C (True);  --  Data mode
 
             if Ignore_First_Byte then
-               Nu_Pogodi.Hardware.SPI.Receive
-                 (Data_Buffer.all,
-                  On_Transfer_Callbacks.Create_Callback,
-                  Success,
-                  Ignore_First_Byte);
+               Data_Descriptor.Buffer := Command_Storage'Address;
+               Data_Descriptor.Length := 1;
 
             else
                Data_Descriptor.Buffer := Data_Buffer.Address;
                Data_Descriptor.Length :=
                  A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
-
-               Nu_Pogodi.Hardware.SPI.Receive
-                 (Data_Descriptor,
-                  On_Transfer_Callbacks.Create_Callback,
-                  Success);
             end if;
+
+            Nu_Pogodi.Hardware.SPI.Receive
+              (Data_Descriptor,
+               On_Transfer_Callbacks.Create_Callback,
+               Success);
 
             if not Success then
                State := Inactive;
@@ -230,14 +227,35 @@ package body Nu_Pogodi.Hardware.MIPI is
          when Receive_Data =>
             State := Inactive;
 
-            if not Ignore_First_Byte then
+            if Ignore_First_Byte then
+               State := Receive_Data;
+               Ignore_First_Byte := False;
+
+               Data_Descriptor.Buffer := Data_Buffer.Address;
+               Data_Descriptor.Length :=
+                 A0B.Types.Unsigned_32 (Data_Buffer.Expected_Length);
+
+               Nu_Pogodi.Hardware.SPI.Receive
+                 (Data_Descriptor,
+                  On_Transfer_Callbacks.Create_Callback,
+                  Success);
+
+               if not Success then
+                  State := Inactive;
+
+                  Nu_Pogodi.Hardware.SPI.Release;
+
+                  A0B.Callbacks.Emit_Once (Transfer_Callback);
+               end if;
+
+            else
                Data_Buffer.Set_Actual_Length
                  (A0B.Buffers.Storage_Count (Data_Descriptor.Transferred));
+
+               Nu_Pogodi.Hardware.SPI.Release;
+
+               A0B.Callbacks.Emit_Once (Transfer_Callback);
             end if;
-
-            Nu_Pogodi.Hardware.SPI.Release;
-
-            A0B.Callbacks.Emit_Once (Transfer_Callback);
       end case;
    end On_Transfer;
 
