@@ -33,17 +33,13 @@ package body Nu_Pogodi.Hardware.SPI is
    Dummy_Byte : aliased constant A0B.Types.Unsigned_8 := 16#FF#;
    --  Repeated TX DMA source in receive mode.
 
-   type Buffer_Access is access all A0B.Buffers.Abstract_Buffer'Class;
-
    --  Transmit_Descriptors : access
    --    A0B.Asynchronous_Operations.Transfer_Descriptor_Array;
    Transmit_Descriptor : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
    Receive_Descriptor  : access
      A0B.Asynchronous_Operations.Transfer_Descriptor;
-   Receive_Buffer    : Buffer_Access;
-
-   Transfer_Callback : aliased A0B.Callbacks.Callback;
+   Transfer_Callback   : aliased A0B.Callbacks.Callback;
 
    -----------------------
    -- Acquire_MIPI_Read --
@@ -121,16 +117,9 @@ package body Nu_Pogodi.Hardware.SPI is
             null;
          end loop;
 
-         if Receive_Descriptor /= null then
-            Receive_Descriptor.Transferred := Receive_Descriptor.Length;
-            Receive_Descriptor.State := A0B.Asynchronous_Operations.Success;
-            Receive_Descriptor := null;
-         end if;
-
-         if Receive_Buffer /= null then
-            Receive_Buffer.Set_Actual_Length (Receive_Buffer.Expected_Length);
-            Receive_Buffer := null;
-         end if;
+         Receive_Descriptor.Transferred := Receive_Descriptor.Length;
+         Receive_Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Receive_Descriptor := null;
 
          A0B.Callbacks.Emit_Once (Transfer_Callback);
       end if;
@@ -389,153 +378,6 @@ package body Nu_Pogodi.Hardware.SPI is
    end Receive;
 
    -------------
-   -- Receive --
-   -------------
-
-   procedure Receive
-     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
-      Callback          : A0B.Callbacks.Callback;
-      Success           : in out Boolean;
-      Ignore_First_Byte : Boolean := False)
-   is
-      use System.Storage_Elements;
-      use type A0B.Buffers.Storage_Count;
-
-      Discard : A0B.Types.Unsigned_16 with Unreferenced;
-
-   begin
-      if not Success then
-         return;
-      end if;
-
-      if Buffer.Expected_Length > 65_535 then
-         Success := False;
-
-         return;
-      end if;
-
-      Buffer.Set_Actual_Length (0);
-
-      if Buffer.Expected_Length = 0 then
-         A0B.Callbacks.Emit (Callback);
-
-         return;
-      end if;
-
-      --  The command was sent in bidirectional transmit-only mode, so there
-      --  is no command echo to discard. Switch to full duplex with SPI still
-      --  enabled to keep CS low; MOSI is already disconnected from SDA.
-
-      A0B.STM32F401.SVD.SPI.SPI1_Periph.CR1 :=
-        (@ with delta
-           BIDIMODE => False,  --  0: 2-line unidirectional data mode selected
-           RXONLY   => False,  --  0: Full duplex (Transmit and receive)
-           SPE      => True);  --  1: Peripheral enabled
-
-      if Ignore_First_Byte then
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-            null;
-         end loop;
-
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
-           (DR => 16#FF#, Reserved_16_31 => 0);
-
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
-            null;
-         end loop;
-
-         Discard := A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR;
-      end if;
-
-      if Buffer.Expected_Length >= 5 then
-         Receive_Buffer    := Buffer'Unchecked_Access;
-         Transfer_Callback := Callback;
-
-         A0B.STM32F401.SVD.SPI.SPI1_Periph.CR2 :=
-           (@ with delta
-              RXDMAEN => True,   --  1: Rx buffer DMA enabled
-              TXDMAEN => True);  --  1: Tx buffer DMA enabled
-
-         --  Configure RX DMA to receive data.
-
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
-           (CFEIF0  => True,
-            CDMEIF0 => True,
-            CTEIF0  => True,
-            CHTIF0  => True,
-            CTCIF0  => True,
-            others  => <>);
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
-           A0B.Types.Unsigned_32
-             (System.Storage_Elements.To_Integer (Buffer.Address));
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0NDTR :=
-           (NDT            => A0B.Types.Unsigned_16 (Buffer.Expected_Length),
-            Reserved_16_31 => 0);
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S0CR :=
-           (@ with delta
-              TCIE => True,   --  1: TC interrupt enabled
-              EN   => True);  --  1: Stream enabled
-
-         --  Configure TX DMA to transfer dummy byte.
-
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.LIFCR :=
-           (CFEIF3  => True,
-            CDMEIF3 => True,
-            CTEIF3  => True,
-            CHTIF3  => True,
-            CTCIF3  => True,
-            others  => <>);
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
-           A0B.Types.Unsigned_32
-             (System.Storage_Elements.To_Integer (Dummy_Byte'Address));
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
-           (NDT            => A0B.Types.Unsigned_16 (Buffer.Expected_Length),
-            Reserved_16_31 => 0);
-         A0B.STM32F401.SVD.DMA.DMA2_Periph.S3CR :=
-           (@ with delta
-              MINC => False,   --  0: Memory address pointer is fixed
-              TCIE => False,   --  0: TC interrupt disabled
-              EN   => True);   --  1: Stream enabled
-
-      else
-         for Offset in
-           A0B.Buffers.Storage_Count range 0 .. Buffer.Expected_Length - 1
-         loop
-            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-               null;
-            end loop;
-
-            A0B.STM32F401.SVD.SPI.SPI1_Periph.DR :=
-              (DR => 16#FF#, Reserved_16_31 => 0);
-
-            while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.RXNE loop
-               null;
-            end loop;
-
-            declare
-               Byte : A0B.Types.Unsigned_8
-                 with Import,
-                      Address => Buffer.Address + Storage_Offset (Offset);
-            begin
-               Byte := A0B.Types.Unsigned_8
-                 (A0B.STM32F401.SVD.SPI.SPI1_Periph.DR.DR);
-            end;
-         end loop;
-
-         while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
-            null;
-         end loop;
-
-         while A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.BSY loop
-            null;
-         end loop;
-
-         Buffer.Set_Actual_Length (Buffer.Expected_Length);
-         A0B.Callbacks.Emit (Callback);
-      end if;
-   end Receive;
-
-   -------------
    -- Release --
    -------------
 
@@ -563,11 +405,9 @@ package body Nu_Pogodi.Hardware.SPI is
          Nu_Pogodi.Hardware.Pin_Control.Configure_SPI1_MOSI_Input;
          --  Transfer completed, "disconnect" MOSI from SDA line.
 
-         if Transmit_Descriptor /= null then
-            Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
-            Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
-            Transmit_Descriptor := null;
-         end if;
+         Transmit_Descriptor.Transferred := Transmit_Descriptor.Length;
+         Transmit_Descriptor.State := A0B.Asynchronous_Operations.Success;
+         Transmit_Descriptor := null;
 
          A0B.Callbacks.Emit_Once (Transfer_Callback);
       end if;

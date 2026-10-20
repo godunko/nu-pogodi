@@ -6,7 +6,6 @@
 
 with A0B.Asynchronous_Operations;
 with A0B.Callbacks;
-with A0B.Buffers;
 
 package Nu_Pogodi.Hardware.SPI is
 
@@ -35,11 +34,5 @@ package Nu_Pogodi.Hardware.SPI is
         A0B.Asynchronous_Operations.Transfer_Descriptor;
       Callback   : A0B.Callbacks.Callback;
       Success    : in out Boolean);
-
-   procedure Receive
-     (Buffer            : in out A0B.Buffers.Abstract_Buffer'Class;
-      Callback          : A0B.Callbacks.Callback;
-      Success           : in out Boolean;
-      Ignore_First_Byte : Boolean := False);
 
 end Nu_Pogodi.Hardware.SPI;
