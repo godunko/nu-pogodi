@@ -355,6 +355,7 @@ package body Nu_Pogodi.Hardware.SPI is
       Callback    : A0B.Callbacks.Callback;
       Success     : in out Boolean)
    is
+      use type A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
       use type System.Storage_Elements.Storage_Count;
 
    begin
@@ -661,6 +662,7 @@ package body Nu_Pogodi.Hardware.SPI is
       Finished    : A0B.Callbacks.Callback;
       Success     : in out Boolean)
    is
+      use type A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
       use type System.Storage_Elements.Storage_Count;
 
    begin

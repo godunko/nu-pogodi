@@ -192,6 +192,8 @@ package body Nu_Pogodi.Hardware.MIPI is
 
    procedure On_Transfer is
 
+      use type A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
+
       procedure Finish;
 
       ------------
