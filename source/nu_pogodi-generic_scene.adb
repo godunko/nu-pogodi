@@ -16,10 +16,12 @@ package body Nu_Pogodi.Generic_Scene is
    procedure Next (Item : in out Lane);
    --  Select next lane circulary.
 
-   procedure Update_Score;
+   procedure Update_Score
+     with Pre => State.Mode /= None;
    --  Increment score, update game speed.
 
-   function Exclude_Current_Lane return Boolean;
+   function Exclude_Current_Lane return Boolean
+     with Pre => State.Mode /= None;
    --  Returns `True` when current lane should be excluded from egg generation
    --  procedure.
 
@@ -100,6 +102,9 @@ package body Nu_Pogodi.Generic_Scene is
    function Exclude_Current_Lane return Boolean is
    begin
       case State.Mode is
+         when None =>
+            raise Program_Error;
+
          when Mode_A =>
             return
               (State.Current_Lane = Left_Top and State.Miss_Count = 2)
@@ -150,7 +155,10 @@ package body Nu_Pogodi.Generic_Scene is
 
       declare
          Cycle_Ticks  : constant A0B.Types.Unsigned_32 :=
-           (case Mode is when Mode_A => 31, when Mode_B => 25);
+           (case Mode is
+              when None   => raise Program_Error,
+              when Mode_A => 31,
+              when Mode_B => 25);
          Current_Lane : constant Lane :=
            (case Random_Generator.Generate mod 4 is
                when 0      => Left_Top,
@@ -418,15 +426,17 @@ package body Nu_Pogodi.Generic_Scene is
       if New_Wolf /= Wolf then
          Wolf := New_Wolf;
 
-         Random_Generator.Update;
+         if State.Mode /= None then
+            Random_Generator.Update;
 
-         if State.Dangerous_Lane /= None
-          and then To_Wolf (State.Dangerous_Lane) = Wolf
-         then
-            State.Dangerous_Lane    := None;
-            State.Active_Eggs_Count := @ - 1;
+            if State.Dangerous_Lane /= None
+             and then To_Wolf (State.Dangerous_Lane) = Wolf
+            then
+               State.Dangerous_Lane    := None;
+               State.Active_Eggs_Count := @ - 1;
 
-            Update_Score;
+               Update_Score;
+            end if;
          end if;
       end if;
    end Update_Input;
@@ -450,8 +460,8 @@ package body Nu_Pogodi.Generic_Scene is
       use type A0B.Types.Unsigned_32;
 
    begin
-      if State.Miss_Count > 3 then
-         --  Game over
+      if State.Miss_Count > 3 or State.Mode = None then
+         --  Game over or game not started
 
          return;
       end if;
@@ -525,6 +535,9 @@ package body Nu_Pogodi.Generic_Scene is
       --  Update score records
 
       case State.Mode is
+         when None =>
+            raise Program_Error;
+
          when Mode_A =>
             if State.Current_Score > Records.A then
                Records.A := State.Current_Score;

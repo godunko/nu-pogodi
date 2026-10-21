@@ -158,7 +158,6 @@ package body Nu_Pogodi.Desktop is
       Focus.On_Leave (Focus_Out'Access);
       Window.Add_Controller (Focus);
       Update_Input;
-      Initialize (Mode_A);
       Nu_Pogodi.Scene.Screen.Get_Visibility (Visible);
 
       Next_Tick := Clock + Tick_Step;

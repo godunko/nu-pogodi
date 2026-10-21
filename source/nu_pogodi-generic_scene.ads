@@ -31,7 +31,7 @@ generic
 
 package Nu_Pogodi.Generic_Scene is
 
-   type Game_Mode is (Mode_A, Mode_B);
+   type Game_Mode is (None, Mode_A, Mode_B);
 
    type Lane_Side is (Left, Right);
    type Lane_Height is (Top, Bottom);
@@ -52,7 +52,8 @@ package Nu_Pogodi.Generic_Scene is
 
    subtype Lane is Optional_Lane range Left_Top .. Right_Bottom;
 
-   procedure Initialize (Mode : Game_Mode);
+   procedure Initialize (Mode : Game_Mode)
+     with Pre => Mode /= None;
 
    procedure Update_Physics_Tick (Refresh : in out Boolean);
 
@@ -67,7 +68,7 @@ private
    subtype Score_Digit is Score range 0 .. 9;
 
    type Game_State is record
-      Mode                 : Game_Mode             := Mode_A;
+      Mode                 : Game_Mode             := None;
 
       Current_Tick         : A0B.Types.Unsigned_32 := 0;
       Current_Cycle        : A0B.Types.Unsigned_32 := 0;
@@ -85,7 +86,7 @@ private
 
       Current_Lane         : Lane                  := Left_Top;
       Current_Score        : Score                 := 0;
-      Miss_Count           : Natural               := 4;
+      Miss_Count           : Natural               := 0;
       Miss_Half            : Boolean               := False;
       Random_Seed          : A0B.Types.Unsigned_32 := 0;
       Idle_Lane_Count      : A0B.Types.Unsigned_32 := 0;

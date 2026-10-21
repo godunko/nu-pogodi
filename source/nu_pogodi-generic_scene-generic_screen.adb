@@ -313,6 +313,9 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
       --  Game mode
 
       case State.Mode is
+         when None =>
+            null;
+
          when Mode_A =>
             Sprites (Nu_Pogodi.Sprites.G4652) := not Is_Game_Over;
 
