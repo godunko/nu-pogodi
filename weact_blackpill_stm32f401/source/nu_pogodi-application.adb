@@ -20,6 +20,7 @@ with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
 with Nu_Pogodi.States.Clock;
 with Nu_Pogodi.States.Game;
+with Nu_Pogodi.States.Splash;
 
 package body Nu_Pogodi.Application is
 
@@ -57,6 +58,7 @@ package body Nu_Pogodi.Application is
    Mode         : Nu_Pogodi.Scene.Game_Mode := Nu_Pogodi.Scene.Mode_A;
    Game         : aliased Nu_Pogodi.States.Game.Game_State;
    Clock        : aliased Nu_Pogodi.States.Clock.Clock_State;
+   Splash       : aliased Nu_Pogodi.States.Splash.Splash_State;
    Active       : State_Access := null;
    Requested    : State_Access := null;
 
@@ -119,17 +121,15 @@ package body Nu_Pogodi.Application is
          Success);
    end Enter_Clock_State;
 
-   ----------------------
-   -- Enter_Game_State --
-   ----------------------
+   ----------------------------
+   -- Enter_Fast_Update_Mode --
+   ----------------------------
 
-   procedure Enter_Game_State is
+   procedure Enter_Fast_Update_Mode is
       Await   : aliased A0B.Awaits.Await;
       Success : Boolean := True;
 
    begin
-      Active := Game'Access;
-
       Nu_Pogodi.Display.Write_Waveform_Setting_For_Fast_Partial_Update
         (A0B.Awaits.Create_Callback (Await), Success);
       A0B.Awaits.Suspend_Until_Callback (Await, Success);
@@ -164,9 +164,30 @@ package body Nu_Pogodi.Application is
       if not Success then
          raise Program_Error;
       end if;
+   end Enter_Fast_Update_Mode;
 
+   ----------------------
+   -- Enter_Game_State --
+   ----------------------
+
+   procedure Enter_Game_State is
+   begin
+      Active := Game'Access;
+
+      Enter_Fast_Update_Mode;
       Scene.Initialize (Mode);
    end Enter_Game_State;
+
+   ------------------------
+   -- Enter_Splash_State --
+   ------------------------
+
+   procedure Enter_Splash_State is
+   begin
+      Active := Splash'Access;
+
+      Enter_Fast_Update_Mode;
+   end Enter_Splash_State;
 
    ----------------
    -- Full_Clean --
@@ -369,7 +390,7 @@ package body Nu_Pogodi.Application is
       Display_Busy    := False;
       Refresh_Pending := False;
 
-      Request_Clock_State;
+      Requested := Splash'Access;
 
       Next := A0B.Time.Clock;
 
@@ -381,6 +402,9 @@ package body Nu_Pogodi.Application is
 
                elsif Requested = Game'Access then
                   Enter_Game_State;
+
+               elsif Requested = Splash'Access then
+                  Enter_Splash_State;
                end if;
 
                Requested       := null;
