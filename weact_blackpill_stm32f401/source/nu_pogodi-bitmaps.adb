@@ -1,3 +1,9 @@
+--
+--  Copyright (C) 2026, Vadim Godunko <vgodunko@gmail.com>
+--
+--  SPDX-License-Identifier: GPL-3.0-or-later
+--
+
 pragma Ada_2022;
 
 with Nu_Pogodi.Drawing;

@@ -1,4 +1,8 @@
-pragma Ada_2022;
+--
+--  Copyright (C) 2026, Vadim Godunko <vgodunko@gmail.com>
+--
+--  SPDX-License-Identifier: GPL-3.0-or-later
+--
 
 with A0B.Types.Arrays;
 
@@ -6,12 +10,6 @@ with Nu_Pogodi.Framebuffers;
 with Nu_Pogodi.Sprites;
 
 package Nu_Pogodi.Bitmaps is
-   --  Layout: scanlines top-to-bottom, bytes left-to-right.
-   --  Each byte holds 8 horizontal pixels; bit 7 is the leftmost.
-   --  Black pixels are 0; white/padding pixels are 1.
-   Screen_Width   : constant := 400;
-   Screen_Height  : constant := 252;
-   Row_Bytes      : constant := Screen_Width / 8;
 
    type Byte_Array_Access is access constant A0B.Types.Arrays.Unsigned_8_Array;
 

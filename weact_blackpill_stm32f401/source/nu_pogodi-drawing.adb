@@ -134,7 +134,7 @@ package body Nu_Pogodi.Drawing is
         with Import, Address => A0B.Buffers.Address (Framebuffer.Buffer.all);
 
    begin
-      Storage := (others => 16#FF#);
+      Storage := [others => 16#FF#];
    end Fill;
 
 end Nu_Pogodi.Drawing;
