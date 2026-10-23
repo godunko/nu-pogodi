@@ -16,4 +16,9 @@ package Nu_Pogodi.Drawing is
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
       Bitmap      : Nu_Pogodi.Bitmaps.Bitmap_Descriptor);
 
+   procedure Draw
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Bitmap      : Nu_Pogodi.Bitmaps.RLE_Bitmap_Descriptor);
+   --  Decode and AND into framebuffer, clipping at framebuffer boundaries.
+
 end Nu_Pogodi.Drawing;
