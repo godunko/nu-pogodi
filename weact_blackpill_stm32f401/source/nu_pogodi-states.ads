@@ -4,8 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-with A0B.Buffers;
-
+with Nu_Pogodi.Framebuffers;
 with Nu_Pogodi.Keyboard;
 
 package Nu_Pogodi.States is
@@ -13,8 +12,8 @@ package Nu_Pogodi.States is
    type Abstract_State is abstract tagged limited private;
 
    not overriding procedure Render
-     (Self   : in out Abstract_State;
-      Buffer : in out A0B.Buffers.Abstract_Buffer'Class) is abstract;
+     (Self        : in out Abstract_State;
+      Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer) is abstract;
 
    not overriding procedure Physics_Tick
      (Self    : in out Abstract_State;

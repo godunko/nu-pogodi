@@ -13,8 +13,8 @@ private
    type Clock_State is new Abstract_State with null record;
 
    overriding procedure Render
-     (Self   : in out Clock_State;
-      Buffer : in out A0B.Buffers.Abstract_Buffer'Class);
+     (Self        : in out Clock_State;
+      Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer);
 
    overriding procedure Physics_Tick
      (Self    : in out Clock_State;

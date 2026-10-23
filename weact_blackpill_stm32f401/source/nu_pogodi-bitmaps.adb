@@ -1,9 +1,10 @@
 pragma Ada_2022;
 
-package body Nu_Pogodi.Bitmaps is
-   use type Byte;
+with Nu_Pogodi.Drawing;
 
-   G4671_Data : aliased constant Byte_Array :=
+package body Nu_Pogodi.Bitmaps is
+
+   G4671_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FE#, 16#03#, 16#80#, 16#0F#,
@@ -29,7 +30,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4663_Data : aliased constant Byte_Array :=
+   G4663_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -79,7 +80,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   G4667_Data : aliased constant Byte_Array :=
+   G4667_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -113,7 +114,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   G4675_Data : aliased constant Byte_Array :=
+   G4675_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#9F#, 16#FF#, 16#FF#, 16#FF#,
       16#01#, 16#FF#, 16#FF#, 16#FF#,
       16#00#, 16#3F#, 16#FF#, 16#FF#,
@@ -163,7 +164,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4631_Data : aliased constant Byte_Array :=
+   G4631_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -205,7 +206,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4636_Data : aliased constant Byte_Array :=
+   G4636_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#BF#,
       16#FF#, 16#FF#, 16#FF#, 16#E0#, 16#3F#,
@@ -239,7 +240,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4659_Data : aliased constant Byte_Array :=
+   G4659_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -265,7 +266,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4648_Data : aliased constant Byte_Array :=
+   G4648_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -291,7 +292,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   G4641_Data : aliased constant Byte_Array :=
+   G4641_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FC#, 16#07#,
       16#FB#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FC#, 16#07#,
@@ -309,7 +310,7 @@ package body Nu_Pogodi.Bitmaps is
       16#F1#, 16#8C#, 16#FC#, 16#7E#, 16#79#, 16#F8#, 16#03#,
       16#FF#, 16#FF#, 16#FC#, 16#FE#, 16#FD#, 16#FC#, 16#07#];
 
-   G4652_Data : aliased constant Byte_Array :=
+   G4652_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#7F#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FE#, 16#3F#,
@@ -327,7 +328,7 @@ package body Nu_Pogodi.Bitmaps is
       16#C7#, 16#33#, 16#F9#, 16#F9#, 16#F3#, 16#F1#, 16#E1#,
       16#FF#, 16#73#, 16#FB#, 16#F9#, 16#F3#, 16#F3#, 16#F1#];
 
-   G4486_Data : aliased constant Byte_Array :=
+   G4486_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#F0#, 16#01#, 16#E0#, 16#07#,
@@ -353,7 +354,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path16_Data : aliased constant Byte_Array :=
+   Path16_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#E0#, 16#3F#,
       16#FF#, 16#FF#, 16#80#, 16#1F#,
@@ -379,7 +380,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path18_Data : aliased constant Byte_Array :=
+   Path18_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#80#, 16#0F#,
@@ -389,7 +390,7 @@ package body Nu_Pogodi.Bitmaps is
       16#F0#, 16#1F#,
       16#FF#, 16#FF#];
 
-   Path20_Data : aliased constant Byte_Array :=
+   Path20_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#00#, 16#0F#,
@@ -399,7 +400,7 @@ package body Nu_Pogodi.Bitmaps is
       16#C0#, 16#3F#,
       16#E0#, 16#7F#];
 
-   Path22_Data : aliased constant Byte_Array :=
+   Path22_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#80#, 16#07#,
@@ -409,7 +410,7 @@ package body Nu_Pogodi.Bitmaps is
       16#E0#, 16#1F#,
       16#E0#, 16#3F#];
 
-   Path30_Data : aliased constant Byte_Array :=
+   Path30_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#,
       16#FF#,
       16#FF#,
@@ -435,7 +436,7 @@ package body Nu_Pogodi.Bitmaps is
       16#DF#,
       16#FF#];
 
-   Path32_Data : aliased constant Byte_Array :=
+   Path32_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -461,7 +462,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path34_Data : aliased constant Byte_Array :=
+   Path34_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -487,7 +488,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path36_Data : aliased constant Byte_Array :=
+   Path36_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -513,7 +514,7 @@ package body Nu_Pogodi.Bitmaps is
       16#F7#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path38_Data : aliased constant Byte_Array :=
+   Path38_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -539,7 +540,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path42_Data : aliased constant Byte_Array :=
+   Path42_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -573,7 +574,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path44_Data : aliased constant Byte_Array :=
+   Path44_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -591,7 +592,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path48_Data : aliased constant Byte_Array :=
+   Path48_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FD#, 16#FF#,
       16#F8#, 16#FF#,
       16#F0#, 16#7F#,
@@ -617,7 +618,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path50_Data : aliased constant Byte_Array :=
+   Path50_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#,
       16#F3#,
       16#E1#,
@@ -643,7 +644,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#,
       16#FF#];
 
-   Path54_Data : aliased constant Byte_Array :=
+   Path54_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#,
       16#FB#,
       16#F3#,
@@ -669,7 +670,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#,
       16#FF#];
 
-   Path56_Data : aliased constant Byte_Array :=
+   Path56_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#DF#,
       16#FF#, 16#8F#,
@@ -695,7 +696,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path58_Data : aliased constant Byte_Array :=
+   Path58_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -721,7 +722,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path66_Data : aliased constant Byte_Array :=
+   Path66_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -739,7 +740,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path68_Data : aliased constant Byte_Array :=
+   Path68_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -757,7 +758,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path72_Data : aliased constant Byte_Array :=
+   Path72_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FE#, 16#03#,
       16#FC#, 16#01#,
       16#F8#, 16#01#,
@@ -767,7 +768,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path80_Data : aliased constant Byte_Array :=
+   Path80_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -809,7 +810,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path82_Data : aliased constant Byte_Array :=
+   Path82_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -851,7 +852,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path84_Data : aliased constant Byte_Array :=
+   Path84_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -893,7 +894,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path88_Data : aliased constant Byte_Array :=
+   Path88_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#E1#, 16#FF#,
       16#FF#, 16#80#, 16#FF#,
@@ -911,7 +912,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#0F#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path90_Data : aliased constant Byte_Array :=
+   Path90_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FC#, 16#1F#,
       16#F0#, 16#07#,
       16#E0#, 16#07#,
@@ -929,7 +930,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path92_Data : aliased constant Byte_Array :=
+   Path92_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -955,7 +956,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path98_Data : aliased constant Byte_Array :=
+   Path98_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FC#, 16#0F#, 16#FF#,
       16#F8#, 16#03#, 16#FF#,
@@ -973,7 +974,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path100_Data : aliased constant Byte_Array :=
+   Path100_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#8F#, 16#FF#,
       16#FE#, 16#01#, 16#FF#,
@@ -991,7 +992,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#F0#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path102_Data : aliased constant Byte_Array :=
+   Path102_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FE#, 16#3F#,
@@ -1009,7 +1010,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FE#, 16#03#,
       16#FF#, 16#87#];
 
-   Path108_Data : aliased constant Byte_Array :=
+   Path108_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -1083,7 +1084,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path110_Data : aliased constant Byte_Array :=
+   Path110_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#0F#,
@@ -1101,7 +1102,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#C0#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path112_Data : aliased constant Byte_Array :=
+   Path112_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FC#, 16#3F#,
       16#FF#, 16#F0#, 16#0F#,
@@ -1119,7 +1120,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path118_Data : aliased constant Byte_Array :=
+   Path118_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#C1#, 16#FF#, 16#FF#, 16#FF#,
@@ -1185,7 +1186,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path122_Data : aliased constant Byte_Array :=
+   Path122_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1211,7 +1212,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path124_Data : aliased constant Byte_Array :=
+   Path124_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1237,7 +1238,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path132_Data : aliased constant Byte_Array :=
+   Path132_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1263,7 +1264,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path134_Data : aliased constant Byte_Array :=
+   Path134_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1289,7 +1290,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path136_Data : aliased constant Byte_Array :=
+   Path136_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1315,7 +1316,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path138_Data : aliased constant Byte_Array :=
+   Path138_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1341,7 +1342,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path148_Data : aliased constant Byte_Array :=
+   Path148_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1367,7 +1368,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path150_Data : aliased constant Byte_Array :=
+   Path150_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1393,7 +1394,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path156_Data : aliased constant Byte_Array :=
+   Path156_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1419,7 +1420,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path160_Data : aliased constant Byte_Array :=
+   Path160_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1445,7 +1446,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path162_Data : aliased constant Byte_Array :=
+   Path162_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -1511,7 +1512,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path168_Data : aliased constant Byte_Array :=
+   Path168_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -1569,7 +1570,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path176_Data : aliased constant Byte_Array :=
+   Path176_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1595,7 +1596,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path178_Data : aliased constant Byte_Array :=
+   Path178_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#F0#, 16#FF#,
       16#E0#, 16#3F#,
@@ -1613,7 +1614,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FC#, 16#07#,
       16#FF#, 16#0F#];
 
-   Path190_Data : aliased constant Byte_Array :=
+   Path190_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#87#,
@@ -1647,7 +1648,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path202_Data : aliased constant Byte_Array :=
+   Path202_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -1689,7 +1690,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path208_Data : aliased constant Byte_Array :=
+   Path208_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FE#, 16#FF#,
       16#FF#, 16#FF#, 16#F7#, 16#F9#, 16#FF#,
@@ -1723,7 +1724,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path34_8_63_Data : aliased constant Byte_Array :=
+   Path34_8_63_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#,
       16#FF#, 16#FF#,
       16#FF#, 16#FF#,
@@ -1749,7 +1750,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#,
       16#FF#, 16#FF#];
 
-   Path56_3_64_Data : aliased constant Byte_Array :=
+   Path56_3_64_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#,
       16#FB#,
       16#F1#,
@@ -1775,7 +1776,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#,
       16#FF#];
 
-   Path44_0_65_Data : aliased constant Byte_Array :=
+   Path44_0_65_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1793,7 +1794,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path44_0_1_66_Data : aliased constant Byte_Array :=
+   Path44_0_1_66_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1811,7 +1812,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path150_4_67_Data : aliased constant Byte_Array :=
+   Path150_4_67_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -1845,7 +1846,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path164_Data : aliased constant Byte_Array :=
+   Path164_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#C3#, 16#FF#,
@@ -1879,7 +1880,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path14_Data : aliased constant Byte_Array :=
+   Path14_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FE#, 16#7F#, 16#FF#, 16#FF#, 16#FF#,
@@ -2009,7 +2010,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path10_3_70_Data : aliased constant Byte_Array :=
+   Path10_3_70_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
@@ -2139,7 +2140,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#E0#, 16#00#, 16#00#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#80#, 16#0F#, 16#FF#, 16#FF#];
 
-   Path30_8_71_Data : aliased constant Byte_Array :=
+   Path30_8_71_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#F8#, 16#7F#, 16#FF#, 16#FF#,
@@ -2173,7 +2174,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#];
 
-   Path168_3_72_Data : aliased constant Byte_Array :=
+   Path168_3_72_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#DF#, 16#FF#,
@@ -2207,7 +2208,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path166_Data : aliased constant Byte_Array :=
+   Path166_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#,
@@ -2241,7 +2242,7 @@ package body Nu_Pogodi.Bitmaps is
       16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#];
 
-   Path16_9_74_Data : aliased constant Byte_Array :=
+   Path16_9_74_Data : aliased constant A0B.Types.Arrays.Unsigned_8_Array :=
      [16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#E3#, 16#FF#, 16#FF#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#C0#, 16#FE#, 16#7F#, 16#FF#, 16#FF#,
       16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#FF#, 16#9E#, 16#7C#, 16#1F#, 16#FF#, 16#FF#,
@@ -2475,12 +2476,19 @@ package body Nu_Pogodi.Bitmaps is
    ----------
 
    procedure Draw
-     (Buffer : in out Framebuffer; Id : Nu_Pogodi.Sprites.Sprite_Id)
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Id          : Nu_Pogodi.Sprites.Sprite_Id)
    is
+      use type A0B.Types.Unsigned_8;
+      use type A0B.Types.Unsigned_32;
+
+      Buffer : A0B.Types.Arrays.Unsigned_8_Array
+        (0 .. Framebuffer.Stride * Framebuffer.Height - 1)
+        with Import, Address => Framebuffer.Buffer.Address;
       Bitmap : constant Bitmap_Descriptor := Descriptors (Id);
-      Bitmap_Row_Bytes : constant Positive := Bitmap.Width / 8;
-      Screen_Y, Screen_Byte : Integer;
-      Target, Source : Natural;
+      Bitmap_Row_Bytes : constant A0B.Types.Unsigned_32 := Bitmap.Width / 8;
+      Screen_Y, Screen_Byte : A0B.Types.Unsigned_32;
+      Target, Source : A0B.Types.Unsigned_32;
    begin
       for Row in 0 .. Bitmap.Height - 1 loop
          Screen_Y := Bitmap.Y + Row;
@@ -2502,11 +2510,12 @@ package body Nu_Pogodi.Bitmaps is
    ----------
 
    procedure Draw
-     (Buffer : in out Framebuffer; Set : Nu_Pogodi.Sprites.Sprite_Set) is
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Set         : Nu_Pogodi.Sprites.Sprite_Set) is
    begin
       for Id in Set'Range loop
          if Set (Id) then
-            Draw (Buffer, Id);
+            Draw (Framebuffer, Id);
          end if;
       end loop;
    end Draw;
@@ -2515,12 +2524,13 @@ package body Nu_Pogodi.Bitmaps is
    -- Reconstruct --
    -----------------
 
-   procedure Reconstruct (Buffer : out Framebuffer) is
+   procedure Reconstruct
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer) is
    begin
-      Buffer := [others => 16#FF#];
+      Nu_Pogodi.Drawing.Fill (Framebuffer);
 
       for Id in Nu_Pogodi.Sprites.Sprite_Id loop
-         Draw (Buffer, Id);
+         Draw (Framebuffer, Id);
       end loop;
    end Reconstruct;
 

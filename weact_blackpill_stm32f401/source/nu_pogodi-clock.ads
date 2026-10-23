@@ -4,10 +4,10 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-with A0B.Buffers;
+with Nu_Pogodi.Framebuffers;
 
 package Nu_Pogodi.Clock is
 
-   procedure Draw (Buffer : in out A0B.Buffers.Abstract_Buffer'Class);
+   procedure Draw (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer);
 
 end Nu_Pogodi.Clock;

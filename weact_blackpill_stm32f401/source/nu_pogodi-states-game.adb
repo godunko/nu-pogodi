@@ -39,17 +39,15 @@ package body Nu_Pogodi.States.Game is
    ------------
 
    overriding procedure Render
-     (Self   : in out Game_State;
-      Buffer : in out A0B.Buffers.Abstract_Buffer'Class)
+     (Self        : in out Game_State;
+      Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer)
    is
-      FB  : Nu_Pogodi.Bitmaps.Framebuffer
-        with Import, Address => Buffer.Address;
       Set : Nu_Pogodi.Sprites.Sprite_Set;
 
    begin
       Nu_Pogodi.Scene.Screen.Get_Visibility (Set);
-      Nu_Pogodi.Bitmaps.Draw (FB, Set);
-      Nu_Pogodi.Clock.Draw (Buffer);
+      Nu_Pogodi.Bitmaps.Draw (Framebuffer, Set);
+      Nu_Pogodi.Clock.Draw (Framebuffer);
 
       if Nu_Pogodi.Scene.Is_Game_Over then
          Nu_Pogodi.Application.Request_Clock_State;

@@ -44,17 +44,15 @@ package body Nu_Pogodi.States.Clock is
    ------------
 
    overriding procedure Render
-     (Self   : in out Clock_State;
-      Buffer : in out A0B.Buffers.Abstract_Buffer'Class)
+     (Self        : in out Clock_State;
+      Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer)
    is
-      FB  : Nu_Pogodi.Bitmaps.Framebuffer
-        with Import, Address => Buffer.Address;
       Set : Nu_Pogodi.Sprites.Sprite_Set;
 
    begin
       Nu_Pogodi.Scene.Screen.Get_Visibility (Set);
-      Nu_Pogodi.Bitmaps.Draw (FB, Set);
-      Nu_Pogodi.Clock.Draw (Buffer);
+      Nu_Pogodi.Bitmaps.Draw (Framebuffer, Set);
+      Nu_Pogodi.Clock.Draw (Framebuffer);
    end Render;
 
 end Nu_Pogodi.States.Clock;

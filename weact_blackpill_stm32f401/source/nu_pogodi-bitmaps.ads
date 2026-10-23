@@ -1,7 +1,8 @@
 pragma Ada_2022;
 
-with A0B.Types;
+with A0B.Types.Arrays;
 
+with Nu_Pogodi.Framebuffers;
 with Nu_Pogodi.Sprites;
 
 package Nu_Pogodi.Bitmaps is
@@ -12,30 +13,31 @@ package Nu_Pogodi.Bitmaps is
    Screen_Height  : constant := 252;
    Row_Bytes      : constant := Screen_Width / 8;
 
-   subtype Byte is A0B.Types.Unsigned_8;
-   type Byte_Array is array (Natural range <>) of Byte
-     with Component_Size => 8;
-   subtype Framebuffer is Byte_Array (0 .. Row_Bytes * Screen_Height - 1);
-   type Byte_Array_Access is access constant Byte_Array;
+   type Byte_Array_Access is access constant A0B.Types.Arrays.Unsigned_8_Array;
 
    type Bitmap_Descriptor is record
-      X, Y          : Integer;
-      Width, Height : Positive;
-      Data          : Byte_Array_Access;
+      X      : A0B.Types.Unsigned_32;
+      Y      : A0B.Types.Unsigned_32;
+      Width  : A0B.Types.Unsigned_32;
+      Height : A0B.Types.Unsigned_32;
+      Data   : Byte_Array_Access;
    end record;
 
    function Metadata
      (Id : Nu_Pogodi.Sprites.Sprite_Id) return Bitmap_Descriptor;
 
+   procedure Draw
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Id          : Nu_Pogodi.Sprites.Sprite_Id);
    --  AND one bitmap into Buffer, clipping at screen boundaries.
    --  Does not clear Buffer. Process one individual scanline at a time.
-   procedure Draw
-     (Buffer : in out Framebuffer; Id : Nu_Pogodi.Sprites.Sprite_Id);
 
    procedure Draw
-     (Buffer : in out Framebuffer; Set : Nu_Pogodi.Sprites.Sprite_Set);
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Set         : Nu_Pogodi.Sprites.Sprite_Set);
 
+   procedure Reconstruct
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer);
    --  Fill Buffer with white and draw all 72 artwork components.
-   procedure Reconstruct (Buffer : out Framebuffer);
 
 end Nu_Pogodi.Bitmaps;

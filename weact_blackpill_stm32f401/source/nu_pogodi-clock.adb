@@ -51,13 +51,13 @@ package body Nu_Pogodi.Clock is
    -- Draw --
    ----------
 
-   procedure Draw (Buffer : in out A0B.Buffers.Abstract_Buffer'Class) is
+   procedure Draw (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer) is
       use type A0B.Types.Unsigned_32;
 
       T : constant Nu_Pogodi.Hardware.RTC.Date_Time :=
         Nu_Pogodi.Hardware.RTC.Clock;
 
-      F : Frame_Buffer with Import, Address => Buffer.Address;
+      F : Frame_Buffer with Import, Address => Framebuffer.Buffer.Address;
 
       procedure Draw
         (X     : A0B.Types.Unsigned_32;

@@ -11,10 +11,10 @@ with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time.Clock;
 with A0B.Timer;
 with A0B.Buffers.Static;
-with A0B.Types.Arrays;
 
-with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Display;
+with Nu_Pogodi.Drawing;
+with Nu_Pogodi.Framebuffers;
 with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
@@ -49,8 +49,8 @@ package body Nu_Pogodi.Application is
    procedure Full_Clean;
 
    procedure Partial
-     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success : in out Boolean);
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Success     : in out Boolean);
 
    type State_Access is access all Nu_Pogodi.States.Abstract_State'Class;
 
@@ -61,9 +61,15 @@ package body Nu_Pogodi.Application is
    Requested    : State_Access := null;
 
    Display_Busy : Boolean := False with Volatile;
-   Pixel_Buffer : A0B.Buffers.Static.Static_Buffer (15_000);
    Wakeup       : Boolean := False with Volatile;
    Keyboard     : Boolean := False with Volatile;
+
+   Framebuffer_Storage : aliased A0B.Buffers.Static.Static_Buffer (15_000);
+   Framebuffer         : Nu_Pogodi.Framebuffers.Framebuffer :=
+     (Buffer => Framebuffer_Storage'Access,
+      Width  => 400,
+      Height => 300,
+      Stride => 50);
 
    -----------------
    -- Delay_Until --
@@ -216,14 +222,8 @@ package body Nu_Pogodi.Application is
            Nu_Pogodi.Hardware.SSD1683.Height_Full,
            Success);
 
-      declare
-         Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-           with Import, Address => Pixel_Buffer.Address;
-
-      begin
-         Data := [others => 16#FF#];
-         Pixel_Buffer.Set_Actual_Length (15_000);
-      end;
+      Framebuffer_Storage.Set_Actual_Length (15_000);
+      Nu_Pogodi.Drawing.Fill (Framebuffer);
 
       if not Success then
          raise Program_Error;
@@ -262,27 +262,17 @@ package body Nu_Pogodi.Application is
    -------------
 
    procedure Partial
-     (Buffer  : in out A0B.Buffers.Abstract_Buffer'Class;
-      Success : in out Boolean)
-   is
-      Data : A0B.Types.Arrays.Unsigned_8_Array (1 .. 15_000)
-        with Import, Address => Buffer.Address;
-
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Success     : in out Boolean) is
    begin
-      declare
-         FB : Nu_Pogodi.Bitmaps.Framebuffer
-           with Import, Address => Data'Address;
+      Framebuffer.Buffer.Set_Actual_Length (15_000);
 
-      begin
-         Data := [others => 16#FF#];
-         Active.Render (Buffer);
-      end;
-
-      Buffer.Set_Actual_Length (15_000);
+      Nu_Pogodi.Drawing.Fill (Framebuffer);
+      Active.Render (Framebuffer);
 
       Display_Busy := True;
       Nu_Pogodi.Display.Update
-        (Buffer,
+        (Framebuffer.Buffer.all,
          On_Display_Updated_Callbacks.Create_Callback,
          Success);
 
@@ -406,7 +396,7 @@ package body Nu_Pogodi.Application is
             Wakeup          := False;
             Refresh_Pending := False;
 
-            Partial (Pixel_Buffer, Success);
+            Partial (Framebuffer, Success);
          end if;
 
          if Keyboard then
