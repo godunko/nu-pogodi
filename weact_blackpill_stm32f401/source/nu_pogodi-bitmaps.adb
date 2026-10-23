@@ -2477,32 +2477,9 @@ package body Nu_Pogodi.Bitmaps is
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
-      Id          : Nu_Pogodi.Sprites.Sprite_Id)
-   is
-      use type A0B.Types.Unsigned_8;
-      use type A0B.Types.Unsigned_32;
-
-      Buffer : A0B.Types.Arrays.Unsigned_8_Array
-        (0 .. Framebuffer.Stride * Framebuffer.Height - 1)
-        with Import, Address => Framebuffer.Buffer.Address;
-      Bitmap : constant Bitmap_Descriptor := Descriptors (Id);
-      Bitmap_Row_Bytes : constant A0B.Types.Unsigned_32 := Bitmap.Width / 8;
-      Screen_Y, Screen_Byte : A0B.Types.Unsigned_32;
-      Target, Source : A0B.Types.Unsigned_32;
+      Id          : Nu_Pogodi.Sprites.Sprite_Id) is
    begin
-      for Row in 0 .. Bitmap.Height - 1 loop
-         Screen_Y := Bitmap.Y + Row;
-         if Screen_Y >= 0 and then Screen_Y < Screen_Height then
-            for Column in 0 .. Bitmap_Row_Bytes - 1 loop
-               Screen_Byte := Bitmap.X / 8 + Column;
-               if Screen_Byte >= 0 and then Screen_Byte < Row_Bytes then
-                  Target := Screen_Y * Row_Bytes + Screen_Byte;
-                  Source := Row * Bitmap_Row_Bytes + Column;
-                  Buffer (Target) := Buffer (Target) and Bitmap.Data (Source);
-               end if;
-            end loop;
-         end if;
-      end loop;
+      Nu_Pogodi.Drawing.Draw (Framebuffer, Metadata (Id));
    end Draw;
 
    ----------
