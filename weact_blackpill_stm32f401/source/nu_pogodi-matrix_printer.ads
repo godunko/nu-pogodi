@@ -4,7 +4,12 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-package Nu_Pogodi.Drawing.Printer is
+with A0B.Types;
+
+with Nu_Pogodi.Bitmaps;
+with Nu_Pogodi.Framebuffers;
+
+package Nu_Pogodi.Matrix_Printer is
 
    function Frame_Count
      (Bitmap : Nu_Pogodi.Bitmaps.Bitmap_Descriptor) return Natural;
@@ -19,4 +24,4 @@ package Nu_Pogodi.Drawing.Printer is
    --  final screen position in pixels. Frame 0 is blank; Frame_Count is
    --  the final paper feed. Each pass ends with a separate feed frame.
 
-end Nu_Pogodi.Drawing.Printer;
+end Nu_Pogodi.Matrix_Printer;

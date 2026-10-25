@@ -4,9 +4,9 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-pragma Ada_2022;
+with Nu_Pogodi.Drawing;
 
-package body Nu_Pogodi.Drawing.Printer is
+package body Nu_Pogodi.Matrix_Printer is
 
    Rows_Per_Pass     : constant := 9;
    Columns_Per_Frame : constant := 24;
@@ -74,7 +74,7 @@ package body Nu_Pogodi.Drawing.Printer is
                Mask := A0B.Types.Unsigned_8 (2 ** (7 - Column mod 8));
 
                if (Bitmap.Data (Source) and Mask) /= 0 then
-                  Fill_Rectangle
+                  Nu_Pogodi.Drawing.Fill_Rectangle
                     (Framebuffer => Framebuffer,
                      Left        => Left_X
                        + A0B.Types.Unsigned_32 (Column * Dot_Step),
@@ -82,7 +82,7 @@ package body Nu_Pogodi.Drawing.Printer is
                        + A0B.Types.Unsigned_32 ((Row + Offset) * Dot_Step),
                      Width       => Dot_Size,
                      Height      => Dot_Size,
-                     Color       => Black);
+                     Color       => Nu_Pogodi.Drawing.Black);
                end if;
             end if;
          end loop;
@@ -92,28 +92,28 @@ package body Nu_Pogodi.Drawing.Printer is
          Head_X := Integer (Left_X) + Head * Dot_Step;
          Head_Y := Integer (Top_Y) + Passes * Rows_Per_Pass * Dot_Step;
 
-         Fill_Rectangle
+         Nu_Pogodi.Drawing.Fill_Rectangle
            (Framebuffer => Framebuffer,
             Left        => A0B.Types.Unsigned_32 (Head_X),
             Top         => A0B.Types.Unsigned_32 (Head_Y - 2),
             Width       => 1,
             Height      => Rows_Per_Pass * Dot_Step + 4,
-            Color       => Black);
-         Fill_Rectangle
+            Color       => Nu_Pogodi.Drawing.Black);
+         Nu_Pogodi.Drawing.Fill_Rectangle
            (Framebuffer => Framebuffer,
             Left        => A0B.Types.Unsigned_32 (Head_X - 3),
             Top         => A0B.Types.Unsigned_32 (Head_Y - 2),
             Width       => 7,
             Height      => 1,
-            Color       => Black);
-         Fill_Rectangle
+            Color       => Nu_Pogodi.Drawing.Black);
+         Nu_Pogodi.Drawing.Fill_Rectangle
            (Framebuffer => Framebuffer,
             Left        => A0B.Types.Unsigned_32 (Head_X - 3),
             Top         => A0B.Types.Unsigned_32
               (Head_Y + Rows_Per_Pass * Dot_Step + 1),
             Width       => 7,
             Height      => 1,
-            Color       => Black);
+            Color       => Nu_Pogodi.Drawing.Black);
       end if;
    end Draw;
 
@@ -136,4 +136,4 @@ package body Nu_Pogodi.Drawing.Printer is
         * ((Width + Columns_Per_Frame - 1) / Columns_Per_Frame + 1);
    end Frame_Count;
 
-end Nu_Pogodi.Drawing.Printer;
+end Nu_Pogodi.Matrix_Printer;
