@@ -11,6 +11,8 @@ package Nu_Pogodi.Drawing.Printer is
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Left_X      : A0B.Types.Unsigned_32;
+      Top_Y       : A0B.Types.Unsigned_32;
       Bitmap      : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
       Frame       : Natural);
    --  Bitmap contains printer dots, MSB first, 1 = ink. X/Y specify the

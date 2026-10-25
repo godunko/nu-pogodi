@@ -24,8 +24,6 @@ package Nu_Pogodi.Bitmaps is
    --  Width must be multiples of eight.
 
    type Bitmap_Descriptor is record
-      X      : A0B.Types.Unsigned_32;
-      Y      : A0B.Types.Unsigned_32;
       Width  : A0B.Types.Unsigned_32;
       Height : A0B.Types.Unsigned_32;
       Data   : Byte_Array_Access;

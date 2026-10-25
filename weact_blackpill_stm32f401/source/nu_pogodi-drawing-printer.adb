@@ -21,6 +21,8 @@ package body Nu_Pogodi.Drawing.Printer is
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Left_X      : A0B.Types.Unsigned_32;
+      Top_Y       : A0B.Types.Unsigned_32;
       Bitmap      : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
       Frame       : Natural)
    is
@@ -109,8 +111,8 @@ package body Nu_Pogodi.Drawing.Printer is
                   for Y in 0 .. Dot_Size - 1 loop
                      for X in 0 .. Dot_Size - 1 loop
                         Pixel
-                          (Integer (Bitmap.X) + Column * Dot_Step + X,
-                           Integer (Bitmap.Y)
+                          (Integer (Left_X) + Column * Dot_Step + X,
+                           Integer (Top_Y)
                              + (Row + Offset) * Dot_Step + Y);
                      end loop;
                   end loop;
@@ -120,8 +122,8 @@ package body Nu_Pogodi.Drawing.Printer is
       end loop;
 
       if Frame < Last then
-         Head_X := Integer (Bitmap.X) + Head * Dot_Step;
-         Head_Y := Integer (Bitmap.Y) + Passes * Rows_Per_Pass * Dot_Step;
+         Head_X := Integer (Left_X) + Head * Dot_Step;
+         Head_Y := Integer (Top_Y) + Passes * Rows_Per_Pass * Dot_Step;
 
          for Y in -2 .. Rows_Per_Pass * Dot_Step + 1 loop
             Pixel (Head_X, Head_Y + Y);

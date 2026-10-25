@@ -16,6 +16,8 @@ package Nu_Pogodi.Drawing is
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      X           : A0B.Types.Unsigned_32;
+      Y           : A0B.Types.Unsigned_32;
       Bitmap      : Nu_Pogodi.Bitmaps.Bitmap_Descriptor);
 
    procedure Draw
