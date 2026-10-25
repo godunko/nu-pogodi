@@ -8,7 +8,7 @@ with Nu_Pogodi.Application;
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Clock;
 with Nu_Pogodi.Scene.Screen;
-with Nu_Pogodi.Sprites;
+with Nu_Pogodi.Display_Segments;
 
 package body Nu_Pogodi.States.Clock is
 
@@ -47,7 +47,7 @@ package body Nu_Pogodi.States.Clock is
      (Self        : in out Clock_State;
       Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer)
    is
-      Set : Nu_Pogodi.Sprites.Sprite_Set;
+      Set : Nu_Pogodi.Display_Segments.Display_Segment_Set;
 
    begin
       Nu_Pogodi.Scene.Screen.Get_Visibility (Set);

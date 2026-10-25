@@ -9,39 +9,41 @@ pragma Ada_2022;
 package body Nu_Pogodi.Generic_Scene.Generic_Screen is
 
    Left_Top_Egg : constant
-     array (Lane_Side, Lane_Height, Egg_Step) of Nu_Pogodi.Sprites.Sprite_Id :=
+     array (Lane_Side, Lane_Height, Egg_Step)
+     of Nu_Pogodi.Display_Segments.Display_Segment_Identifier :=
      [Left =>
         [Top =>
-           [Nu_Pogodi.Sprites.Path90,
-            Nu_Pogodi.Sprites.Path98,
-            Nu_Pogodi.Sprites.Path102,
-            Nu_Pogodi.Sprites.Path112,
-            Nu_Pogodi.Sprites.Path124],
+           [Nu_Pogodi.Display_Segments.Path90,
+            Nu_Pogodi.Display_Segments.Path98,
+            Nu_Pogodi.Display_Segments.Path102,
+            Nu_Pogodi.Display_Segments.Path112,
+            Nu_Pogodi.Display_Segments.Path124],
          Bottom =>
-           [Nu_Pogodi.Sprites.Path132,
-            Nu_Pogodi.Sprites.Path136,
-            Nu_Pogodi.Sprites.Path148,
-            Nu_Pogodi.Sprites.Path156,
-            Nu_Pogodi.Sprites.Path176]],
+           [Nu_Pogodi.Display_Segments.Path132,
+            Nu_Pogodi.Display_Segments.Path136,
+            Nu_Pogodi.Display_Segments.Path148,
+            Nu_Pogodi.Display_Segments.Path156,
+            Nu_Pogodi.Display_Segments.Path176]],
       Right =>
         [Top =>
-           [Nu_Pogodi.Sprites.Path88,
-            Nu_Pogodi.Sprites.Path92,
-            Nu_Pogodi.Sprites.Path100,
-            Nu_Pogodi.Sprites.Path110,
-            Nu_Pogodi.Sprites.Path122],
+           [Nu_Pogodi.Display_Segments.Path88,
+            Nu_Pogodi.Display_Segments.Path92,
+            Nu_Pogodi.Display_Segments.Path100,
+            Nu_Pogodi.Display_Segments.Path110,
+            Nu_Pogodi.Display_Segments.Path122],
          Bottom =>
-           [Nu_Pogodi.Sprites.Path134,
-            Nu_Pogodi.Sprites.Path138,
-            Nu_Pogodi.Sprites.Path150,
-            Nu_Pogodi.Sprites.Path160,
-            Nu_Pogodi.Sprites.Path178]]];
+           [Nu_Pogodi.Display_Segments.Path134,
+            Nu_Pogodi.Display_Segments.Path138,
+            Nu_Pogodi.Display_Segments.Path150,
+            Nu_Pogodi.Display_Segments.Path160,
+            Nu_Pogodi.Display_Segments.Path178]]];
 
    type Indicator_Segment is
      (Top, Left_Top, Right_Top, Middle, Left_Bottom, Right_Bottom, Bottom);
 
    type Segment_Bitmap is
-     array (Indicator_Segment) of Nu_Pogodi.Sprites.Sprite_Id;
+     array (Indicator_Segment)
+     of Nu_Pogodi.Display_Segments.Display_Segment_Identifier;
 
    type Segments_State is array (Indicator_Segment) of Boolean;
 
@@ -128,35 +130,37 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
          Bottom       => True]];
 
    Indicator_0 : constant Segment_Bitmap :=
-     [Top          => Nu_Pogodi.Sprites.Path22,
-      Left_Top     => Nu_Pogodi.Sprites.Path38,
-      Right_Top    => Nu_Pogodi.Sprites.Path36,
-      Middle       => Nu_Pogodi.Sprites.Path44_0_1_66,
-      Left_Bottom  => Nu_Pogodi.Sprites.Path54,
-      Right_Bottom => Nu_Pogodi.Sprites.Path58,
-      Bottom       => Nu_Pogodi.Sprites.Path72];
+     [Top          => Nu_Pogodi.Display_Segments.Path22,
+      Left_Top     => Nu_Pogodi.Display_Segments.Path38,
+      Right_Top    => Nu_Pogodi.Display_Segments.Path36,
+      Middle       => Nu_Pogodi.Display_Segments.Path44_0_1_66,
+      Left_Bottom  => Nu_Pogodi.Display_Segments.Path54,
+      Right_Bottom => Nu_Pogodi.Display_Segments.Path58,
+      Bottom       => Nu_Pogodi.Display_Segments.Path72];
    Indicator_1 : constant Segment_Bitmap :=
-     [Top          => Nu_Pogodi.Sprites.Path20,
-      Left_Top     => Nu_Pogodi.Sprites.Path34,
-      Right_Top    => Nu_Pogodi.Sprites.Path30,
-      Middle       => Nu_Pogodi.Sprites.Path44_0_65,
-      Left_Bottom  => Nu_Pogodi.Sprites.Path50,
-      Right_Bottom => Nu_Pogodi.Sprites.Path56,
-      Bottom       => Nu_Pogodi.Sprites.Path68];
+     [Top          => Nu_Pogodi.Display_Segments.Path20,
+      Left_Top     => Nu_Pogodi.Display_Segments.Path34,
+      Right_Top    => Nu_Pogodi.Display_Segments.Path30,
+      Middle       => Nu_Pogodi.Display_Segments.Path44_0_65,
+      Left_Bottom  => Nu_Pogodi.Display_Segments.Path50,
+      Right_Bottom => Nu_Pogodi.Display_Segments.Path56,
+      Bottom       => Nu_Pogodi.Display_Segments.Path68];
    Indicator_2 : constant Segment_Bitmap :=
-     [Top          => Nu_Pogodi.Sprites.Path18,
-      Left_Top     => Nu_Pogodi.Sprites.Path34_8_63,
-      Right_Top    => Nu_Pogodi.Sprites.Path32,
-      Middle       => Nu_Pogodi.Sprites.Path44,
-      Left_Bottom  => Nu_Pogodi.Sprites.Path48,
-      Right_Bottom => Nu_Pogodi.Sprites.Path56_3_64,
-      Bottom       => Nu_Pogodi.Sprites.Path66];
+     [Top          => Nu_Pogodi.Display_Segments.Path18,
+      Left_Top     => Nu_Pogodi.Display_Segments.Path34_8_63,
+      Right_Top    => Nu_Pogodi.Display_Segments.Path32,
+      Middle       => Nu_Pogodi.Display_Segments.Path44,
+      Left_Bottom  => Nu_Pogodi.Display_Segments.Path48,
+      Right_Bottom => Nu_Pogodi.Display_Segments.Path56_3_64,
+      Bottom       => Nu_Pogodi.Display_Segments.Path66];
 
    --------------------
    -- Get_Visibility --
    --------------------
 
-   procedure Get_Visibility (Sprites : in out Nu_Pogodi.Sprites.Sprite_Set) is
+   procedure Get_Visibility
+     (Sprites : in out Nu_Pogodi.Display_Segments.Display_Segment_Set)
+   is
 
       use type A0B.Types.Unsigned_32;
 
@@ -188,25 +192,25 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
 
       case Wolf.Side is
          when Left =>
-            Sprites (Nu_Pogodi.Sprites.Path14) := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path14) := True;
 
             case Wolf.Height is
                when Top =>
-                  Sprites (Nu_Pogodi.Sprites.Path108) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path108) := True;
 
                when Bottom =>
-                  Sprites (Nu_Pogodi.Sprites.Path162) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path162) := True;
             end case;
 
          when Right =>
-            Sprites (Nu_Pogodi.Sprites.Path10_3_70) := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path10_3_70) := True;
 
             case Wolf.Height is
                when Top =>
-                  Sprites (Nu_Pogodi.Sprites.Path118) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path118) := True;
 
                when Bottom =>
-                  Sprites (Nu_Pogodi.Sprites.Path168) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path168) := True;
             end case;
       end case;
 
@@ -243,41 +247,41 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
          when 1 =>
             case State.Miss_Animation_Side is
                when Left =>
-                  Sprites (Nu_Pogodi.Sprites.Path30_8_71) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path30_8_71) := True;
 
                when Right =>
-                  Sprites (Nu_Pogodi.Sprites.Path150_4_67) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path150_4_67) := True;
             end case;
 
          when 2 =>
             case State.Miss_Animation_Side is
                when Left =>
-                  Sprites (Nu_Pogodi.Sprites.Path166) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path166) := True;
 
                when Right =>
-                  Sprites (Nu_Pogodi.Sprites.Path190) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path190) := True;
             end case;
 
          when 3 =>
             case State.Miss_Animation_Side is
                when Left =>
-                  Sprites (Nu_Pogodi.Sprites.Path168_3_72) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path168_3_72) := True;
 
                when Right =>
-                  Sprites (Nu_Pogodi.Sprites.Path164) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path164) := True;
             end case;
 
          when 4 =>
             case State.Miss_Animation_Side is
                when Left =>
-                  Sprites (Nu_Pogodi.Sprites.G4631)   := True;
-                  Sprites (Nu_Pogodi.Sprites.G4659)   := True;
-                  Sprites (Nu_Pogodi.Sprites.Path202) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.G4631)   := True;
+                  Sprites (Nu_Pogodi.Display_Segments.G4659)   := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path202) := True;
 
                when Right =>
-                  Sprites (Nu_Pogodi.Sprites.G4636)   := True;
-                  Sprites (Nu_Pogodi.Sprites.G4648)   := True;
-                  Sprites (Nu_Pogodi.Sprites.Path208) := True;
+                  Sprites (Nu_Pogodi.Display_Segments.G4636)   := True;
+                  Sprites (Nu_Pogodi.Display_Segments.G4648)   := True;
+                  Sprites (Nu_Pogodi.Display_Segments.Path208) := True;
             end case;
 
          when others =>
@@ -287,7 +291,7 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
       --  Rabbit
 
       if State.Rabbit_Visible then
-         Sprites (Nu_Pogodi.Sprites.Path16_9_74) := True;
+         Sprites (Nu_Pogodi.Display_Segments.Path16_9_74) := True;
       end if;
 
       --  Miss count
@@ -295,19 +299,19 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
       if State.Miss_Count > 0
         and (State.Miss_Count /= 1 or not State.Miss_Half or Even_Cycle)
       then
-         Sprites (Nu_Pogodi.Sprites.Path80) := True;
+         Sprites (Nu_Pogodi.Display_Segments.Path80) := True;
       end if;
 
       if State.Miss_Count > 1
         and (State.Miss_Count /= 2 or not State.Miss_Half or Even_Cycle)
       then
-         Sprites (Nu_Pogodi.Sprites.Path84) := True;
+         Sprites (Nu_Pogodi.Display_Segments.Path84) := True;
       end if;
 
       if State.Miss_Count > 2
         and (State.Miss_Count /= 3 or not State.Miss_Half or Even_Cycle)
       then
-         Sprites (Nu_Pogodi.Sprites.Path82) := True;
+         Sprites (Nu_Pogodi.Display_Segments.Path82) := True;
       end if;
 
       --  Game mode
@@ -317,10 +321,10 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
             null;
 
          when Mode_A =>
-            Sprites (Nu_Pogodi.Sprites.G4652) := not Is_Game_Over;
+            Sprites (Nu_Pogodi.Display_Segments.G4652) := not Is_Game_Over;
 
          when Mode_B =>
-            Sprites (Nu_Pogodi.Sprites.G4641) := not Is_Game_Over;
+            Sprites (Nu_Pogodi.Display_Segments.G4641) := not Is_Game_Over;
       end case;
    end Get_Visibility;
 

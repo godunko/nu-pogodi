@@ -7,7 +7,7 @@
 with A0B.Types.Arrays;
 
 with Nu_Pogodi.Framebuffers;
-with Nu_Pogodi.Sprites;
+with Nu_Pogodi.Display_Segments;
 
 package Nu_Pogodi.Bitmaps is
 
@@ -34,17 +34,18 @@ package Nu_Pogodi.Bitmaps is
    end record;
 
    function Metadata
-     (Id : Nu_Pogodi.Sprites.Sprite_Id) return RLE_Bitmap_Descriptor;
+     (Id : Nu_Pogodi.Display_Segments.Display_Segment_Identifier)
+      return RLE_Bitmap_Descriptor;
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
-      Id          : Nu_Pogodi.Sprites.Sprite_Id);
+      Id          : Nu_Pogodi.Display_Segments.Display_Segment_Identifier);
    --  AND one bitmap into Buffer, clipping at screen boundaries.
    --  Does not clear Buffer. Process one individual scanline at a time.
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
-      Set         : Nu_Pogodi.Sprites.Sprite_Set);
+      Set         : Nu_Pogodi.Display_Segments.Display_Segment_Set);
 
    procedure Reconstruct
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer);

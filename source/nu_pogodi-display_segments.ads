@@ -4,9 +4,9 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-package Nu_Pogodi.Sprites is
+package Nu_Pogodi.Display_Segments is
 
-   type Sprite_Id is
+   type Display_Segment_Identifier is
      (G4671,
       G4663,
       G4667,
@@ -80,6 +80,6 @@ package Nu_Pogodi.Sprites is
       Path166,
       Path16_9_74);
 
-   type Sprite_Set is array (Sprite_Id) of Boolean;
+   type Display_Segment_Set is array (Display_Segment_Identifier) of Boolean;
 
-end Nu_Pogodi.Sprites;
+end Nu_Pogodi.Display_Segments;
