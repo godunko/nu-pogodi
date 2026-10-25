@@ -6,8 +6,6 @@
 
 pragma Ada_2022;
 
-with A0B.Types.Arrays;
-
 package body Nu_Pogodi.Drawing.Printer is
 
    Rows_Per_Pass     : constant := 9;
@@ -38,10 +36,6 @@ package body Nu_Pogodi.Drawing.Printer is
         (Width + Columns_Per_Frame - 1) / Columns_Per_Frame;
       Last   : constant Natural := Frame_Count (Bitmap);
 
-      Storage : A0B.Types.Arrays.Unsigned_8_Array
-        (0 .. Framebuffer.Stride * Framebuffer.Height - 1)
-        with Import, Address => Framebuffer.Buffer.Address;
-
       Pass       : Natural;
       Step       : Natural;
       Printed    : Natural;
@@ -54,34 +48,6 @@ package body Nu_Pogodi.Drawing.Printer is
       Visible    : Boolean;
       Source     : A0B.Types.Unsigned_32;
       Mask       : A0B.Types.Unsigned_8;
-
-      procedure Pixel
-        (X : Integer;
-         Y : Integer);
-
-      -----------
-      -- Pixel --
-      -----------
-
-      procedure Pixel
-        (X : Integer;
-         Y : Integer)
-      is
-         Target : A0B.Types.Unsigned_32;
-
-      begin
-         if X < 0 or else Y < 0
-           or else X >= Integer (Framebuffer.Width)
-           or else Y >= Integer (Framebuffer.Height)
-         then
-            return;
-         end if;
-
-         Target := A0B.Types.Unsigned_32 (Y) * Framebuffer.Stride
-           + A0B.Types.Unsigned_32 (X / 8);
-         Storage (Target) := @ and not
-           A0B.Types.Unsigned_8 (2 ** (7 - X mod 8));
-      end Pixel;
 
    begin
       if Frame = 0 or else Last = 0 then
@@ -108,14 +74,15 @@ package body Nu_Pogodi.Drawing.Printer is
                Mask := A0B.Types.Unsigned_8 (2 ** (7 - Column mod 8));
 
                if (Bitmap.Data (Source) and Mask) /= 0 then
-                  for Y in 0 .. Dot_Size - 1 loop
-                     for X in 0 .. Dot_Size - 1 loop
-                        Pixel
-                          (Integer (Left_X) + Column * Dot_Step + X,
-                           Integer (Top_Y)
-                             + (Row + Offset) * Dot_Step + Y);
-                     end loop;
-                  end loop;
+                  Fill_Rectangle
+                    (Framebuffer => Framebuffer,
+                     Left        => Left_X
+                       + A0B.Types.Unsigned_32 (Column * Dot_Step),
+                     Top         => Top_Y
+                       + A0B.Types.Unsigned_32 ((Row + Offset) * Dot_Step),
+                     Width       => Dot_Size,
+                     Height      => Dot_Size,
+                     Color       => Black);
                end if;
             end if;
          end loop;
@@ -125,14 +92,28 @@ package body Nu_Pogodi.Drawing.Printer is
          Head_X := Integer (Left_X) + Head * Dot_Step;
          Head_Y := Integer (Top_Y) + Passes * Rows_Per_Pass * Dot_Step;
 
-         for Y in -2 .. Rows_Per_Pass * Dot_Step + 1 loop
-            Pixel (Head_X, Head_Y + Y);
-         end loop;
-
-         for X in -3 .. 3 loop
-            Pixel (Head_X + X, Head_Y - 2);
-            Pixel (Head_X + X, Head_Y + Rows_Per_Pass * Dot_Step + 1);
-         end loop;
+         Fill_Rectangle
+           (Framebuffer => Framebuffer,
+            Left        => A0B.Types.Unsigned_32 (Head_X),
+            Top         => A0B.Types.Unsigned_32 (Head_Y - 2),
+            Width       => 1,
+            Height      => Rows_Per_Pass * Dot_Step + 4,
+            Color       => Black);
+         Fill_Rectangle
+           (Framebuffer => Framebuffer,
+            Left        => A0B.Types.Unsigned_32 (Head_X - 3),
+            Top         => A0B.Types.Unsigned_32 (Head_Y - 2),
+            Width       => 7,
+            Height      => 1,
+            Color       => Black);
+         Fill_Rectangle
+           (Framebuffer => Framebuffer,
+            Left        => A0B.Types.Unsigned_32 (Head_X - 3),
+            Top         => A0B.Types.Unsigned_32
+              (Head_Y + Rows_Per_Pass * Dot_Step + 1),
+            Width       => 7,
+            Height      => 1,
+            Color       => Black);
       end if;
    end Draw;
 
