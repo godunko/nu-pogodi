@@ -141,4 +141,56 @@ package body Nu_Pogodi.Drawing is
       Storage := [others => 16#FF#];
    end Fill;
 
+   --------------------
+   -- Fill_Rectangle --
+   --------------------
+
+   procedure Fill_Rectangle
+     (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      Left        : A0B.Types.Unsigned_32;
+      Top         : A0B.Types.Unsigned_32;
+      Width       : A0B.Types.Unsigned_32;
+      Height      : A0B.Types.Unsigned_32;
+      Color       : Color_Type)
+   is
+      use type A0B.Types.Unsigned_8;
+      use type A0B.Types.Unsigned_32;
+
+      Right      : constant A0B.Types.Unsigned_32 := Left + Width;
+      First_Byte : constant A0B.Types.Unsigned_32 := Left / 8;
+      Last_Byte  : constant A0B.Types.Unsigned_32 := (Right - 1) / 8;
+      First_Mask : constant A0B.Types.Unsigned_8 :=
+        A0B.Types.Shift_Right (16#FF#, Natural (Left mod 8));
+      Last_Mask  : constant A0B.Types.Unsigned_8 :=
+        A0B.Types.Shift_Left
+          (16#FF#, Natural (7 - (Right - 1) mod 8));
+      Value      : constant A0B.Types.Unsigned_8 :=
+        (if Color = Black then 16#00# else 16#FF#);
+
+      Mask    : A0B.Types.Unsigned_8;
+      Target  : A0B.Types.Unsigned_32;
+
+      Storage : A0B.Types.Arrays.Unsigned_8_Array
+        (0 .. Framebuffer.Stride * Framebuffer.Height - 1)
+        with Import, Address => Framebuffer.Buffer.Address;
+
+   begin
+      for Row in Top .. Top + Height - 1 loop
+         for Column in First_Byte .. Last_Byte loop
+            Mask := 16#FF#;
+
+            if Column = First_Byte then
+               Mask := @ and First_Mask;
+            end if;
+
+            if Column = Last_Byte then
+               Mask := @ and Last_Mask;
+            end if;
+
+            Target := Row * Framebuffer.Stride + Column;
+            Storage (Target) := (@ and not Mask) or (Value and Mask);
+         end loop;
+      end loop;
+   end Fill_Rectangle;
+
 end Nu_Pogodi.Drawing;
