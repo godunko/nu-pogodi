@@ -26,6 +26,9 @@ package Nu_Pogodi.Hardware.Pin_Control is
    --  Configure keyboard pins and set callback to be emitted when change of
    --  key state is detected.
 
+   procedure Configure_Buzzer_Pin;
+   --  Configure TIM1 CH1 output pin, used to control buzzer
+
    procedure Set_MIPI_D_C (To : Boolean);
 
    procedure Set_SSD1683_RES (To : Boolean);

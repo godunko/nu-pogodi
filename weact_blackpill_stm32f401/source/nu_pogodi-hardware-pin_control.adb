@@ -30,6 +30,8 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    Keyboard_SET    : constant := 8;   --  PB8
    Keyboard_RESET  : constant := 9;   --  PB9
 
+   BUZZER : constant := 8;  --  PA8
+
    SSD1683_BUSY_Callback : aliased A0B.Callbacks.Callback;
    Keyboard_Callback     : aliased A0B.Callbacks.Callback;
 
@@ -127,6 +129,20 @@ package body Nu_Pogodi.Hardware.Pin_Control is
          --  Dummy := A0B.STM32F401.SVD.RCC.RCC_Periph.AHB1ENR;
       --  Disable clock of all GPIO peripheral
    end Configure_Analog_All;
+
+   --------------------------
+   -- Configure_Buzzer_Pin --
+   --------------------------
+
+   procedure Configure_Buzzer_Pin is
+   begin
+      --  PA8: AF1/TIM1_CH1, push-pull, no pull-up or pull-down.
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.AFRH.Arr (BUZZER)      := 2#0001#;
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.OTYPER.OT.Arr (BUZZER) := False;
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.OSPEEDR.Arr (BUZZER)   := 2#00#;
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.PUPDR.Arr (BUZZER)     := 2#00#;
+      A0B.STM32F401.SVD.GPIO.GPIOA_Periph.MODER.Arr (BUZZER)     := 2#10#;
+   end Configure_Buzzer_Pin;
 
    ----------------------------------
    -- Configure_External_Interrupt --
