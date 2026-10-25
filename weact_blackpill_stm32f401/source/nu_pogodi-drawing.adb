@@ -58,6 +58,8 @@ package body Nu_Pogodi.Drawing is
 
    procedure Draw
      (Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer;
+      X           : A0B.Types.Unsigned_32;
+      Y           : A0B.Types.Unsigned_32;
       Bitmap      : Nu_Pogodi.Bitmaps.RLE_Bitmap_Descriptor)
    is
       use type A0B.Types.Unsigned_8;
@@ -84,7 +86,7 @@ package body Nu_Pogodi.Drawing is
       end if;
 
       for Row in 0 .. Bitmap.Height - 1 loop
-         Screen_Y := Bitmap.Y + Row;
+         Screen_Y := Y + Row;
 
          exit when Framebuffer.Height <= Screen_Y;
 
@@ -110,7 +112,7 @@ package body Nu_Pogodi.Drawing is
             end if;
 
             Remaining   := @ - 1;
-            Screen_Byte := Bitmap.X / 8 + Column;
+            Screen_Byte := X / 8 + Column;
 
             --  Consume clipped bytes to keep the following rows in sync.
 
