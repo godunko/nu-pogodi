@@ -7,13 +7,16 @@
 pragma Ada_2022;
 
 with Nu_Pogodi.Application;
-with Nu_Pogodi.Drawing;
-with Nu_Pogodi.States.Splash.Frames;
+with Nu_Pogodi.Bitmaps.Logo;
+with Nu_Pogodi.Drawing.Printer;
 
 package body Nu_Pogodi.States.Splash is
 
-   Last_Frame_Tick : constant := Frames.Last_Frame * Ticks_Per_Frame;
-   Hold_Ticks      : constant := Last_Frame_Tick + Physics_Ticks_Per_Second;
+   Last_Frame : constant Natural :=
+     Nu_Pogodi.Drawing.Printer.Frame_Count (Nu_Pogodi.Bitmaps.Logo.Descriptor);
+   Last_Frame_Tick : constant Natural := Last_Frame * Ticks_Per_Frame;
+   Hold_Ticks      : constant Natural :=
+     Last_Frame_Tick + Physics_Ticks_Per_Second;
 
    --------------
    -- Keyboard --
@@ -59,13 +62,14 @@ package body Nu_Pogodi.States.Splash is
       Framebuffer : in out Nu_Pogodi.Framebuffers.Framebuffer)
    is
       Frame : constant Natural :=
-        Natural'Min (Self.Tick / Ticks_Per_Frame, Frames.Last_Frame);
+        Natural'Min (Self.Tick / Ticks_Per_Frame, Last_Frame);
 
    begin
       Self.Started := True;
 
       if Frame /= 0 then
-         Nu_Pogodi.Drawing.Draw (Framebuffer, Frames.Descriptors (Frame));
+         Nu_Pogodi.Drawing.Printer.Draw
+           (Framebuffer, Nu_Pogodi.Bitmaps.Logo.Descriptor, Frame);
       end if;
    end Render;
 
