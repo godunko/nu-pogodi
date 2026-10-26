@@ -12,8 +12,11 @@ with Nu_Pogodi.Application;
 with Nu_Pogodi.Hardware.Sound;
 with Nu_Pogodi.Logo;
 with Nu_Pogodi.Matrix_Printer;
+with Nu_Pogodi.Sounds.Buffers;
 
 package body Nu_Pogodi.States.Splash is
+
+   package Sound_Buffers renames Nu_Pogodi.Sounds.Buffers;
 
    Last_Frame : constant Natural :=
      Nu_Pogodi.Matrix_Printer.Frame_Count (Nu_Pogodi.Logo.Descriptor);
@@ -21,17 +24,7 @@ package body Nu_Pogodi.States.Splash is
    Hold_Ticks      : constant Natural :=
      Last_Frame_Tick + Physics_Ticks_Per_Second;
 
-   type Buffer_Index is range 0 .. 1;
-
-   Buffer_0, Buffer_1 : aliased Nu_Pogodi.Hardware.Sound.Sample_Array :=
-     [0 .. Nu_Pogodi.Hardware.Sound.Samples_Per_Frame - 1 =>
-        (ARR => 249, CCR1 => 0, others => <>)] with Alignment => 4;
-
-   type Sound_Buffer_Access is
-     access all Nu_Pogodi.Hardware.Sound.Sample_Array;
-
-   Buffers : constant array (Buffer_Index) of Sound_Buffer_Access :=
-     [Buffer_0'Access, Buffer_1'Access];
+   subtype Buffer_Index is Sound_Buffers.Buffer_Index;
 
    procedure On_Sound_Finished (Frame : Natural);
 
@@ -63,7 +56,7 @@ package body Nu_Pogodi.States.Splash is
       end if;
 
       Nu_Pogodi.Hardware.Sound.Start
-        (Buffers (Buffer).all,
+        (Sound_Buffers.Buffers (Buffer).all,
          Sound_Finished_Callbacks.Create_Callback (Frame + 1),
          Success);
 
@@ -85,12 +78,12 @@ package body Nu_Pogodi.States.Splash is
 
          if Last_Frame /= 0 then
             Nu_Pogodi.Matrix_Printer.Generate_Sound
-              (Nu_Pogodi.Logo.Descriptor, 1, Buffers (0).all);
+              (Nu_Pogodi.Logo.Descriptor, 1, Sound_Buffers.Buffers (0).all);
             On_Sound_Finished (0);
 
             if Last_Frame > 1 then
                Nu_Pogodi.Matrix_Printer.Generate_Sound
-                 (Nu_Pogodi.Logo.Descriptor, 2, Buffers (1).all);
+                 (Nu_Pogodi.Logo.Descriptor, 2, Sound_Buffers.Buffers (1).all);
             end if;
          end if;
 
@@ -116,7 +109,8 @@ package body Nu_Pogodi.States.Splash is
                   Nu_Pogodi.Matrix_Printer.Generate_Sound
                     (Nu_Pogodi.Logo.Descriptor,
                      Sound_Frame,
-                     Buffers (Buffer_Index ((Sound_Frame - 1) mod 2)).all);
+                     Sound_Buffers.Buffers
+                       (Buffer_Index ((Sound_Frame - 1) mod 2)).all);
                end if;
             end;
          end if;

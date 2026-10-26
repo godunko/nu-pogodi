@@ -14,6 +14,7 @@ with Nu_Pogodi.Clock;
 with Nu_Pogodi.Hardware.Sound;
 with Nu_Pogodi.Scene.Screen;
 with Nu_Pogodi.Display_Segments;
+with Nu_Pogodi.Sounds.Buffers;
 with Nu_Pogodi.Sounds.Samples;
 
 package body Nu_Pogodi.States.Game is
@@ -29,9 +30,8 @@ package body Nu_Pogodi.States.Game is
 
    procedure Start_Sound;
 
-   Buffer : aliased Nu_Pogodi.Hardware.Sound.Sample_Array
-     (0 .. Nu_Pogodi.Hardware.Sound.Samples_Per_Frame - 1)
-       with Alignment => 4;
+   Buffer : Nu_Pogodi.Hardware.Sound.Sample_Array
+     renames Nu_Pogodi.Sounds.Buffers.Buffers (0).all;
 
    type Queue_Index is mod 4;
    --  One slot remains free, leaving room for three sounds.
