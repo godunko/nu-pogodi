@@ -36,7 +36,8 @@ package Nu_Pogodi.Generic_Scene is
       Move_Left_Top,
       Move_Left_Bottom,
       Move_Right_Top,
-      Move_Right_Bottom);
+      Move_Right_Bottom,
+      Egg_Caught);
 
    type Game_Mode is (None, Mode_A, Mode_B);
 
@@ -65,9 +66,10 @@ package Nu_Pogodi.Generic_Scene is
    procedure Update_Physics_Tick
      (Refresh : in out Boolean;
       Sound   : out Sound_Kind);
-   --  Sound is None unless this tick requests a display refresh.
 
-   procedure Update_Keyboad_State (State : Nu_Pogodi.Keyboard.Keyboard_State);
+   procedure Update_Keyboad_State
+     (State : Nu_Pogodi.Keyboard.Keyboard_State;
+      Sound : out Sound_Kind);
 
    function Is_Game_Over return Boolean;
 

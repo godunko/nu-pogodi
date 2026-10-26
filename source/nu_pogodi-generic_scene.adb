@@ -10,7 +10,8 @@ package body Nu_Pogodi.Generic_Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height);
+      Height : Lane_Height;
+      Sound  : out Sound_Kind);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -58,13 +59,16 @@ package body Nu_Pogodi.Generic_Scene is
 
    procedure Advance_Lane
      (Side   : Lane_Side;
-      Height : Lane_Height)
+      Height : Lane_Height;
+      Sound  : out Sound_Kind)
    is
       use type A0B.Types.Unsigned_32;
 
       Lane : Egg_Array renames Lanes (Side, Height);
 
    begin
+      Sound := None;
+
       if Lane (Lane'Last) then
          State.Dangerous_Lane := To_Lane (Side, Height);
       end if;
@@ -85,9 +89,16 @@ package body Nu_Pogodi.Generic_Scene is
          Lane (Lane'First) := False;
       end if;
 
-      if (for some Step in Egg_Step => Lane (Step))
-        or State.Dangerous_Lane /= None
-      then
+      if (for some Step in Egg_Step => Lane (Step)) then
+         Sound :=
+           (case To_Lane (Side, Height) is
+               when Left_Top     => Move_Left_Top,
+               when Right_Top    => Move_Right_Top,
+               when Left_Bottom  => Move_Left_Bottom,
+               when Right_Bottom => Move_Right_Bottom);
+      end if;
+
+      if Sound /= None or State.Dangerous_Lane /= None then
          State.Idle_Lane_Count := 0;
 
       else
@@ -330,26 +341,17 @@ package body Nu_Pogodi.Generic_Scene is
             loop
                case State.Current_Lane is
                   when Left_Top =>
-                     Advance_Lane (Left, Top);
+                     Advance_Lane (Left, Top, Sound);
 
                   when Right_Top =>
-                     Advance_Lane (Right, Top);
+                     Advance_Lane (Right, Top, Sound);
 
                   when Left_Bottom =>
-                     Advance_Lane (Left, Bottom);
+                     Advance_Lane (Left, Bottom, Sound);
 
                   when Right_Bottom =>
-                     Advance_Lane (Right, Bottom);
+                     Advance_Lane (Right, Bottom, Sound);
                end case;
-
-               if State.Idle_Lane_Count = 0 then
-                  Sound :=
-                    (case State.Current_Lane is
-                        when Left_Top     => Move_Left_Top,
-                        when Right_Top    => Move_Right_Top,
-                        when Left_Bottom  => Move_Left_Bottom,
-                        when Right_Bottom => Move_Right_Bottom);
-               end if;
 
                Next (State.Current_Lane);
 
@@ -362,6 +364,7 @@ package body Nu_Pogodi.Generic_Scene is
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
+               Sound                   := Egg_Caught;
 
                Update_Score;
             end if;
@@ -418,7 +421,7 @@ package body Nu_Pogodi.Generic_Scene is
    -- Update_Input --
    ------------------
 
-   procedure Update_Input is
+   procedure Update_Input (Sound : in out Sound_Kind) is
       use type A0B.Types.Unsigned_32;
 
       New_Wolf : constant Wolf_Position :=
@@ -444,6 +447,7 @@ package body Nu_Pogodi.Generic_Scene is
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
+               Sound                   := Egg_Caught;
 
                Update_Score;
             end if;
@@ -456,10 +460,12 @@ package body Nu_Pogodi.Generic_Scene is
    --------------------------
 
    procedure Update_Keyboad_State
-     (State : Nu_Pogodi.Keyboard.Keyboard_State) is
+     (State : Nu_Pogodi.Keyboard.Keyboard_State;
+      Sound : out Sound_Kind) is
    begin
-      Keys := State;
-      Update_Input;
+      Keys  := State;
+      Sound := None;
+      Update_Input (Sound);
    end Update_Keyboad_State;
 
    -------------------------
@@ -485,15 +491,14 @@ package body Nu_Pogodi.Generic_Scene is
       State.Remain_Ticks := @ - 1;
 
       if State.Remain_Ticks /= 0 then
-         Update_Input;
+         Update_Input (Sound);
 
-         return;
+      else
+         Update_Game_Tick (Sound);
+         Update_Input (Sound);
+
+         Refresh := True;
       end if;
-
-      Update_Game_Tick (Sound);
-      Update_Input;
-
-      Refresh := True;
    end Update_Physics_Tick;
 
    ------------------
