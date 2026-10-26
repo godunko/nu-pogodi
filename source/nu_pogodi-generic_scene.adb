@@ -415,6 +415,7 @@ package body Nu_Pogodi.Generic_Scene is
               or (State.Miss_Count = 3 and not State.Miss_Half)
             then
                State.Miss_Count := 4;
+               Sound := Nu_Pogodi.Sounds.Game_Over;
             end if;
 
          else

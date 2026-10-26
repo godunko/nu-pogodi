@@ -122,6 +122,56 @@ package body Nu_Pogodi.Sounds.Samples is
       Last := Buffer'First + Samples_Per_Fall - 1;
    end Generate_Fall_Sound;
 
+   ------------------------------
+   -- Generate_Game_Over_Sound --
+   ------------------------------
+
+   procedure Generate_Game_Over_Sound
+     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
+      Last   : out Natural)
+   is
+      Start_Frequency : constant := 700;
+      End_Frequency   : constant := 180;
+      Frequency_Scale : constant := Samples_Per_Game_Over ** 2;
+
+   begin
+      --  Keep the quadratic frequency curve without floating-point rounding.
+
+      for J in 0 .. Samples_Per_Game_Over - 1 loop
+         declare
+            Scaled_Frequency : constant Positive :=
+              Start_Frequency * Frequency_Scale
+                - (Start_Frequency - End_Frequency) * J * J;
+            Period           : constant Positive :=
+              Positive
+                (1_000_000 * Long_Long_Integer (Frequency_Scale)
+                   / Long_Long_Integer (Scaled_Frequency));
+            Pulse            : Natural := Period / 2;
+
+         begin
+            if Scaled_Frequency < 300 * Frequency_Scale then
+               if J mod 12 > 6 then
+                  Pulse := @ + Period / 4;
+
+               else
+                  Pulse := @ - Period / 4;
+               end if;
+            end if;
+
+            if J > Samples_Per_Game_Over - 200 then
+               Pulse := 0;
+            end if;
+
+            Buffer (Buffer'First + J) :=
+              (ARR    => A0B.Types.Unsigned_16 (Period - 1),
+               CCR1   => A0B.Types.Unsigned_16 (Pulse),
+               others => <>);
+         end;
+      end loop;
+
+      Last := Buffer'First + Samples_Per_Game_Over - 1;
+   end Generate_Game_Over_Sound;
+
    --------------------------------
    -- Generate_Left_Bottom_Sound --
    --------------------------------

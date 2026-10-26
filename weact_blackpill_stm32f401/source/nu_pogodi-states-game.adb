@@ -31,7 +31,7 @@ package body Nu_Pogodi.States.Game is
    procedure Start_Sound;
 
    Buffer : Nu_Pogodi.Hardware.Sound.Sample_Array
-     renames Nu_Pogodi.Sounds.Buffers.Buffers (0).all;
+     renames Nu_Pogodi.Sounds.Buffers.Buffer_0;
 
    type Queue_Index is mod 4;
    --  One slot remains free, leaving room for three sounds.
