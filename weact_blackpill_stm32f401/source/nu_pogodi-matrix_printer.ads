@@ -8,6 +8,7 @@ with A0B.Types;
 
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Framebuffers;
+with Nu_Pogodi.Hardware.Sound;
 
 package Nu_Pogodi.Matrix_Printer is
 
@@ -23,5 +24,11 @@ package Nu_Pogodi.Matrix_Printer is
    --  Bitmap contains printer dots, MSB first, 1 = ink. X/Y specify the
    --  final screen position in pixels. Frame 0 is blank; Frame_Count is
    --  the final paper feed. Each pass ends with a separate feed frame.
+
+   procedure Generate_Sound
+     (Bitmap  : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
+      Frame   : Positive;
+      Samples : out Nu_Pogodi.Hardware.Sound.Sample_Array);
+   --  Fill the sound buffer for the specified printer frame.
 
 end Nu_Pogodi.Matrix_Printer;

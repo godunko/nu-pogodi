@@ -4,14 +4,31 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+pragma Ada_2022;
+
 with Nu_Pogodi.Drawing;
 
 package body Nu_Pogodi.Matrix_Printer is
 
-   Rows_Per_Pass     : constant := 9;
-   Columns_Per_Frame : constant := 24;
    Dot_Step          : constant := 3;
    Dot_Size          : constant := 2;
+
+   Rows_Per_Pass     : constant := 9;
+   --  Number of printer needles, shared by drawing and sound generation.
+   Columns_Per_Frame : constant := 24;
+
+   type Needle_Mask is mod 2 ** Rows_Per_Pass;
+
+   type Needle_Mask_Array is
+     array (Natural range 0 .. Columns_Per_Frame - 1) of Needle_Mask;
+
+   procedure Read_Needles
+     (Bitmap : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
+      Frame  : Positive;
+      Masks  : out Needle_Mask_Array;
+      Count  : out Natural);
+   --  Read the columns printed in this frame, in carriage travel order.
+   --  Bit 0 is the top needle. Count = 0 denotes a paper feed frame.
 
    ----------
    -- Draw --
@@ -135,5 +152,140 @@ package body Nu_Pogodi.Matrix_Printer is
       return ((Height + Rows_Per_Pass - 1) / Rows_Per_Pass)
         * ((Width + Columns_Per_Frame - 1) / Columns_Per_Frame + 1);
    end Frame_Count;
+
+   procedure Generate_Sound
+     (Bitmap  : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
+      Frame   : Positive;
+      Samples : out Nu_Pogodi.Hardware.Sound.Sample_Array)
+   is
+      use type A0B.Types.Unsigned_32;
+
+      function PWM_Sample
+        (Frequency : Positive;
+         Divisor   : Positive) return Nu_Pogodi.Hardware.Sound.Sample;
+
+      ----------------
+      -- PWM_Sample --
+      ----------------
+
+      function PWM_Sample
+        (Frequency : Positive;
+         Divisor   : Positive) return Nu_Pogodi.Hardware.Sound.Sample
+      is
+         Period : constant Positive := 1_000_000 / Frequency;
+
+      begin
+         return
+           (ARR    => A0B.Types.Unsigned_16 (Period - 1),
+            CCR1   => A0B.Types.Unsigned_16 (Period / Divisor),
+            others => <>);
+      end PWM_Sample;
+
+      Columns : Needle_Mask_Array;
+      Count   : Natural;
+      Index   : Natural := 0;
+
+   begin
+      Read_Needles (Bitmap, Frame, Columns, Count);
+
+      if Count = 0 then
+         for J in Samples'Range loop
+            Samples (J) := PWM_Sample (550 + (J * 7) mod 250, 3);
+         end loop;
+
+      else
+         for Column in 0 .. Count - 1 loop
+            for S in 0 .. Samples'Length / Count - 1 loop
+               declare
+                  Mask : constant A0B.Types.Unsigned_32 :=
+                    A0B.Types.Unsigned_32 (Columns (Column));
+                  Frequency : constant Positive :=
+                    (if Mask = 0 then 300 + S mod 25
+                     else 1_600 + Natural
+                       ((Mask * 37 + A0B.Types.Unsigned_32 (S) * 65)
+                          mod 1_600));
+
+               begin
+                  Samples (Index) :=
+                    PWM_Sample (Frequency, (if Mask = 0 then 2 else 6));
+                  Index := @ + 1;
+               end;
+            end loop;
+         end loop;
+
+         while Index < Samples'Length loop
+            Samples (Index) := PWM_Sample (300, 2);
+            Index := @ + 1;
+         end loop;
+      end if;
+   end Generate_Sound;
+
+   ------------------
+   -- Read_Needles --
+   ------------------
+
+   procedure Read_Needles
+     (Bitmap : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
+      Frame  : Positive;
+      Masks  : out Needle_Mask_Array;
+      Count  : out Natural)
+   is
+      use type A0B.Types.Unsigned_8;
+      use type A0B.Types.Unsigned_32;
+
+      Width  : constant Natural := Natural (Bitmap.Width);
+      Height : constant Natural := Natural (Bitmap.Height);
+      Stride : constant Natural := (Width + 7) / 8;
+      Steps  : constant Natural :=
+        (Width + Columns_Per_Frame - 1) / Columns_Per_Frame;
+      Last   : constant Natural := Frame_Count (Bitmap);
+      Pass   : Natural;
+      Step   : Natural;
+      Column : Natural;
+      Row    : Natural;
+      Source : A0B.Types.Unsigned_32;
+      Bit    : Needle_Mask;
+
+   begin
+      Masks := [others => 0];
+      Count := 0;
+
+      if Last = 0 or else Frame > Last then
+         return;
+      end if;
+
+      Pass := (Frame - 1) / (Steps + 1);
+      Step := (Frame - 1) mod (Steps + 1);
+
+      if Step = Steps then
+         return;
+      end if;
+
+      Count :=
+        Natural'Min (Columns_Per_Frame, Width - Step * Columns_Per_Frame);
+
+      for J in 0 .. Count - 1 loop
+         Column :=
+           (if Pass mod 2 = 0 then Step * Columns_Per_Frame + J
+            else Width - 1 - Step * Columns_Per_Frame - J);
+         Bit := 1;
+
+         for Pin in 0 .. Rows_Per_Pass - 1 loop
+            Row := Pass * Rows_Per_Pass + Pin;
+            exit when Row >= Height;
+
+            Source := Bitmap.Data'First
+              + A0B.Types.Unsigned_32 (Row * Stride + Column / 8);
+
+            if (Bitmap.Data (Source)
+                and A0B.Types.Unsigned_8 (2 ** (7 - Column mod 8))) /= 0
+            then
+               Masks (J) := @ or Bit;
+            end if;
+
+            Bit := @ + @;
+         end loop;
+      end loop;
+   end Read_Needles;
 
 end Nu_Pogodi.Matrix_Printer;
