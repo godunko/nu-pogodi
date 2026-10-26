@@ -19,6 +19,10 @@ package Nu_Pogodi.Sounds.Samples is
      (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
       Last   : out Natural);
 
+   procedure Generate_Fall_Sound
+     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
+      Last   : out Natural);
+
    procedure Generate_Left_Bottom_Sound
      (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
       Last   : out Natural);
@@ -42,6 +46,7 @@ package Nu_Pogodi.Sounds.Samples is
         Move_Left_Bottom  => Generate_Left_Bottom_Sound'Access,
         Move_Right_Top    => Generate_Right_Top_Sound'Access,
         Move_Right_Bottom => Generate_Right_Bottom_Sound'Access,
-        Egg_Caught        => Generate_Catch_Sound'Access];
+        Egg_Caught        => Generate_Catch_Sound'Access,
+        Egg_Broken        => Generate_Fall_Sound'Access];
 
 end Nu_Pogodi.Sounds.Samples;

@@ -332,6 +332,7 @@ package body Nu_Pogodi.Generic_Scene is
                   when Left_Bottom  => Left,
                   when Right_Bottom => Right);
             State.Miss_Animation_Cycle := 4;
+            Sound := Nu_Pogodi.Sounds.Egg_Broken;
 
             Lanes := [others => [others => [others => False]]];
             State.Active_Eggs_Count := 0;

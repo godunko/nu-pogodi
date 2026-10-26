@@ -17,6 +17,9 @@ package body Nu_Pogodi.Sounds.Samples is
    Samples_Per_Catch : constant :=
      Nu_Pogodi.Hardware.Sound.Sample_Rate * 75 / 1_000;
 
+   Samples_Per_Fall : constant :=
+     Nu_Pogodi.Hardware.Sound.Sample_Rate / 20;
+
    procedure Generate_Sound
      (Buffer           : out Nu_Pogodi.Hardware.Sound.Sample_Array;
       Last             : out Natural;
@@ -53,6 +56,36 @@ package body Nu_Pogodi.Sounds.Samples is
 
       Last := Buffer'First + Samples_Per_Catch - 1;
    end Generate_Catch_Sound;
+
+   -------------------------
+   -- Generate_Fall_Sound --
+   -------------------------
+
+   procedure Generate_Fall_Sound
+     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
+      Last   : out Natural)
+   is
+      ARR_Start : constant := 2_222;
+      ARR_End   : constant := 8_333;
+
+   begin
+      for J in 0 .. Samples_Per_Fall - 1 loop
+         declare
+            ARR : constant Natural :=
+              ARR_Start + (ARR_End - ARR_Start) * J / Samples_Per_Fall;
+
+         begin
+            Buffer (Buffer'First + J) :=
+              (ARR    => A0B.Types.Unsigned_16 (ARR),
+               CCR1   =>
+                 (if J > Samples_Per_Fall - 40 then 0
+                  else A0B.Types.Unsigned_16 (ARR / 2)),
+               others => <>);
+         end;
+      end loop;
+
+      Last := Buffer'First + Samples_Per_Fall - 1;
+   end Generate_Fall_Sound;
 
    --------------------------------
    -- Generate_Left_Bottom_Sound --

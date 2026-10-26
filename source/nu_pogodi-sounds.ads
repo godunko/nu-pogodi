@@ -12,6 +12,7 @@ package Nu_Pogodi.Sounds with Pure is
       Move_Left_Bottom,
       Move_Right_Top,
       Move_Right_Bottom,
-      Egg_Caught);
+      Egg_Caught,
+      Egg_Broken);
 
 end Nu_Pogodi.Sounds;
