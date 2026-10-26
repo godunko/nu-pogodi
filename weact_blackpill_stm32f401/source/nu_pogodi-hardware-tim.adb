@@ -4,6 +4,9 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+--  TIM1_CH1/PA8 generates sound. TIM4_TRGO at 4 kHz triggers TIM1 DMA
+--  bursts through DMA2 Stream4/channel 6 into TIM1_DMAR.
+
 pragma Ada_2022;
 
 with System.Storage_Elements;
