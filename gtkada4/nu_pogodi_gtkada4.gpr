@@ -5,7 +5,6 @@
 --
 
 with "config/nu_pogodi_gtkada4_config.gpr";
-with "gtkada/src/gtkada.gpr";
 
 project Nu_Pogodi_GtkAda4 is
 
@@ -17,5 +16,9 @@ project Nu_Pogodi_GtkAda4 is
    package Builder is
       for Executable ("nu_pogodi-driver.adb") use "nu_pogodi_gtkada4";
    end Builder;
+
+   package Compiler is
+      for Switches ("Ada") use Nu_Pogodi_GtkAda4_Config.Ada_Compiler_Switches;
+   end Compiler;
 
 end Nu_Pogodi_GtkAda4;
