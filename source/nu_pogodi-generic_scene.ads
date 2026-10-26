@@ -9,6 +9,7 @@ pragma Ada_2022;
 with A0B.Types;
 
 with Nu_Pogodi.Keyboard;
+with Nu_Pogodi.Sounds;
 
 generic
    with function Timer return A0B.Types.Unsigned_4;
@@ -57,11 +58,11 @@ package Nu_Pogodi.Generic_Scene is
 
    procedure Update_Physics_Tick
      (Refresh : in out Boolean;
-      Sound   : out Sound_Kind);
+      Sound   : out Nu_Pogodi.Sounds.Sound_Identifier);
 
    procedure Update_Keyboad_State
      (State : Nu_Pogodi.Keyboard.Keyboard_State;
-      Sound : out Sound_Kind);
+      Sound : out Nu_Pogodi.Sounds.Sound_Identifier);
 
    function Is_Game_Over return Boolean;
 

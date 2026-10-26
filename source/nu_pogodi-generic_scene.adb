@@ -8,10 +8,12 @@ pragma Ada_2022;
 
 package body Nu_Pogodi.Generic_Scene is
 
+   use type Nu_Pogodi.Sounds.Sound_Identifier;
+
    procedure Advance_Lane
      (Side   : Lane_Side;
       Height : Lane_Height;
-      Sound  : out Sound_Kind);
+      Sound  : out Nu_Pogodi.Sounds.Sound_Identifier);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -60,14 +62,14 @@ package body Nu_Pogodi.Generic_Scene is
    procedure Advance_Lane
      (Side   : Lane_Side;
       Height : Lane_Height;
-      Sound  : out Sound_Kind)
+      Sound  : out Nu_Pogodi.Sounds.Sound_Identifier)
    is
       use type A0B.Types.Unsigned_32;
 
       Lane : Egg_Array renames Lanes (Side, Height);
 
    begin
-      Sound := None;
+      Sound := Nu_Pogodi.Sounds.None;
 
       if Lane (Lane'Last) then
          State.Dangerous_Lane := To_Lane (Side, Height);
@@ -92,13 +94,13 @@ package body Nu_Pogodi.Generic_Scene is
       if (for some Step in Egg_Step => Lane (Step)) then
          Sound :=
            (case To_Lane (Side, Height) is
-               when Left_Top     => Move_Left_Top,
-               when Right_Top    => Move_Right_Top,
-               when Left_Bottom  => Move_Left_Bottom,
-               when Right_Bottom => Move_Right_Bottom);
+               when Left_Top     => Nu_Pogodi.Sounds.Move_Left_Top,
+               when Right_Top    => Nu_Pogodi.Sounds.Move_Right_Top,
+               when Left_Bottom  => Nu_Pogodi.Sounds.Move_Left_Bottom,
+               when Right_Bottom => Nu_Pogodi.Sounds.Move_Right_Bottom);
       end if;
 
-      if Sound /= None or State.Dangerous_Lane /= None then
+      if Sound /= Nu_Pogodi.Sounds.None or State.Dangerous_Lane /= None then
          State.Idle_Lane_Count := 0;
 
       else
@@ -282,11 +284,13 @@ package body Nu_Pogodi.Generic_Scene is
    -- Update_Game_Tick --
    ----------------------
 
-   procedure Update_Game_Tick (Sound : out Sound_Kind) is
+   procedure Update_Game_Tick
+     (Sound : out Nu_Pogodi.Sounds.Sound_Identifier)
+   is
       use type A0B.Types.Unsigned_32;
 
    begin
-      Sound := None;
+      Sound := Nu_Pogodi.Sounds.None;
       State.Current_Cycle := @ + 1;
 
       --  for Side in Lane_Side loop
@@ -364,7 +368,7 @@ package body Nu_Pogodi.Generic_Scene is
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
-               Sound                   := Egg_Caught;
+               Sound                   := Nu_Pogodi.Sounds.Egg_Caught;
 
                Update_Score;
             end if;
@@ -421,7 +425,9 @@ package body Nu_Pogodi.Generic_Scene is
    -- Update_Input --
    ------------------
 
-   procedure Update_Input (Sound : in out Sound_Kind) is
+   procedure Update_Input
+     (Sound : in out Nu_Pogodi.Sounds.Sound_Identifier)
+   is
       use type A0B.Types.Unsigned_32;
 
       New_Wolf : constant Wolf_Position :=
@@ -447,7 +453,7 @@ package body Nu_Pogodi.Generic_Scene is
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
-               Sound                   := Egg_Caught;
+               Sound                   := Nu_Pogodi.Sounds.Egg_Caught;
 
                Update_Score;
             end if;
@@ -461,10 +467,10 @@ package body Nu_Pogodi.Generic_Scene is
 
    procedure Update_Keyboad_State
      (State : Nu_Pogodi.Keyboard.Keyboard_State;
-      Sound : out Sound_Kind) is
+      Sound : out Nu_Pogodi.Sounds.Sound_Identifier) is
    begin
       Keys  := State;
-      Sound := None;
+      Sound := Nu_Pogodi.Sounds.None;
       Update_Input (Sound);
    end Update_Keyboad_State;
 
@@ -474,12 +480,12 @@ package body Nu_Pogodi.Generic_Scene is
 
    procedure Update_Physics_Tick
      (Refresh : in out Boolean;
-      Sound   : out Sound_Kind)
+      Sound   : out Nu_Pogodi.Sounds.Sound_Identifier)
    is
       use type A0B.Types.Unsigned_32;
 
    begin
-      Sound := None;
+      Sound := Nu_Pogodi.Sounds.None;
 
       if State.Miss_Count > 3 or State.Mode = None then
          --  Game over or game not started
