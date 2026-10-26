@@ -13,8 +13,12 @@ generate_c = false
 generate_gpr = true
 
 [[depends-on]]
+gtkada4 = "*"
 gnat = ">16"
 nu_pogodi = "*"
 
 [[pins]]
 nu_pogodi = { path = ".." }
+gtkada4 = { path = "../../gtkada" }
+libgtk4 = { path = "../../libgtk4" }
+pkg_config = { path = "../../pkg_config" }
