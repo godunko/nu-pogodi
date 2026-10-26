@@ -33,7 +33,7 @@ with Gtk.Event_Controller_Focus;
 with Nu_Pogodi.Images;
 with Nu_Pogodi.Keyboard;
 with Nu_Pogodi.Scene.Screen;
-with Nu_Pogodi.Sprites;
+with Nu_Pogodi.Display_Segments;
 
 package body Nu_Pogodi.Desktop is
 
@@ -43,14 +43,15 @@ package body Nu_Pogodi.Desktop is
    use type Gdk.Pixbuf.Gdk_Pixbuf;
    use type GNAT.OS_Lib.String_Access;
    use type Glib.Main.G_Source_Id;
-   use type Nu_Pogodi.Sprites.Sprite_Set;
+   use type Nu_Pogodi.Display_Segments.Display_Segment_Set;
 
    Window     : Gtk.Application_Window.Gtk_Application_Window;
    Field      : Gtk.Drawing_Area.Gtk_Drawing_Area;
    Status     : Gtk.Label.Gtk_Label;
    Keys       : Nu_Pogodi.Keyboard.Keyboard_State :=
      (others => [others => False]);
-   Visible    : Nu_Pogodi.Sprites.Sprite_Set := [others => False];
+   Visible    : Nu_Pogodi.Display_Segments.Display_Segment_Set :=
+     [others => False];
    Running    : Boolean := False;
    Failed     : Boolean := False;
    Next_Tick  : Time;
@@ -58,7 +59,8 @@ package body Nu_Pogodi.Desktop is
    Tick_Step  : constant Time_Span := Milliseconds (25);
 
    type Image_Array is
-     array (Nu_Pogodi.Sprites.Sprite_Id) of Gdk.Pixbuf.Gdk_Pixbuf;
+     array (Nu_Pogodi.Display_Segments.Display_Segment_Identifier)
+     of Gdk.Pixbuf.Gdk_Pixbuf;
 
    Images     : Image_Array := [others => null];
    Background : Gdk.Pixbuf.Gdk_Pixbuf := null;
@@ -240,7 +242,8 @@ package body Nu_Pogodi.Desktop is
                Images (Id) :=
                  Nu_Pogodi.Images.Load
                    (Directory & "/" & Ada.Characters.Handling.To_Lower
-                      (Nu_Pogodi.Sprites.Sprite_Id'Image (Id)) & ".svg",
+                      (Nu_Pogodi.Display_Segments.Display_Segment_Identifier
+                         'Image (Id)) & ".svg",
                     Width,
                     Height);
             end loop;
@@ -396,7 +399,7 @@ package body Nu_Pogodi.Desktop is
       Now         : constant Time := Clock;
       Refresh     : Boolean := False;
       Updated     : Boolean := False;
-      New_Visible : Nu_Pogodi.Sprites.Sprite_Set;
+      New_Visible : Nu_Pogodi.Display_Segments.Display_Segment_Set;
 
    begin
       if not Window.Is_Active then
