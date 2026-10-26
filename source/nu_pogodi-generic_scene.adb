@@ -416,6 +416,9 @@ package body Nu_Pogodi.Generic_Scene is
             then
                State.Miss_Count := 4;
             end if;
+
+         else
+            Sound := Nu_Pogodi.Sounds.Chick_Jump;
          end if;
 
          State.Remain_Ticks := Miss_Animation_Ticks;

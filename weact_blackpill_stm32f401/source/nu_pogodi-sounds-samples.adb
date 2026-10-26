@@ -20,6 +20,9 @@ package body Nu_Pogodi.Sounds.Samples is
    Samples_Per_Fall : constant :=
      Nu_Pogodi.Hardware.Sound.Sample_Rate / 20;
 
+   Samples_Per_Chick_Jump : constant :=
+     Nu_Pogodi.Hardware.Sound.Sample_Rate * 30 / 1_000;
+
    procedure Generate_Sound
      (Buffer           : out Nu_Pogodi.Hardware.Sound.Sample_Array;
       Last             : out Natural;
@@ -56,6 +59,38 @@ package body Nu_Pogodi.Sounds.Samples is
 
       Last := Buffer'First + Samples_Per_Catch - 1;
    end Generate_Catch_Sound;
+
+   -------------------------------
+   -- Generate_Chick_Jump_Sound --
+   -------------------------------
+
+   procedure Generate_Chick_Jump_Sound
+     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
+      Last   : out Natural)
+   is
+      Frequencies : constant array (Natural range 0 .. 3) of Positive :=
+        [2_500, 3_200, 4_000, 5_000];
+      Samples_Per_Note : constant :=
+        Samples_Per_Chick_Jump / Frequencies'Length;
+
+   begin
+      for Part in Frequencies'Range loop
+         declare
+            Period : constant Positive := 1_000_000 / Frequencies (Part);
+
+         begin
+            Buffer
+              (Buffer'First + Part * Samples_Per_Note ..
+                 Buffer'First + (Part + 1) * Samples_Per_Note - 1) :=
+                [others =>
+                   (ARR    => A0B.Types.Unsigned_16 (Period - 1),
+                    CCR1   => A0B.Types.Unsigned_16 (Period / 2),
+                    others => <>)];
+         end;
+      end loop;
+
+      Last := Buffer'First + Samples_Per_Chick_Jump - 1;
+   end Generate_Chick_Jump_Sound;
 
    -------------------------
    -- Generate_Fall_Sound --
