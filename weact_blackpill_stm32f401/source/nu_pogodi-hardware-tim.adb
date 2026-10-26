@@ -22,6 +22,12 @@ package body Nu_Pogodi.Hardware.TIM is
 
    procedure Configure_DMA;
 
+   procedure DMA2_Stream4_Handler
+     with Export, Convention => C, External_Name => "DMA2_Stream4_Handler";
+
+   Transmit_Descriptor : access A0B.Asynchronous_Transfers.Transfer_Descriptor;
+   Transmit_Finished   : aliased A0B.Callbacks.Callback;
+
    -------------------
    -- Configure_DMA --
    -------------------
@@ -289,6 +295,28 @@ package body Nu_Pogodi.Hardware.TIM is
       --  Clear all flags.
    end Configure_TIM4;
 
+   --------------------------
+   -- DMA2_Stream4_Handler --
+   --------------------------
+
+   procedure DMA2_Stream4_Handler is
+   begin
+      if A0B.STM32F401.SVD.DMA.DMA2_Periph.HISR.TCIF4 then
+         A0B.STM32F401.SVD.DMA.DMA2_Periph.HIFCR :=
+           (CTCIF4 => True, others => <>);
+
+         A0B.Asynchronous_Transfers.Set_Success
+           (Transmit_Descriptor.all, Transmit_Descriptor.Length);
+         Transmit_Descriptor := null;
+         A0B.Callbacks.Emit_Once (Transmit_Finished);
+
+         if not A0B.STM32F401.SVD.DMA.DMA2_Periph.S4CR.EN then
+            A0B.STM32F401.SVD.TIM.TIM4_Periph.CR1.CEN   := False;
+            A0B.STM32F401.SVD.TIM.TIM1_Periph.CCR1.CCR1 := 0;
+         end if;
+      end if;
+   end DMA2_Stream4_Handler;
+
    ----------------
    -- Initialize --
    ----------------
@@ -306,5 +334,62 @@ package body Nu_Pogodi.Hardware.TIM is
       Configure_TIM4;
       Configure_DMA;
    end Initialize;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit
+     (Descriptor : aliased in out
+        A0B.Asynchronous_Transfers.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean)
+   is
+      use type System.Storage_Elements.Storage_Count;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Descriptor.Length = 0
+        or Descriptor.Length mod 2 /= 0
+        or Descriptor.Length / 2 >
+          System.Storage_Elements.Storage_Count (A0B.Types.Unsigned_16'Last)
+      then
+         --  DMA transfers a nonzero count of 16-bit elements.
+
+         Success := False;
+
+         return;
+
+      elsif A0B.STM32F401.SVD.DMA.DMA2_Periph.S4CR.EN then
+         --  Transfer is in progress.
+
+         Success := False;
+
+         return;
+      end if;
+
+      A0B.Asynchronous_Transfers.Set_Active (Descriptor);
+
+      Transmit_Descriptor := Descriptor'Unchecked_Access;
+      Transmit_Finished   := Finished;
+
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S4M0AR :=
+        A0B.Types.Unsigned_32
+          (System.Storage_Elements.To_Integer (Transmit_Descriptor.Buffer));
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S4NDTR :=
+        (NDT    => A0B.Types.Unsigned_16 (Transmit_Descriptor.Length / 2),
+         others => <>);
+      A0B.STM32F401.SVD.DMA.DMA2_Periph.S4CR.EN := True;
+
+      if not A0B.STM32F401.SVD.TIM.TIM4_Periph.CR1.CEN then
+         A0B.STM32F401.SVD.TIM.TIM4_Periph.EGR := (UG => True, others => <>);
+         A0B.STM32F401.SVD.TIM.TIM4_Periph.CR1.CEN := True;
+      end if;
+
+      Success := True;
+   end Transmit;
 
 end Nu_Pogodi.Hardware.TIM;
