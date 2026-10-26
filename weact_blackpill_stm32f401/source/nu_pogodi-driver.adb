@@ -10,6 +10,7 @@ with Nu_Pogodi.Application;
 with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.Pin_Control;
 with Nu_Pogodi.Hardware.RTC;
+with Nu_Pogodi.Hardware.Sound;
 with Nu_Pogodi.Hardware.SSD1683;
 
 procedure Nu_Pogodi.Driver is
@@ -20,6 +21,7 @@ begin
 
    Nu_Pogodi.Hardware.RTC.Initialize;
    Nu_Pogodi.Hardware.Pin_Control.Initialize;
+   Nu_Pogodi.Hardware.Sound.Initialize;
    Nu_Pogodi.Hardware.SSD1683.Initialize;
    Nu_Pogodi.Hardware.Keyboard.Initialize;
 
