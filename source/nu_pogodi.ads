@@ -4,6 +4,6 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-package Nu_Pogodi is
+package Nu_Pogodi with Pure is
 
 end Nu_Pogodi;

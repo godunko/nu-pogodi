@@ -31,14 +31,6 @@ generic
 
 package Nu_Pogodi.Generic_Scene is
 
-   type Sound_Kind is
-     (None,
-      Move_Left_Top,
-      Move_Left_Bottom,
-      Move_Right_Top,
-      Move_Right_Bottom,
-      Egg_Caught);
-
    type Game_Mode is (None, Mode_A, Mode_B);
 
    type Lane_Side is (Left, Right);
