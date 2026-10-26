@@ -34,6 +34,7 @@ with Nu_Pogodi.Images;
 with Nu_Pogodi.Keyboard;
 with Nu_Pogodi.Scene.Screen;
 with Nu_Pogodi.Display_Segments;
+with Nu_Pogodi.Sounds;
 
 package body Nu_Pogodi.Desktop is
 
@@ -400,6 +401,8 @@ package body Nu_Pogodi.Desktop is
       Refresh     : Boolean := False;
       Updated     : Boolean := False;
       New_Visible : Nu_Pogodi.Display_Segments.Display_Segment_Set;
+      Sound       : Nu_Pogodi.Sounds.Sound_Identifier;
+      --  Sound is not supported by this port.
 
    begin
       if not Window.Is_Active then
@@ -410,7 +413,7 @@ package body Nu_Pogodi.Desktop is
          Update_Input;
 
          while Next_Tick <= Now and then Running loop
-            Update_Physics_Tick (Refresh);
+            Update_Physics_Tick (Refresh, Sound);
             Updated := True;
             Next_Tick := Next_Tick + Tick_Step;
 
@@ -505,9 +508,12 @@ package body Nu_Pogodi.Desktop is
    ------------------
 
    procedure Update_Input is
+      Sound : Nu_Pogodi.Sounds.Sound_Identifier;
+      --  Sound is not supported by this port.
+
    begin
       if Running and then not Failed then
-         Update_Keyboad_State (Keys);
+         Update_Keyboad_State (Keys, Sound);
       end if;
 
       Keys.Pressed  := [others => False];
