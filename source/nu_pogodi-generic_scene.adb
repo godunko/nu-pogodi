@@ -271,10 +271,11 @@ package body Nu_Pogodi.Generic_Scene is
    -- Update_Game_Tick --
    ----------------------
 
-   procedure Update_Game_Tick is
+   procedure Update_Game_Tick (Sound : out Sound_Kind) is
       use type A0B.Types.Unsigned_32;
 
    begin
+      Sound := None;
       State.Current_Cycle := @ + 1;
 
       --  for Side in Lane_Side loop
@@ -340,6 +341,15 @@ package body Nu_Pogodi.Generic_Scene is
                   when Right_Bottom =>
                      Advance_Lane (Right, Bottom);
                end case;
+
+               if State.Idle_Lane_Count = 0 then
+                  Sound :=
+                    (case State.Current_Lane is
+                        when Left_Top     => Move_Left_Top,
+                        when Right_Top    => Move_Right_Top,
+                        when Left_Bottom  => Move_Left_Bottom,
+                        when Right_Bottom => Move_Right_Bottom);
+               end if;
 
                Next (State.Current_Lane);
 
@@ -456,10 +466,15 @@ package body Nu_Pogodi.Generic_Scene is
    -- Update_Physics_Tick --
    -------------------------
 
-   procedure Update_Physics_Tick (Refresh : in out Boolean) is
+   procedure Update_Physics_Tick
+     (Refresh : in out Boolean;
+      Sound   : out Sound_Kind)
+   is
       use type A0B.Types.Unsigned_32;
 
    begin
+      Sound := None;
+
       if State.Miss_Count > 3 or State.Mode = None then
          --  Game over or game not started
 
@@ -475,7 +490,7 @@ package body Nu_Pogodi.Generic_Scene is
          return;
       end if;
 
-      Update_Game_Tick;
+      Update_Game_Tick (Sound);
       Update_Input;
 
       Refresh := True;

@@ -27,8 +27,7 @@ package Nu_Pogodi.Hardware.Sound is
       CCR2 at 6 range 0 .. 15;
    end record;
 
-   type Sample_Array is array (Natural range 0 .. Samples_Per_Frame - 1)
-     of Sample;
+   type Sample_Array is array (Natural range <>) of Sample;
 
    procedure Initialize;
 

@@ -23,8 +23,15 @@ package body Nu_Pogodi.States.Splash is
 
    type Buffer_Index is range 0 .. 1;
 
-   Buffers : array (Buffer_Index)
-     of aliased Nu_Pogodi.Hardware.Sound.Sample_Array with Alignment => 4;
+   Buffer_0, Buffer_1 : aliased Nu_Pogodi.Hardware.Sound.Sample_Array :=
+     [0 .. Nu_Pogodi.Hardware.Sound.Samples_Per_Frame - 1 =>
+        (ARR => 249, CCR1 => 0, others => <>)] with Alignment => 4;
+
+   type Sound_Buffer_Access is
+     access all Nu_Pogodi.Hardware.Sound.Sample_Array;
+
+   Buffers : constant array (Buffer_Index) of Sound_Buffer_Access :=
+     [Buffer_0'Access, Buffer_1'Access];
 
    procedure On_Sound_Finished (Frame : Natural);
 
@@ -56,7 +63,7 @@ package body Nu_Pogodi.States.Splash is
       end if;
 
       Nu_Pogodi.Hardware.Sound.Start
-        (Buffers (Buffer),
+        (Buffers (Buffer).all,
          Sound_Finished_Callbacks.Create_Callback (Frame + 1),
          Success);
 
@@ -78,12 +85,12 @@ package body Nu_Pogodi.States.Splash is
 
          if Last_Frame /= 0 then
             Nu_Pogodi.Matrix_Printer.Generate_Sound
-              (Nu_Pogodi.Logo.Descriptor, 1, Buffers (0));
+              (Nu_Pogodi.Logo.Descriptor, 1, Buffers (0).all);
             On_Sound_Finished (0);
 
             if Last_Frame > 1 then
                Nu_Pogodi.Matrix_Printer.Generate_Sound
-                 (Nu_Pogodi.Logo.Descriptor, 2, Buffers (1));
+                 (Nu_Pogodi.Logo.Descriptor, 2, Buffers (1).all);
             end if;
          end if;
 
@@ -109,7 +116,7 @@ package body Nu_Pogodi.States.Splash is
                   Nu_Pogodi.Matrix_Printer.Generate_Sound
                     (Nu_Pogodi.Logo.Descriptor,
                      Sound_Frame,
-                     Buffers (Buffer_Index ((Sound_Frame - 1) mod 2)));
+                     Buffers (Buffer_Index ((Sound_Frame - 1) mod 2)).all);
                end if;
             end;
          end if;

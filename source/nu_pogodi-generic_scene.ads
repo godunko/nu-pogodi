@@ -31,6 +31,13 @@ generic
 
 package Nu_Pogodi.Generic_Scene is
 
+   type Sound_Kind is
+     (None,
+      Move_Left_Top,
+      Move_Left_Bottom,
+      Move_Right_Top,
+      Move_Right_Bottom);
+
    type Game_Mode is (None, Mode_A, Mode_B);
 
    type Lane_Side is (Left, Right);
@@ -55,7 +62,10 @@ package Nu_Pogodi.Generic_Scene is
    procedure Initialize (Mode : Game_Mode)
      with Pre => Mode /= None;
 
-   procedure Update_Physics_Tick (Refresh : in out Boolean);
+   procedure Update_Physics_Tick
+     (Refresh : in out Boolean;
+      Sound   : out Sound_Kind);
+   --  Sound is None unless this tick requests a display refresh.
 
    procedure Update_Keyboad_State (State : Nu_Pogodi.Keyboard.Keyboard_State);
 
