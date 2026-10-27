@@ -8,7 +8,7 @@ pragma Ada_2022;
 
 private with A0B.Types;
 
-package Nu_Pogodi.Scene with Preelaborate is
+package Nu_Pogodi.Scene is
 
    type Game_Mode is (None, Mode_A, Mode_B);
 
@@ -26,14 +26,15 @@ private
 
    type Egg_Step is range 1 .. 5;
 
-   type Egg_Array is array (Egg_Step) of Boolean;
-
-   type Game_Lanes is array (Lane_Side, Lane_Height) of Egg_Array;
+   type Egg_Array is array (Egg_Step) of Boolean
+     with Default_Component_Value => False;
 
    type Optional_Lane is
      (None, Left_Top, Right_Top, Left_Bottom, Right_Bottom);
 
    subtype Lane is Optional_Lane range Left_Top .. Right_Bottom;
+
+   type Game_Lanes is array (Lane) of Egg_Array;
 
    type Score is mod 1_000;
 
@@ -56,6 +57,8 @@ private
       Rabbit_Visible       : Boolean               := False;
       Rabbit_Remain_Cycles : A0B.Types.Unsigned_32 := 15;
 
+      Lanes                : Game_Lanes            :=
+        [others => [others => False]];
       Current_Lane         : Lane                  := Left_Top;
       Current_Score        : Score                 := 0;
       Miss_Count           : Natural               := 0;
@@ -76,8 +79,6 @@ private
    Records : Game_Records;
 
    Wolf              : Wolf_Position := (Side => Left, Height => Top);
-   Lanes             : Game_Lanes    :=
-     [others => [others => [others => False]]];
 
    function Ones (Value : Score) return Score_Digit is (Value mod 10);
 

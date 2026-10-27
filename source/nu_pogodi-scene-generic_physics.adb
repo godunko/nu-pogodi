@@ -66,7 +66,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
    is
       use type A0B.Types.Unsigned_32;
 
-      Lane : Egg_Array renames Lanes (Side, Height);
+      Lane : Egg_Array renames State.Lanes (To_Lane (Side, Height));
 
    begin
       Sound := Nu_Pogodi.Sounds.None;
@@ -154,6 +154,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
          Miss_Animation_Cycle => 0,
          Rabbit_Visible       =>  False,
          Rabbit_Remain_Cycles => 15,
+         Lanes                => [others => [others => False]],
          Current_Lane         => <>,
          Random_Seed          => Save_Random_Seed,
          Idle_Lane_Count      => 0,
@@ -162,7 +163,6 @@ package body Nu_Pogodi.Scene.Generic_Physics is
          Dangerous_Lane       => None);
 
       Wolf              := (Side => Right, Height => Bottom);
-      Lanes             := [others => [others => [others => False]]];
 
       --  Some initial values requires calculations based on the game state
 
@@ -325,7 +325,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
             State.Miss_Animation_Cycle := 4;
             Sound := Nu_Pogodi.Sounds.Egg_Broken;
 
-            Lanes := [others => [others => [others => False]]];
+            State.Lanes := [others => [others => False]];
             State.Active_Eggs_Count := 0;
 
             State.Dangerous_Lane := None;

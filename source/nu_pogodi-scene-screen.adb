@@ -8,35 +8,33 @@ pragma Ada_2022;
 
 package body Nu_Pogodi.Scene.Screen is
 
-   Left_Top_Egg : constant
-     array (Lane_Side, Lane_Height, Egg_Step)
-     of Nu_Pogodi.Display_Segments.Display_Segment_Identifier :=
-     [Left =>
-        [Top =>
-           [Nu_Pogodi.Display_Segments.Path90,
-            Nu_Pogodi.Display_Segments.Path98,
-            Nu_Pogodi.Display_Segments.Path102,
-            Nu_Pogodi.Display_Segments.Path112,
-            Nu_Pogodi.Display_Segments.Path124],
-         Bottom =>
-           [Nu_Pogodi.Display_Segments.Path132,
-            Nu_Pogodi.Display_Segments.Path136,
-            Nu_Pogodi.Display_Segments.Path148,
-            Nu_Pogodi.Display_Segments.Path156,
-            Nu_Pogodi.Display_Segments.Path176]],
-      Right =>
-        [Top =>
-           [Nu_Pogodi.Display_Segments.Path88,
-            Nu_Pogodi.Display_Segments.Path92,
-            Nu_Pogodi.Display_Segments.Path100,
-            Nu_Pogodi.Display_Segments.Path110,
-            Nu_Pogodi.Display_Segments.Path122],
-         Bottom =>
-           [Nu_Pogodi.Display_Segments.Path134,
-            Nu_Pogodi.Display_Segments.Path138,
-            Nu_Pogodi.Display_Segments.Path150,
-            Nu_Pogodi.Display_Segments.Path160,
-            Nu_Pogodi.Display_Segments.Path178]]];
+   Eggs : constant
+     array (Lane, Egg_Step)
+       of Nu_Pogodi.Display_Segments.Display_Segment_Identifier :=
+     [Left_Top =>
+        [Nu_Pogodi.Display_Segments.Path90,
+         Nu_Pogodi.Display_Segments.Path98,
+         Nu_Pogodi.Display_Segments.Path102,
+         Nu_Pogodi.Display_Segments.Path112,
+         Nu_Pogodi.Display_Segments.Path124],
+      Left_Bottom =>
+        [Nu_Pogodi.Display_Segments.Path132,
+         Nu_Pogodi.Display_Segments.Path136,
+         Nu_Pogodi.Display_Segments.Path148,
+         Nu_Pogodi.Display_Segments.Path156,
+         Nu_Pogodi.Display_Segments.Path176],
+      Right_Top =>
+        [Nu_Pogodi.Display_Segments.Path88,
+         Nu_Pogodi.Display_Segments.Path92,
+         Nu_Pogodi.Display_Segments.Path100,
+         Nu_Pogodi.Display_Segments.Path110,
+         Nu_Pogodi.Display_Segments.Path122],
+      Right_Bottom =>
+        [Nu_Pogodi.Display_Segments.Path134,
+         Nu_Pogodi.Display_Segments.Path138,
+         Nu_Pogodi.Display_Segments.Path150,
+         Nu_Pogodi.Display_Segments.Path160,
+         Nu_Pogodi.Display_Segments.Path178]];
 
    type Indicator_Segment is
      (Top, Left_Top, Right_Top, Middle, Left_Bottom, Right_Bottom, Bottom);
@@ -216,13 +214,11 @@ package body Nu_Pogodi.Scene.Screen is
 
       --  Eggs on lanes
 
-      for Side in Lane_Side loop
-         for Height in Lane_Height loop
-            for Step in Egg_Step loop
-               if Lanes (Side, Height) (Step) then
-                  Sprites (Left_Top_Egg (Side, Height, Step)) := True;
-               end if;
-            end loop;
+      for L in Lane loop
+         for Step in Egg_Step loop
+            if State.Lanes (L) (Step) then
+               Sprites (Eggs (L, Step)) := True;
+            end if;
          end loop;
       end loop;
 
