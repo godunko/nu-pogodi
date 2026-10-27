@@ -1,3 +1,3 @@
 # Nu, Pogodi!
 
-[![Watch the video](https://www.youtube.com/watch?v=zPXWQj4_dtE)](https://www.youtube.com/watch?v=zPXWQj4_dtE)
+[![Watch the video](https://youtu.be/5OMoh4Zz4vw?si=vdFWiseZSg9BoilU)](https://youtu.be/5OMoh4Zz4vw?si=vdFWiseZSg9BoilU)
