@@ -11,9 +11,10 @@ with A0B.Callbacks.Generic_Parameterless;
 with Nu_Pogodi.Application;
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Clock;
-with Nu_Pogodi.Hardware.Sound;
-with Nu_Pogodi.Scene.Screen;
 with Nu_Pogodi.Display_Segments;
+with Nu_Pogodi.Hardware.Sound;
+with Nu_Pogodi.Scene.Physics;
+with Nu_Pogodi.Scene.Screen;
 with Nu_Pogodi.Sounds.Buffers;
 with Nu_Pogodi.Sounds.Samples;
 
@@ -52,7 +53,7 @@ package body Nu_Pogodi.States.Game is
       Sound : Nu_Pogodi.Sounds.Sound_Identifier;
 
    begin
-      Nu_Pogodi.Scene.Update_Keyboad_State (State, Sound);
+      Nu_Pogodi.Scene.Physics.Update_Keyboad_State (State, Sound);
       Play_Sound (Sound);
    end Keyboard;
 
@@ -77,7 +78,7 @@ package body Nu_Pogodi.States.Game is
       Sound : Nu_Pogodi.Sounds.Sound_Identifier;
 
    begin
-      Nu_Pogodi.Scene.Update_Physics_Tick (Refresh, Sound);
+      Nu_Pogodi.Scene.Physics.Update_Physics_Tick (Refresh, Sound);
       Play_Sound (Sound);
    end Physics_Tick;
 

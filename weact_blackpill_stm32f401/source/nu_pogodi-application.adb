@@ -7,10 +7,10 @@
 pragma Ada_2022;
 
 with A0B.Awaits;
+with A0B.Buffers.Static;
 with A0B.Callbacks.Generic_Parameterless;
 with A0B.Time.Clock;
 with A0B.Timer;
-with A0B.Buffers.Static;
 
 with Nu_Pogodi.Display;
 with Nu_Pogodi.Drawing;
@@ -18,6 +18,7 @@ with Nu_Pogodi.Framebuffers;
 with Nu_Pogodi.Hardware.Keyboard;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.SSD1683.Synchronous;
+with Nu_Pogodi.Scene.Physics;
 with Nu_Pogodi.States.Clock;
 with Nu_Pogodi.States.Game;
 with Nu_Pogodi.States.Splash;
@@ -175,7 +176,7 @@ package body Nu_Pogodi.Application is
       Active := Game'Access;
 
       Enter_Fast_Update_Mode;
-      Scene.Initialize (Mode);
+      Nu_Pogodi.Scene.Physics.Initialize (Mode);
    end Enter_Game_State;
 
    ------------------------

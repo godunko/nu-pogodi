@@ -6,12 +6,12 @@
 
 pragma Ada_2022;
 
-with Nu_Pogodi.Generic_Scene;
+with Nu_Pogodi.Scene.Generic_Physics;
 with Nu_Pogodi.Hardware.RTC;
 with Nu_Pogodi.Hardware.Timer;
 
-package Nu_Pogodi.Scene is
-  new Nu_Pogodi.Generic_Scene
+package Nu_Pogodi.Scene.Physics is
+  new Nu_Pogodi.Scene.Generic_Physics
     (Timer        => Nu_Pogodi.Hardware.Timer,
      Time         => Nu_Pogodi.Hardware.RTC.Time,
      Clock        => Nu_Pogodi.Hardware.RTC.Clock,

@@ -6,10 +6,9 @@
 
 with Nu_Pogodi.Display_Segments;
 
-generic
-package Nu_Pogodi.Generic_Scene.Generic_Screen is
+package Nu_Pogodi.Scene.Screen is
 
    procedure Get_Visibility
      (Sprites : in out Nu_Pogodi.Display_Segments.Display_Segment_Set);
 
-end Nu_Pogodi.Generic_Scene.Generic_Screen;
+end Nu_Pogodi.Scene.Screen;

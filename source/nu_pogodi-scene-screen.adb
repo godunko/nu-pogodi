@@ -6,7 +6,7 @@
 
 pragma Ada_2022;
 
-package body Nu_Pogodi.Generic_Scene.Generic_Screen is
+package body Nu_Pogodi.Scene.Screen is
 
    Left_Top_Egg : constant
      array (Lane_Side, Lane_Height, Egg_Step)
@@ -328,4 +328,4 @@ package body Nu_Pogodi.Generic_Scene.Generic_Screen is
       end case;
    end Get_Visibility;
 
-end Nu_Pogodi.Generic_Scene.Generic_Screen;
+end Nu_Pogodi.Scene.Screen;

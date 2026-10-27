@@ -6,7 +6,7 @@
 
 pragma Ada_2022;
 
-package body Nu_Pogodi.Generic_Scene is
+package body Nu_Pogodi.Scene.Generic_Physics is
 
    use type Nu_Pogodi.Sounds.Sound_Identifier;
 
@@ -187,15 +187,6 @@ package body Nu_Pogodi.Generic_Scene is
          State.Remain_Ticks := State.Cycle_Ticks + 1;
       end;
    end Initialize;
-
-   ------------------
-   -- Is_Game_Over --
-   ------------------
-
-   function Is_Game_Over return Boolean is
-   begin
-      return State.Miss_Count > 3;
-   end Is_Game_Over;
 
    ----------
    -- Next --
@@ -581,4 +572,4 @@ package body Nu_Pogodi.Generic_Scene is
       end case;
    end Update_Score;
 
-end Nu_Pogodi.Generic_Scene;
+end Nu_Pogodi.Scene.Generic_Physics;
