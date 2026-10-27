@@ -1,6 +1,6 @@
 # Nu, Pogodi! (Retro Game Reimplementation)
 
-Modern reimplementation of the classic Soviet handheld electronic retro game **"Nu, Pogodi!" (Электроника ИМ-02)**. The project is built using the **Ada** programming language, targetting the **STM32F401** microcontroller and utilizing an **ePaper** display.
+Modern reimplementation of the classic Soviet handheld electronic retro game **"Nu, Pogodi!" (Электроника ИМ-02)**. The project is built using the **Ada** programming language, targetting the **STM32F401** microcontroller and utilizing an **ePaper** display. There is GtkAda4 port too.
 
 ---
 
