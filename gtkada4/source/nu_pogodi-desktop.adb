@@ -32,6 +32,7 @@ with Gtk.Event_Controller_Focus;
 
 with Nu_Pogodi.Images;
 with Nu_Pogodi.Keyboard;
+with Nu_Pogodi.Scene.Physics;
 with Nu_Pogodi.Scene.Screen;
 with Nu_Pogodi.Display_Segments;
 with Nu_Pogodi.Sounds;
@@ -41,6 +42,7 @@ package body Nu_Pogodi.Desktop is
    use Ada.Real_Time;
    use Glib;
    use Nu_Pogodi.Scene;
+   use Nu_Pogodi.Scene.Physics;
    use type Gdk.Pixbuf.Gdk_Pixbuf;
    use type GNAT.OS_Lib.String_Access;
    use type Glib.Main.G_Source_Id;
