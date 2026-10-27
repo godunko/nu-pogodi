@@ -188,28 +188,22 @@ package body Nu_Pogodi.Scene.Screen is
 
       --  Wolf
 
-      case Wolf.Side is
-         when Left =>
-            Sprites (Nu_Pogodi.Display_Segments.Path14) := True;
+      case State.Wolf is
+         when Left_Top =>
+            Sprites (Nu_Pogodi.Display_Segments.Path14)  := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path108) := True;
 
-            case Wolf.Height is
-               when Top =>
-                  Sprites (Nu_Pogodi.Display_Segments.Path108) := True;
+         when Left_Bottom =>
+            Sprites (Nu_Pogodi.Display_Segments.Path14)  := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path162) := True;
 
-               when Bottom =>
-                  Sprites (Nu_Pogodi.Display_Segments.Path162) := True;
-            end case;
-
-         when Right =>
+         when Right_Top =>
             Sprites (Nu_Pogodi.Display_Segments.Path10_3_70) := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path118)     := True;
 
-            case Wolf.Height is
-               when Top =>
-                  Sprites (Nu_Pogodi.Display_Segments.Path118) := True;
-
-               when Bottom =>
-                  Sprites (Nu_Pogodi.Display_Segments.Path168) := True;
-            end case;
+         when Right_Bottom =>
+            Sprites (Nu_Pogodi.Display_Segments.Path10_3_70) := True;
+            Sprites (Nu_Pogodi.Display_Segments.Path168)     := True;
       end case;
 
       --  Eggs on lanes

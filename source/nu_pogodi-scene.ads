@@ -16,14 +16,6 @@ package Nu_Pogodi.Scene is
 
 private
 
-   type Lane_Side is (Left, Right);
-   type Lane_Height is (Top, Bottom);
-
-   type Wolf_Position is record
-      Side   : Lane_Side;
-      Height : Lane_Height;
-   end record;
-
    type Egg_Step is range 1 .. 5;
 
    type Egg_Array is array (Egg_Step) of Boolean
@@ -35,6 +27,8 @@ private
    subtype Lane is Optional_Lane range Left_Top .. Right_Bottom;
 
    type Game_Lanes is array (Lane) of Egg_Array;
+
+   type Lane_Side is (Left, Right);
 
    type Score is mod 1_000;
 
@@ -57,6 +51,7 @@ private
       Rabbit_Visible       : Boolean               := False;
       Rabbit_Remain_Cycles : A0B.Types.Unsigned_32 := 15;
 
+      Wolf                 : Lane                  := Right_Bottom;
       Lanes                : Game_Lanes            :=
         [others => [others => False]];
       Current_Lane         : Lane                  := Left_Top;
@@ -77,8 +72,6 @@ private
 
    State   : Game_State;
    Records : Game_Records;
-
-   Wolf              : Wolf_Position := (Side => Left, Height => Top);
 
    function Ones (Value : Score) return Score_Digit is (Value mod 10);
 

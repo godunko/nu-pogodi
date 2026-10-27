@@ -11,9 +11,8 @@ package body Nu_Pogodi.Scene.Generic_Physics is
    use type Nu_Pogodi.Sounds.Sound_Identifier;
 
    procedure Advance_Lane
-     (Side   : Lane_Side;
-      Height : Lane_Height;
-      Sound  : out Nu_Pogodi.Sounds.Sound_Identifier);
+     (Index : Lane;
+      Sound : out Nu_Pogodi.Sounds.Sound_Identifier);
    --  Internal Lane Physics Tracker and Scoring Logic
 
    procedure Next (Item : in out Lane);
@@ -40,19 +39,6 @@ package body Nu_Pogodi.Scene.Generic_Physics is
 
    Miss_Animation_Ticks : constant := 15;
 
-   To_Lane : constant array (Lane_Side, Lane_Height) of Lane :=
-     [Left  =>
-        [Top    => Left_Top,
-         Bottom => Left_Bottom],
-      Right =>
-        [Top    => Right_Top,
-         Bottom => Right_Bottom]];
-   To_Wolf : constant array (Lane) of Wolf_Position :=
-     [Left_Top     => (Side => Left,  Height => Top),
-      Right_Top    => (Side => Right, Height => Top),
-      Left_Bottom  => (Side => Left,  Height => Bottom),
-      Right_Bottom => (Side => Right, Height => Bottom)];
-
    Keys : Nu_Pogodi.Keyboard.Keyboard_State := (others => [others => False]);
 
    ------------------
@@ -60,19 +46,18 @@ package body Nu_Pogodi.Scene.Generic_Physics is
    ------------------
 
    procedure Advance_Lane
-     (Side   : Lane_Side;
-      Height : Lane_Height;
-      Sound  : out Nu_Pogodi.Sounds.Sound_Identifier)
+     (Index : Lane;
+      Sound : out Nu_Pogodi.Sounds.Sound_Identifier)
    is
       use type A0B.Types.Unsigned_32;
 
-      Lane : Egg_Array renames State.Lanes (To_Lane (Side, Height));
+      Lane : Egg_Array renames State.Lanes (Index);
 
    begin
       Sound := Nu_Pogodi.Sounds.None;
 
       if Lane (Lane'Last) then
-         State.Dangerous_Lane := To_Lane (Side, Height);
+         State.Dangerous_Lane := Index;
       end if;
 
       for Step in reverse Egg_Step'First + 1 .. Egg_Step'Last loop
@@ -93,7 +78,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
 
       if (for some Step in Egg_Step => Lane (Step)) then
          Sound :=
-           (case To_Lane (Side, Height) is
+           (case Index is
                when Left_Top     => Nu_Pogodi.Sounds.Move_Left_Top,
                when Right_Top    => Nu_Pogodi.Sounds.Move_Right_Top,
                when Left_Bottom  => Nu_Pogodi.Sounds.Move_Left_Bottom,
@@ -154,6 +139,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
          Miss_Animation_Cycle => 0,
          Rabbit_Visible       =>  False,
          Rabbit_Remain_Cycles => 15,
+         Wolf                 => Right_Bottom,
          Lanes                => [others => [others => False]],
          Current_Lane         => <>,
          Random_Seed          => Save_Random_Seed,
@@ -161,8 +147,6 @@ package body Nu_Pogodi.Scene.Generic_Physics is
          Eggs_Count_Limit     => 1,
          Active_Eggs_Count    => 0,
          Dangerous_Lane       => None);
-
-      Wolf              := (Side => Right, Height => Bottom);
 
       --  Some initial values requires calculations based on the game state
 
@@ -337,16 +321,16 @@ package body Nu_Pogodi.Scene.Generic_Physics is
             loop
                case State.Current_Lane is
                   when Left_Top =>
-                     Advance_Lane (Left, Top, Sound);
+                     Advance_Lane (Left_Top, Sound);
 
                   when Right_Top =>
-                     Advance_Lane (Right, Top, Sound);
+                     Advance_Lane (Right_Top, Sound);
 
                   when Left_Bottom =>
-                     Advance_Lane (Left, Bottom, Sound);
+                     Advance_Lane (Left_Bottom, Sound);
 
                   when Right_Bottom =>
-                     Advance_Lane (Right, Bottom, Sound);
+                     Advance_Lane (Right_Bottom, Sound);
                end case;
 
                Next (State.Current_Lane);
@@ -356,7 +340,7 @@ package body Nu_Pogodi.Scene.Generic_Physics is
             end loop;
 
             if State.Dangerous_Lane /= None
-              and then To_Wolf (State.Dangerous_Lane) = Wolf
+              and State.Dangerous_Lane = State.Wolf
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
@@ -426,26 +410,26 @@ package body Nu_Pogodi.Scene.Generic_Physics is
    is
       use type A0B.Types.Unsigned_32;
 
-      New_Wolf : constant Wolf_Position :=
+      New_Wolf : constant Lane :=
         (if Keys.State (Nu_Pogodi.Keyboard.Left_Top)
-         then (Side => Left, Height => Top)
+         then Left_Top
          elsif Keys.State (Nu_Pogodi.Keyboard.Right_Top)
-         then (Side => Right, Height => Top)
+         then Right_Top
          elsif Keys.State (Nu_Pogodi.Keyboard.Left_Bottom)
-         then (Side => Left, Height => Bottom)
+         then Left_Bottom
          elsif Keys.State (Nu_Pogodi.Keyboard.Right_Bottom)
-         then (Side => Right, Height => Bottom)
-         else Wolf);
+         then Right_Bottom
+         else State.Wolf);
 
    begin
-      if New_Wolf /= Wolf then
-         Wolf := New_Wolf;
+      if New_Wolf /= State.Wolf then
+         State.Wolf := New_Wolf;
 
          if State.Mode /= None then
             Random_Generator.Update;
 
             if State.Dangerous_Lane /= None
-             and then To_Wolf (State.Dangerous_Lane) = Wolf
+              and State.Dangerous_Lane = State.Wolf
             then
                State.Dangerous_Lane    := None;
                State.Active_Eggs_Count := @ - 1;
