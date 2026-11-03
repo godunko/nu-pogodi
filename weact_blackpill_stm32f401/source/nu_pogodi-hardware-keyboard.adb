@@ -76,7 +76,7 @@ package body Nu_Pogodi.Hardware.Keyboard is
    procedure Initialize is
    begin
       Nu_Pogodi.Hardware.Pin_Control.Configure_Keyboard_Pins
-        (On_Edge_Callbacks.Create_Callback);
+        (On_Edge_Callbacks.Create);
 
       Known :=
         (State    => not Nu_Pogodi.Hardware.Pin_Control.Get_Keyboard_State,
@@ -114,7 +114,7 @@ package body Nu_Pogodi.Hardware.Keyboard is
       --  Start wakeup timer to debounce
 
       Nu_Pogodi.Hardware.RTC.Schedule_Timer_Wakeup
-        (On_Timer_Callbacks.Create_Callback);
+        (On_Timer_Callbacks.Create);
    end On_Edge;
 
    --------------
@@ -157,7 +157,7 @@ package body Nu_Pogodi.Hardware.Keyboard is
       if Active /= No_Keys then
          Nu_Pogodi.Hardware.Pin_Control.Clear_Keyboard_Pending (Active);
          Nu_Pogodi.Hardware.RTC.Schedule_Timer_Wakeup
-           (On_Timer_Callbacks.Create_Callback);
+           (On_Timer_Callbacks.Create);
 
       else
          Nu_Pogodi.Hardware.Pin_Control.Enable_Keyboard_Interrupt;

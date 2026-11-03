@@ -57,11 +57,11 @@ package body Nu_Pogodi.Hardware.MIPI is
       State := Transmit_Command;
       Transfer_Callback := Finished;
       Command_Storage := A0B.Types.Unsigned_8 (Command);
-      Command_Descriptor.Buffer := Command_Storage'Address;
-      Command_Descriptor.Length := 1;
+      A0B.Asynchronous_Transfers.Initialize
+        (Command_Descriptor, Command_Storage'Address, 1);
 
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
+        (Command_Descriptor, On_Transfer_Callbacks.Create, Success);
 
       if not Success then
          Nu_Pogodi.Hardware.SPI.Release;
@@ -92,11 +92,11 @@ package body Nu_Pogodi.Hardware.MIPI is
       Data_Descriptors := null;
 
       Command_Storage := A0B.Types.Unsigned_8 (Command);
-      Command_Descriptor.Buffer := Command_Storage'Address;
-      Command_Descriptor.Length := 1;
+      A0B.Asynchronous_Transfers.Initialize
+        (Command_Descriptor, Command_Storage'Address, 1);
 
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
+        (Command_Descriptor, On_Transfer_Callbacks.Create, Success);
 
       if not Success then
          State := Inactive;
@@ -129,11 +129,11 @@ package body Nu_Pogodi.Hardware.MIPI is
       Data_Descriptors := Descriptors'Unchecked_Access;
 
       Command_Storage := A0B.Types.Unsigned_8 (Command);
-      Command_Descriptor.Buffer := Command_Storage'Address;
-      Command_Descriptor.Length := 1;
+      A0B.Asynchronous_Transfers.Initialize
+        (Command_Descriptor, Command_Storage'Address, 1);
 
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
+        (Command_Descriptor, On_Transfer_Callbacks.Create, Success);
 
       if not Success then
          State := Inactive;
@@ -165,11 +165,11 @@ package body Nu_Pogodi.Hardware.MIPI is
       Data_Descriptor := Descriptor'Unchecked_Access;
 
       Command_Storage := A0B.Types.Unsigned_8 (Command);
-      Command_Descriptor.Buffer := Command_Storage'Address;
-      Command_Descriptor.Length := 1;
+      A0B.Asynchronous_Transfers.Initialize
+        (Command_Descriptor, Command_Storage'Address, 1);
 
       Nu_Pogodi.Hardware.SPI.Transmit
-        (Command_Descriptor, On_Transfer_Callbacks.Create_Callback, Success);
+        (Command_Descriptor, On_Transfer_Callbacks.Create, Success);
 
       if not Success then
          Nu_Pogodi.Hardware.SPI.Release;
@@ -226,7 +226,7 @@ package body Nu_Pogodi.Hardware.MIPI is
 
             Nu_Pogodi.Hardware.SPI.Transmit
               (Data_Descriptor.all,
-               On_Transfer_Callbacks.Create_Callback,
+               On_Transfer_Callbacks.Create,
                Success);
 
             if not Success then
@@ -244,13 +244,13 @@ package body Nu_Pogodi.Hardware.MIPI is
             if Data_Descriptors /= null then
                Nu_Pogodi.Hardware.SPI.Receive
                  (Data_Descriptors.all,
-                  On_Transfer_Callbacks.Create_Callback,
+                  On_Transfer_Callbacks.Create,
                   Success);
 
             else
                Nu_Pogodi.Hardware.SPI.Receive
                  (Data_Descriptor.all,
-                  On_Transfer_Callbacks.Create_Callback,
+                  On_Transfer_Callbacks.Create,
                   Success);
             end if;
 

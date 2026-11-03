@@ -15,6 +15,7 @@ with A0B.ARMv7M.NVIC_Utilities;
 with A0B.STM32F401.SVD.DMA;
 with A0B.STM32F401.SVD.RCC;
 with A0B.STM32F401.SVD.TIM;
+with A0B.Storage;
 with A0B.Types;
 
 package body Nu_Pogodi.Hardware.TIM is
@@ -381,7 +382,7 @@ package body Nu_Pogodi.Hardware.TIM is
 
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S4M0AR :=
         A0B.Types.Unsigned_32
-          (System.Storage_Elements.To_Integer (Transmit_Descriptor.Buffer));
+          (A0B.Storage.As_Integer (Transmit_Descriptor.Buffer));
       A0B.STM32F401.SVD.DMA.DMA2_Periph.S4NDTR :=
         (NDT    => A0B.Types.Unsigned_16 (Transmit_Descriptor.Length / 2),
          others => <>);

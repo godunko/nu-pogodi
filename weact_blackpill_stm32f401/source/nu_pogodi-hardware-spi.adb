@@ -9,6 +9,7 @@
 
 pragma Ada_2022;
 
+with A0B.Storage;
 with System.Storage_Elements;
 
 with A0B.ARMv7M.NVIC_Utilities;
@@ -440,7 +441,8 @@ package body Nu_Pogodi.Hardware.SPI is
         A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean
    is
-      use type System.Storage_Elements.Storage_Count;
+      use type A0B.Storage.Address;
+      use type A0B.Storage.Storage_Offset;
 
    begin
       Descriptor.Transferred := 0;
@@ -478,7 +480,10 @@ package body Nu_Pogodi.Hardware.SPI is
 
             declare
                Byte : A0B.Types.Unsigned_8
-                 with Import, Address => Descriptor.Buffer + Offset;
+               with
+                 Import,
+                 Address =>
+                   A0B.Storage.As_Address (Descriptor.Buffer + Offset);
 
             begin
                Byte := A0B.Types.Unsigned_8
@@ -518,7 +523,7 @@ package body Nu_Pogodi.Hardware.SPI is
             others  => <>);
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S0M0AR :=
            A0B.Types.Unsigned_32
-             (System.Storage_Elements.To_Integer (Descriptor.Buffer));
+             (A0B.Storage.As_Integer (Descriptor.Buffer));
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S0NDTR :=
            (NDT            => A0B.Types.Unsigned_16 (Descriptor.Length),
             Reserved_16_31 => 0);
@@ -561,7 +566,8 @@ package body Nu_Pogodi.Hardware.SPI is
         A0B.Asynchronous_Transfers.Transfer_Descriptor;
       Poll       : Boolean) return Boolean
    is
-      use type System.Storage_Elements.Storage_Count;
+      use type A0B.Storage.Address;
+      use type A0B.Storage.Storage_Offset;
 
    begin
       Descriptor.Transferred := 0;
@@ -583,17 +589,17 @@ package body Nu_Pogodi.Hardware.SPI is
 
       if Poll and then Descriptor.Length < 5 then
          declare
-            use System.Storage_Elements;
-
-            Length : constant System.Storage_Elements.Storage_Count :=
+            Length : constant A0B.Storage.Storage_Count :=
               Descriptor.Length;
-            Base   : constant System.Address := Descriptor.Buffer;
+            Base   : constant A0B.Storage.Address := Descriptor.Buffer;
 
          begin
             for Offset in 0 .. Length - 1 loop
                declare
                   Byte : A0B.Types.Unsigned_8
-                    with Import, Address => Base + Storage_Offset (Offset);
+                  with
+                    Import,
+                    Address => A0B.Storage.As_Address (Base + Offset);
 
                begin
                   while not A0B.STM32F401.SVD.SPI.SPI1_Periph.SR.TXE loop
@@ -629,7 +635,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S3M0AR :=
            A0B.Types.Unsigned_32
-             (System.Storage_Elements.To_Integer (Descriptor.Buffer));
+             (A0B.Storage.As_Integer (Descriptor.Buffer));
          A0B.STM32F401.SVD.DMA.DMA2_Periph.S3NDTR :=
            (NDT            => A0B.Types.Unsigned_16 (Descriptor.Length),
             Reserved_16_31 => 0);

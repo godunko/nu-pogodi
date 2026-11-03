@@ -1014,10 +1014,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State := Command_Busy;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-           (On_Busy_Callbacks.Create_Callback);
+           (On_Busy_Callbacks.Create);
          Nu_Pogodi.Hardware.MIPI.Command
            (Command,
-            On_Transfer_Finished_Callbacks.Create_Callback,
+            On_Transfer_Finished_Callbacks.Create,
             Success);
 
          if not Success then
@@ -1044,10 +1044,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-           (On_Busy_Callbacks.Create_Callback);
+           (On_Busy_Callbacks.Create);
          Nu_Pogodi.Hardware.MIPI.Command
            (Command,
-            On_Transfer_Finished_Callbacks.Create_Callback,
+            On_Transfer_Finished_Callbacks.Create,
             Success);
 
          if not Success then
@@ -1074,15 +1074,15 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State            := Command_Busy;
          Command_Callback := Callback;
 
-         Data_Descriptor.Buffer := Data_Buffer.Address;
-         Data_Descriptor.Length := Data_Buffer.Length;
+         A0B.Asynchronous_Transfers.Initialize
+           (Data_Descriptor, Data_Buffer.Address, Data_Buffer.Length);
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-           (On_Busy_Callbacks.Create_Callback);
+           (On_Busy_Callbacks.Create);
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
             Data_Descriptor,
-            On_Transfer_Finished_Callbacks.Create_Callback,
+            On_Transfer_Finished_Callbacks.Create,
             Success);
 
          if not Success then
@@ -1139,8 +1139,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback          : A0B.Callbacks.Callback;
          Success           : in out Boolean) is
       begin
-         Data_Descriptor.Buffer := Buffer.Address;
-         Data_Descriptor.Length := Buffer.Expected_Length;
+         A0B.Asynchronous_Transfers.Initialize
+           (Data_Descriptor, Buffer.Address, Buffer.Expected_Length);
          Data_Buffer := Buffer'Unchecked_Access;
 
          Start (Command, Callback, Success, Ignore_First_Byte);
@@ -1158,8 +1158,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback          : A0B.Callbacks.Callback;
          Success           : in out Boolean) is
       begin
-         Data_Descriptor.Buffer := Address;
-         Data_Descriptor.Length := Length;
+         A0B.Asynchronous_Transfers.Initialize
+           (Data_Descriptor, Address, Length);
          Data_Buffer := null;
 
          Start (Command, Callback, Success, Ignore_First_Byte);
@@ -1202,20 +1202,20 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Command_Callback := Callback;
 
          if Ignore_First_Byte then
-            Dummy_Descriptor.Buffer := Dummy_Byte'Address;
-            Dummy_Descriptor.Length := 1;
+            A0B.Asynchronous_Transfers.Initialize
+              (Dummy_Descriptor, Dummy_Byte'Address, 1);
 
             Nu_Pogodi.Hardware.MIPI.Command_Read
               (Command,
                Descriptors,
-               On_Transfer_Finished_Callbacks.Create_Callback,
+               On_Transfer_Finished_Callbacks.Create,
                Success);
 
          else
             Nu_Pogodi.Hardware.MIPI.Command_Read
               (Command,
                Data_Descriptor,
-               On_Transfer_Finished_Callbacks.Create_Callback,
+               On_Transfer_Finished_Callbacks.Create,
                Success);
          end if;
 
@@ -1247,13 +1247,13 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State            := SSD1683.Command;
          Command_Callback := Callback;
 
-         Data_Descriptor.Buffer := Data_Buffer.Address;
-         Data_Descriptor.Length := Data_Buffer.Length;
+         A0B.Asynchronous_Transfers.Initialize
+           (Data_Descriptor, Data_Buffer.Address, Data_Buffer.Length);
 
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
             Data_Descriptor,
-            On_Transfer_Finished_Callbacks.Create_Callback,
+            On_Transfer_Finished_Callbacks.Create,
             Success);
 
          if not Success then
@@ -1295,8 +1295,8 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Callback : A0B.Callbacks.Callback;
          Success  : in out Boolean) is
       begin
-         Data_Descriptor.Buffer := Address;
-         Data_Descriptor.Length := Length;
+         A0B.Asynchronous_Transfers.Initialize
+           (Data_Descriptor, Address, Length);
 
          State            := Command_Write_External;
          Command_Callback := Callback;
@@ -1304,7 +1304,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Nu_Pogodi.Hardware.MIPI.Command_Write
            (Command,
             Data_Descriptor,
-            On_Transfer_Finished_Callbacks.Create_Callback,
+            On_Transfer_Finished_Callbacks.Create,
             Success);
 
          if not Success then
@@ -1343,10 +1343,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State := HW_Reset_High;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
-           (On_Busy_Callbacks.Create_Callback);
+           (On_Busy_Callbacks.Create);
          A0B.Timer.Enqueue
            (Timeout,
-            On_Timeout_Callbacks.Create_Callback,
+            On_Timeout_Callbacks.Create,
             A0B.Time.Milliseconds (10));
 
          Nu_Pogodi.Hardware.Pin_Control.Set_SSD1683_RES (True);
@@ -1399,7 +1399,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
          A0B.Timer.Enqueue
            (Timeout,
-            On_Timeout_Callbacks.Create_Callback,
+            On_Timeout_Callbacks.Create,
             A0B.Time.Milliseconds (10));
       end Enter;
 
@@ -1429,7 +1429,7 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          State := VCI_Wait;
          A0B.Timer.Enqueue
            (Timeout,
-            On_Timeout_Callbacks.Create_Callback,
+            On_Timeout_Callbacks.Create,
             A0B.Time.Milliseconds (10));
       end Enter;
 

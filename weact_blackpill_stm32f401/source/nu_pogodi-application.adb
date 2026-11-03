@@ -295,7 +295,7 @@ package body Nu_Pogodi.Application is
       Display_Busy := True;
       Nu_Pogodi.Display.Update
         (Framebuffer.Buffer.all,
-         On_Display_Updated_Callbacks.Create_Callback,
+         On_Display_Updated_Callbacks.Create,
          Success);
 
       if not Success then
@@ -334,9 +334,9 @@ package body Nu_Pogodi.Application is
 
    begin
       Nu_Pogodi.Hardware.Keyboard.Set_State_Changed
-        (On_Keyboard_Callbacks.Create_Callback);
+        (On_Keyboard_Callbacks.Create);
       Nu_Pogodi.Hardware.RTC.Set_Clock_Wakeup
-        (On_Wakeup_Callbacks.Create_Callback);
+        (On_Wakeup_Callbacks.Create);
 
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Reset (Success);
       Nu_Pogodi.Hardware.SSD1683.Synchronous.Data_Entry_Mode_Setting

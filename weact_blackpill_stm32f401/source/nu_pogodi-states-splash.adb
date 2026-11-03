@@ -57,7 +57,7 @@ package body Nu_Pogodi.States.Splash is
 
       Nu_Pogodi.Hardware.Sound.Start
         (Sound_Buffers.Buffers (Buffer).all,
-         Sound_Finished_Callbacks.Create_Callback (Frame + 1),
+         Sound_Finished_Callbacks.Create (Frame + 1),
          Success);
 
       if not Success then

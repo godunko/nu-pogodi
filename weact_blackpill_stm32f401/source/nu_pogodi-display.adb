@@ -83,32 +83,32 @@ package body Nu_Pogodi.Display is
          when Read_Waveforms_Enable_Clock_Display_Update_Control_2 =>
             State := Read_Waveforms_Enable_Clock_Master_Activation;
             Nu_Pogodi.Hardware.SSD1683.Master_Activation
-              (On_Completed_Callbacks.Create_Callback, Success);
+              (On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Enable_Clock_Master_Activation =>
             State := Read_Waveforms_Load_OTP_X_Address;
             Nu_Pogodi.Hardware.SSD1683.Set_RAM_X_Address_Counter
-              (0, On_Completed_Callbacks.Create_Callback, Success);
+              (0, On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Load_OTP_X_Address =>
             State := Read_Waveforms_Load_OTP_Y_Address;
             Nu_Pogodi.Hardware.SSD1683.Set_RAM_Y_Address_Counter
-              (0, On_Completed_Callbacks.Create_Callback, Success);
+              (0, On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Load_OTP_Y_Address =>
             State := Read_Waveforms_Load_OTP;
             Nu_Pogodi.Hardware.SSD1683.Load_WS_OTP
-              (On_Completed_Callbacks.Create_Callback, Success);
+              (On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Load_OTP =>
             State := Read_Waveforms_Read_RAM_X_Address;
             Nu_Pogodi.Hardware.SSD1683.Set_RAM_X_Address_Counter
-              (0, On_Completed_Callbacks.Create_Callback, Success);
+              (0, On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Read_RAM_X_Address =>
             State := Read_Waveforms_Read_RAM_Y_Address;
             Nu_Pogodi.Hardware.SSD1683.Set_RAM_Y_Address_Counter
-              (0, On_Completed_Callbacks.Create_Callback, Success);
+              (0, On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Read_RAM_Y_Address =>
             State := Read_Waveforms_Read_RAM_Option;
@@ -116,7 +116,7 @@ package body Nu_Pogodi.Display is
               (Nu_Pogodi.Hardware.SSD1683.Black_White,
                Nu_Pogodi.Hardware.SSD1683.Window,
                Nu_Pogodi.Hardware.SSD1683.Waveform_Setting_2C_Mapping_Length,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Read_Waveforms_Read_RAM_Option =>
@@ -128,13 +128,13 @@ package body Nu_Pogodi.Display is
             Buffer.Set_Allocation_Length
               (Nu_Pogodi.Hardware.SSD1683.Waveform_Setting_2C_Mapping_Length);
             Nu_Pogodi.Hardware.SSD1683.Read_RAM
-              (Buffer, On_Completed_Callbacks.Create_Callback, Success);
+              (Buffer, On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Read_RAM =>
             State := Read_Waveforms_Read_OTP_Display_Option;
             Nu_Pogodi.Hardware.SSD1683.OTP_Read_Display_Option
               (Factory_Options,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Read_Waveforms_Read_OTP_Display_Option =>
@@ -143,13 +143,13 @@ package body Nu_Pogodi.Display is
             Buffer.Finalize;
             Nu_Pogodi.Hardware.SSD1683.Display_Update_Control_2
               ((Disable_Clock => True, others => False),
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Read_Waveforms_Disable_Clock_Display_Update_Control_2 =>
             State := Read_Waveforms_Disable_Clock_Master_Activate;
             Nu_Pogodi.Hardware.SSD1683.Master_Activation
-              (On_Completed_Callbacks.Create_Callback, Success);
+              (On_Completed_Callbacks.Create, Success);
 
          when Read_Waveforms_Disable_Clock_Master_Activate =>
             State := Initial;
@@ -169,35 +169,35 @@ package body Nu_Pogodi.Display is
 
             Nu_Pogodi.Hardware.SSD1683.Write_LUT_Register
               (Modified_LUT,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Write_Waveforms_LUT =>
             State := Write_Waveforms_End_Option;
             Nu_Pogodi.Hardware.SSD1683.End_Option
               (Factory_Waveforms.WS (Selected_Waveforms).EOPT,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Write_Waveforms_End_Option =>
             State := Write_Waveforms_Gate_Driving_Voltage;
             Nu_Pogodi.Hardware.SSD1683.Gate_Driving_Voltage_Control
               (Factory_Waveforms.WS (Selected_Waveforms).VGH,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Write_Waveforms_Gate_Driving_Voltage =>
             State := Write_Waveforms_Source_Driving_Voltage;
             Nu_Pogodi.Hardware.SSD1683.Source_Driving_Voltage_Control
               (Factory_Waveforms.WS (Selected_Waveforms).VSH1_VSH2_VSL,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Write_Waveforms_Source_Driving_Voltage =>
             State := Write_Waveforms_VCOM;
             Nu_Pogodi.Hardware.SSD1683.Write_VCOM_Register
               (Factory_Waveforms.WS (Selected_Waveforms).VCOM,
-               On_Completed_Callbacks.Create_Callback,
+               On_Completed_Callbacks.Create,
                Success);
 
          when Write_Waveforms_VCOM =>
@@ -207,7 +207,7 @@ package body Nu_Pogodi.Display is
          when Update_Write_Black_White =>
             State := Update_Master_Activation;
             Nu_Pogodi.Hardware.SSD1683.Master_Activation
-              (On_Completed_Callbacks.Create_Callback, Success);
+              (On_Completed_Callbacks.Create, Success);
 
          when Update_Master_Activation =>
             State := Initial;
@@ -235,7 +235,7 @@ package body Nu_Pogodi.Display is
       State := Read_Waveforms_Enable_Clock_Display_Update_Control_2;
       Nu_Pogodi.Hardware.SSD1683.Display_Update_Control_2
         ((Enable_Clock => True, others => False),
-         On_Completed_Callbacks.Create_Callback,
+         On_Completed_Callbacks.Create,
          Success);
    end Read_Factory_Waveforms;
 
@@ -254,7 +254,7 @@ package body Nu_Pogodi.Display is
 
       State := Update_Write_Black_White;
       Nu_Pogodi.Hardware.SSD1683.Write_RAM_Black_White
-        (Buffer, On_Completed_Callbacks.Create_Callback, Success);
+        (Buffer, On_Completed_Callbacks.Create, Success);
    end Update;
 
    ----------------------------------------------------
@@ -271,7 +271,7 @@ package body Nu_Pogodi.Display is
 
       State := Write_Waveforms_Read_Temperature;
       Nu_Pogodi.Hardware.SSD1683.Read_From_Temperature_Register
-        (Temperature, On_Completed_Callbacks.Create_Callback, Success);
+        (Temperature, On_Completed_Callbacks.Create, Success);
    end Write_Waveform_Setting_For_Fast_Partial_Update;
 
 end Nu_Pogodi.Display;

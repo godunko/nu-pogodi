@@ -155,7 +155,7 @@ package body Nu_Pogodi.States.Game is
       begin
          Nu_Pogodi.Hardware.Sound.Start
            (Data     => Data.all,
-            Finished => Sound_Finished_Callbacks.Create_Callback,
+            Finished => Sound_Finished_Callbacks.Create,
             Success  => Success);
       end;
 
