@@ -35,3 +35,11 @@ command = ["a0b-runtime",
 a0b_tools = { path = "crates/a0b-tools" }
 xtensa_dynconfig = { path = "crates/xtensa-dynconfig" }
 espidf_gnat_runtime = { path = "crates/espidf_gnat_runtime" }
+
+[[depends-on]]
+espidfada_driver_spi = "*"
+
+[[pins]]
+espidfada = { path='components/espidfada' }
+espidfada_driver_gpio = { path='components/espidfada_driver_gpio' }
+espidfada_driver_spi = { path='components/espidfada_driver_spi' }
