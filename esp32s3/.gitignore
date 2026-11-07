@@ -1,0 +1,11 @@
+/.clangd
+/.libs/
+/.objs/
+/.vscode/
+/alire/
+/build/
+/config/
+/crates/
+/runtime/
+/sdkconfig
+/sdkconfig.old

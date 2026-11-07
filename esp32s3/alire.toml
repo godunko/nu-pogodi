@@ -1,0 +1,37 @@
+name = "nu_pogodi_esp32s3"
+version = "0.1.0-dev"
+description = "Nu Pogodi! Game on ESP32-S3"
+
+authors = ["Vadim Godunko"]
+maintainers = ["Vadim Godunko <vgodunko@gmail.com>"]
+maintainers-logins = ["godunko"]
+licenses = "GPL-3.0-or-later"
+tags = ["embedded", "esp", "esp-idf", "esp32s3"]
+
+[configuration]
+generate_ada = false
+generate_c = false
+generate_gpr = true
+
+[environment]
+XTENSA_GNU_CONFIG.set = "${CRATE_ROOT}/crates/xtensa-dynconfig/xtensa-dynconfig/xtensa_esp32s3.so"
+
+[[depends-on]]
+a0b_base = "*"
+a0b_tools = "*"
+espidf_gnat_runtime = "*"
+gnat_xtensa_esp32_elf = "^16"
+xtensa_dynconfig = "*"
+
+[[actions]]
+type = "pre-build"
+command = ["a0b-runtime",
+           "--bb-runtimes=crates/bb-runtimes/",
+           "--svd=crates/espidf_gnat_runtime/svd/esp32s3.svd",
+           "--runtime-description=crates/espidf_gnat_runtime/runtime-esp32s3.json",
+           "--no-startup"]
+
+[[pins]]
+a0b_tools = { path = "crates/a0b-tools" }
+xtensa_dynconfig = { path = "crates/xtensa-dynconfig" }
+espidf_gnat_runtime = { path = "crates/espidf_gnat_runtime" }

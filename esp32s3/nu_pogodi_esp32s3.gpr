@@ -1,0 +1,34 @@
+with "runtime/build_libgnat.gpr";
+with "runtime/build_libgnarl.gpr";
+
+with "config/nu_pogodi_esp32s3_config.gpr";
+
+project Nu_Pogodi_ESP32S3 is
+
+   for Target use "xtensa-esp32-elf";
+   for Runtime ("Ada") use "runtime";
+
+   for Source_Dirs use ("source");
+   for Object_Dir use ".objs";
+   for Main use ("main.adb");
+
+   package Builder is
+      for Executable ("main.adb") use "app_main.o";
+   end Builder;
+
+   package Binder is
+      for Switches ("Ada") use
+        ("-D4k",       --  Default secondary stack size.
+         "-Q2",        --  Secondary stacks for tasks created by ESP-IDF.
+         "-Mapp_main"); --  Entry point expected by ESP-IDF.
+   end Binder;
+
+   package Compiler is
+      for Switches ("Ada") use ("-g", "-O2");
+   end Compiler;
+
+   package Linker is
+      for Default_Switches ("Ada") use ("-Wl,-r", "-nostdlib");
+   end Linker;
+
+end Nu_Pogodi_ESP32S3;
