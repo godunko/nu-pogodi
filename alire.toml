@@ -17,4 +17,4 @@ generate_gpr = true
 a0b_base = "*"
 
 [[pins]]
-a0b_base = { path = "../a0b-base" }
+#a0b_base = { path = "../a0b-base" }
