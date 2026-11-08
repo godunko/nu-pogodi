@@ -1,4 +1,4 @@
-idf_component_register()
+idf_component_register(REQUIRES a0b_espidf_timer_clock_timer espidfada_driver_gpio espidfada_driver_spi)
 
 ExternalProject_Add(app_main_build
     PREFIX ${COMPONENT_DIR}

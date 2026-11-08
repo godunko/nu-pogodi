@@ -16,13 +16,6 @@ generate_gpr = true
 [environment]
 XTENSA_GNU_CONFIG.set = "${CRATE_ROOT}/crates/xtensa-dynconfig/xtensa-dynconfig/xtensa_esp32s3.so"
 
-[[depends-on]]
-a0b_base = "*"
-a0b_tools = "*"
-espidf_gnat_runtime = "*"
-gnat_xtensa_esp32_elf = "^16"
-xtensa_dynconfig = "*"
-
 [[actions]]
 type = "pre-build"
 command = ["a0b-runtime",
@@ -31,15 +24,28 @@ command = ["a0b-runtime",
            "--runtime-description=crates/espidf_gnat_runtime/runtime-esp32s3.json",
            "--no-startup"]
 
+[[depends-on]]
+a0b_asynchronous_operations = "*"
+a0b_awaits_astc = "*"
+a0b_espidf_timer_clock_timer = "*"
+a0b_buffers = "*"
+a0b_timer = "*"
+a0b_tools = "*"
+espidfada_driver_spi = "*"
+espidf_gnat_runtime = "*"
+gnat_xtensa_esp32_elf = "^16"
+nu_pogodi = "*"
+xtensa_dynconfig = "*"
+
 [[pins]]
+a0b_time = { path = "../../a0b-time" }
 a0b_tools = { path = "crates/a0b-tools" }
 xtensa_dynconfig = { path = "crates/xtensa-dynconfig" }
 espidf_gnat_runtime = { path = "crates/espidf_gnat_runtime" }
 
-[[depends-on]]
-espidfada_driver_spi = "*"
-
-[[pins]]
+a0b_espidf_timer_clock_timer = { path='components/a0b_espidf_timer_clock_timer' }
 espidfada = { path='components/espidfada' }
 espidfada_driver_gpio = { path='components/espidfada_driver_gpio' }
 espidfada_driver_spi = { path='components/espidfada_driver_spi' }
+#espidfada_timer = { path='components/espidfada_timer' }
+nu_pogodi = { path = ".." }
