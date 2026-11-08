@@ -1,3 +1,9 @@
+--
+--  Copyright (C) 2026, Vadim Godunko <vgodunko@gmail.com>
+--
+--  SPDX-License-Identifier: GPL-3.0-or-later
+--
+
 with "runtime/build_libgnat.gpr";
 with "runtime/build_libgnarl.gpr";
 
@@ -8,7 +14,7 @@ project Nu_Pogodi_ESP32S3 is
    for Target use "xtensa-esp32-elf";
    for Runtime ("Ada") use "runtime";
 
-   for Source_Dirs use ("source");
+   for Source_Dirs use ("source", "../bare_metal/source");
    for Object_Dir use ".objs";
    for Main use ("main.adb");
 
