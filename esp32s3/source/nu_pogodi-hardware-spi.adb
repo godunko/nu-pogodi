@@ -70,7 +70,8 @@ package body Nu_Pogodi.Hardware.SPI is
       ESPIDF.Driver.SPI.Master.Set_flags
         (Device_Config,
          ESPIDF.Driver.SPI.Master.SPI_DEVICE_HALFDUPLEX
-         or ESPIDF.Driver.SPI.Master.SPI_DEVICE_3WIRE);
+         or ESPIDF.Driver.SPI.Master.SPI_DEVICE_3WIRE
+         or ESPIDF.Driver.SPI.Master.SPI_DEVICE_NO_RETURN_RESULT);
       ESPIDF.Driver.SPI.Master.Set_post_cb
         (Device_Config, Transaction_Complete'Access);
 
