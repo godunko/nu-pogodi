@@ -5,10 +5,9 @@
       "type": "gdbtarget",
       "request": "attach",
       "name": "Eclipse CDT GDB Adapter",
-      "initCommands": [
-        "clear app_main",
-        "thbreak _ada_main",
-        "continue"
+      "initialBreakpoint": "_ada_main",
+      "preRunCommands": [
+        "catch exception"
       ]
     }
   ]
