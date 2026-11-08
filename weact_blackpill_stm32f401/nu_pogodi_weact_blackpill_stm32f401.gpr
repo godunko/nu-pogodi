@@ -15,7 +15,7 @@ project Nu_Pogodi_WeAct_BlackPill_STM32F401 is
    for Exec_Dir use "../bin";
 
    for Main use ("nu_pogodi-driver.adb");
-   for Source_Dirs use ("source");
+   for Source_Dirs use ("source", "../bare_metal/source");
 
    package Compiler is
       for Switches ("Ada") use Nu_Pogodi_Weact_Blackpill_Stm32f401_Config.Ada_Compiler_Switches &
