@@ -20,8 +20,8 @@ XTENSA_GNU_CONFIG.set = "${CRATE_ROOT}/crates/xtensa-dynconfig/xtensa-dynconfig/
 type = "pre-build"
 command = ["a0b-runtime",
            "--bb-runtimes=crates/bb-runtimes/",
-           "--svd=crates/espidf_gnat_runtime/svd/esp32s3.svd",
-           "--runtime-description=crates/espidf_gnat_runtime/runtime-esp32s3.json",
+           "--svd=components/espidf_gnat_runtime/svd/esp32s3.svd",
+           "--runtime-description=components/espidf_gnat_runtime/runtime-embedded-esp32s3.json",
            "--no-startup"]
 
 [[depends-on]]
@@ -38,10 +38,11 @@ nu_pogodi = "*"
 xtensa_dynconfig = "*"
 
 [[pins]]
+a0b_callbacks = { path = "../../a0b-callbacks" }
 a0b_time = { path = "../../a0b-time" }
 a0b_tools = { path = "crates/a0b-tools" }
 xtensa_dynconfig = { path = "crates/xtensa-dynconfig" }
-espidf_gnat_runtime = { path = "crates/espidf_gnat_runtime" }
+espidf_gnat_runtime = { path = "components/espidf_gnat_runtime" }
 
 a0b_espidf_timer_clock_timer = { path='components/a0b_espidf_timer_clock_timer' }
 espidfada = { path='components/espidfada' }

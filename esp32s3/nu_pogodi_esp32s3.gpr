@@ -25,7 +25,7 @@ project Nu_Pogodi_ESP32S3 is
    package Binder is
       for Switches ("Ada") use
         ("-D4k",       --  Default secondary stack size.
-         "-Q2",        --  Secondary stacks for tasks created by ESP-IDF.
+         "-Q4",        --  Environment, two CPU ISR stacks and SPI worker.
          "-Mapp_main"); --  Entry point expected by ESP-IDF.
    end Binder;
 
