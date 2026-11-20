@@ -5,11 +5,12 @@
 --
 
 --  One operation may be active at a time. Descriptors and data must remain
---  available and unchanged by the caller until completion. For segmented
---  operations, only the first array element may use polling for 1-4 bytes;
---  subsequent nonempty segments use DMA, for both receive and transmit.
---  Transmit completion callbacks execute asynchronously on the callback
---  dispatcher task, after the descriptor's result has been recorded.
+--  available and unchanged by the caller until completion. Each descriptor
+--  may transfer at most 32_768 bytes on this platform. Nonempty descriptors
+--  use queued DMA transactions. Completion callbacks execute asynchronously
+--  on the callback dispatcher task after the results and received data have
+--  been recorded. The caller must acquire the bus before starting transfers
+--  and release it after completion.
 
 with A0B.Asynchronous_Transfers;
 with A0B.Callbacks;
@@ -50,9 +51,13 @@ package Nu_Pogodi.Hardware.SPI is
       Success     : in out Boolean);
    --  The array must remain available and unchanged until completion, and
    --  each descriptor must occur only once. Null entries and lengths above
-   --  65_535 reject the whole operation without modifying any descriptor.
+   --  32_768 reject the whole operation without modifying any descriptor.
    --  Accepted descriptors start as Inactive with Transferred = 0, become
    --  Active when reached, then Success when completed (also for zero length).
-   --  Callback is emitted once for the whole array, immediately if empty.
+   --  On failure, subsequent descriptors remain Inactive. Callback is queued
+   --  once for the whole array, also if empty. If Success is False on entry,
+   --  nothing is done. Validation or initial queueing failure sets Success to
+   --  False and does not emit Callback; later failures are reported in the
+   --  descriptors and emit Callback.
 
 end Nu_Pogodi.Hardware.SPI;
