@@ -159,7 +159,7 @@ package body Nu_Pogodi.Hardware.SPI is
 
       Error :=
         ESPIDF.Driver.SPI.Master.spi_device_get_trans_result
-          (Device_Handle, Transaction, ESPIDF.portMAX_DELAY);
+          (Device_Handle, Transaction);
 
       if Transaction = Receive_Transaction'Access then
          if Error /= ESPIDF.ESP_OK then
