@@ -8,6 +8,8 @@
 --  available and unchanged by the caller until completion. For segmented
 --  operations, only the first array element may use polling for 1-4 bytes;
 --  subsequent nonempty segments use DMA, for both receive and transmit.
+--  Transmit completion callbacks execute asynchronously on the callback
+--  dispatcher task, after the descriptor's result has been recorded.
 
 with A0B.Asynchronous_Transfers;
 with A0B.Callbacks;

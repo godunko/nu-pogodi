@@ -4,6 +4,7 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
+with A0B.Callbacks.Task_Context;
 with A0B.Storage;
 
 with ESPIDF.Driver.SPI.Master;
@@ -181,7 +182,7 @@ package body Nu_Pogodi.Hardware.SPI is
          end if;
 
          Transmit_Descriptor := null;
-         A0B.Callbacks.Emit_Once (Transmit_Callback);
+         A0B.Callbacks.Task_Context.Emit_Once (Transmit_Callback);
 
       else
          raise Program_Error;
