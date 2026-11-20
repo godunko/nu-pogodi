@@ -15,13 +15,6 @@ with ESPIDF.Driver.SPI.Master;
 
 package body Nu_Pogodi.Hardware.SPI is
 
-   --  --  procedure Transmit
-   --  --    (Descriptors : aliased in out
-   --  --       A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
-   --  --     Finished    : A0B.Callbacks.Callback;
-   --  --     Success     : in out Boolean);
-   --  --  --  The array contract is the same as for Receive below.
-
    Max_Transfer_Length : constant A0B.Storage.Storage_Count := 32_768;
 
    Device_Handle        : ESPIDF.Driver.SPI.Master.spi_device_handle_t;
@@ -29,6 +22,9 @@ package body Nu_Pogodi.Hardware.SPI is
    Transmit_Transaction : aliased ESPIDF.Driver.SPI.Master.spi_transaction_t;
    Transmit_Descriptor  :
      A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
+   Transmit_Descriptors :
+     access A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
+   Transmit_Index       : A0B.Types.Unsigned_32;
    Receive_Transaction  : aliased ESPIDF.Driver.SPI.Master.spi_transaction_t;
    Receive_Descriptor   :
      A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
@@ -45,6 +41,11 @@ package body Nu_Pogodi.Hardware.SPI is
    --  Start receive operation
 
    procedure Finish_Receive;
+
+   procedure Start_Transmit (Success : in out Boolean);
+   --  Start transmit operation
+
+   procedure Finish_Transmit;
 
    procedure On_post_cb
      (Trans : in out ESPIDF.Driver.SPI.Master.spi_transaction_t)
@@ -86,6 +87,19 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.Callbacks.Task_Context.Emit_Once (Transfer_Callback);
    end Finish_Receive;
+
+   ---------------------
+   -- Finish_Transmit --
+   ---------------------
+
+   procedure Finish_Transmit is
+   begin
+      Transmit_Descriptor  := null;
+      Transmit_Descriptors := null;
+      Transmit_Index       := 0;
+
+      A0B.Callbacks.Task_Context.Emit_Once (Transfer_Callback);
+   end Finish_Transmit;
 
    ----------------
    -- Initialize --
@@ -190,17 +204,30 @@ package body Nu_Pogodi.Hardware.SPI is
 
       elsif Transaction = Transmit_Transaction'Access then
          if Error /= ESPIDF.ESP_OK then
-            A0B.Asynchronous_Transfers.Set_Failure
-              (Transmit_Descriptor.all, 0);
+            A0B.Asynchronous_Transfers.Set_Failure (Transmit_Descriptor.all, 0);
+            Finish_Transmit;
 
-         else
-            A0B.Asynchronous_Transfers.Set_Success
-              (Transmit_Descriptor.all, Transmit_Descriptor.Length);
+            return;
          end if;
 
-         Transmit_Descriptor := null;
+         A0B.Asynchronous_Transfers.Set_Success
+           (Transmit_Descriptor.all, Transmit_Descriptor.Length);
 
-         A0B.Callbacks.Task_Context.Emit_Once (Transfer_Callback);
+         if Transmit_Descriptors /= null
+           and then Transmit_Index /= Transmit_Descriptors'Last
+         then
+            Transmit_Index      := @ + 1;
+            Transmit_Descriptor := Transmit_Descriptors (Transmit_Index);
+
+            Start_Transmit (Success);
+
+            if not Success then
+               Finish_Transmit;
+            end if;
+
+         else
+            Finish_Transmit;
+         end if;
 
       else
          --  Unexpected transaction pointer returned. Should not happen in
@@ -337,8 +364,6 @@ package body Nu_Pogodi.Hardware.SPI is
    is
       use type A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
       use type A0B.Storage.Storage_Count;
-      use type ESPIDF.esp_err_t;
-      use type ESPIDF.size_t;
 
    begin
       if not Success then
@@ -356,39 +381,79 @@ package body Nu_Pogodi.Hardware.SPI is
 
       A0B.Asynchronous_Transfers.Set_Inactive (Descriptor);
 
-      if Descriptor.Length = 0 then
-         A0B.Asynchronous_Transfers.Set_Active (Descriptor);
-         A0B.Asynchronous_Transfers.Set_Success (Descriptor, 0);
+      Transmit_Descriptor  := Descriptor'Unchecked_Access;
+      Transmit_Descriptors := null;
+      Transmit_Index       := 0;
+
+      Transfer_Callback := Finished;
+
+      Start_Transmit (Success);
+
+      if not Success then
+         Transmit_Descriptor := null;
+         A0B.Callbacks.Unset (Transfer_Callback);
+      end if;
+   end Transmit;
+
+   --------------
+   -- Transmit --
+   --------------
+
+   procedure Transmit
+     (Descriptors :
+        aliased in out A0B.Asynchronous_Transfers.Transfer_Descriptor_Array;
+      Finished    : A0B.Callbacks.Callback;
+      Success     : in out Boolean)
+   is
+      use type A0B.Asynchronous_Transfers.Transfer_Descriptor_Access;
+      use type A0B.Storage.Storage_Count;
+
+   begin
+      if not Success then
+         return;
+      end if;
+
+      if Transmit_Descriptor /= null or else Receive_Descriptor /= null then
+         Success := False;
+
+         return;
+      end if;
+
+      if Descriptors'Length = 0 then
          Transfer_Callback := Finished;
          A0B.Callbacks.Task_Context.Emit_Once (Transfer_Callback);
 
          return;
       end if;
 
-      Transmit_Descriptor := Descriptor'Unchecked_Access;
+      --  Check descriptors
+
+      for Descriptor of Descriptors loop
+         if Descriptor = null or else Descriptor.Length > Max_Transfer_Length
+         then
+            Success := False;
+
+            return;
+         end if;
+      end loop;
+
+      --  Reset state of all descriptors
+
+      for Descriptor of Descriptors loop
+         A0B.Asynchronous_Transfers.Set_Inactive (Descriptor.all);
+      end loop;
+
+      Transmit_Descriptors := Descriptors'Unchecked_Access;
+      Transmit_Index       := Descriptors'First;
+      Transmit_Descriptor  := Descriptors (Transmit_Index);
+
       Transfer_Callback := Finished;
 
-      A0B.Asynchronous_Transfers.Set_Active (Transmit_Descriptor.all);
-
-      ESPIDF.Driver.SPI.Master.Set_tx_buffer
-        (Transmit_Transaction,
-         A0B.Storage.As_Address (Transmit_Descriptor.Buffer));
-      ESPIDF.Driver.SPI.Master.Set_length
-        (Transmit_Transaction, ESPIDF.size_t (Transmit_Descriptor.Length) * 8);
-      ESPIDF.Driver.SPI.Master.Set_flags
-        (Transmit_Transaction,
-         ESPIDF.Driver.SPI.Master.SPI_TRANS_CS_KEEP_ACTIVE);
-      ESPIDF.Driver.SPI.Master.Set_user
-        (Transmit_Transaction, Transmit_Descriptor.all'Address);
-
-      Success :=
-        ESPIDF.Driver.SPI.Master.spi_device_queue_trans
-          (Device_Handle, Transmit_Transaction, 0)
-        = ESPIDF.ESP_OK;
+      Start_Transmit (Success);
 
       if not Success then
-         A0B.Asynchronous_Transfers.Set_Failure (Transmit_Descriptor.all, 0);
          Transmit_Descriptor := null;
+         Transmit_Descriptors := null;
          A0B.Callbacks.Unset (Transfer_Callback);
       end if;
    end Transmit;
@@ -443,5 +508,57 @@ package body Nu_Pogodi.Hardware.SPI is
 
       Finish_Receive;
    end Start_Receive;
+
+   --------------------
+   -- Start_Transmit --
+   --------------------
+
+   procedure Start_Transmit (Success : in out Boolean) is
+      use type A0B.Storage.Storage_Offset;
+      use type ESPIDF.esp_err_t;
+      use type ESPIDF.size_t;
+
+   begin
+      loop
+         A0B.Asynchronous_Transfers.Set_Active (Transmit_Descriptor.all);
+
+         if Transmit_Descriptor.Length /= 0 then
+            ESPIDF.Driver.SPI.Master.Set_tx_buffer
+              (Transmit_Transaction,
+               A0B.Storage.As_Address (Transmit_Descriptor.Buffer));
+            ESPIDF.Driver.SPI.Master.Set_length
+              (Transmit_Transaction,
+               ESPIDF.size_t (Transmit_Descriptor.Length) * 8);
+            ESPIDF.Driver.SPI.Master.Set_flags
+              (Transmit_Transaction,
+               ESPIDF.Driver.SPI.Master.SPI_TRANS_CS_KEEP_ACTIVE);
+            ESPIDF.Driver.SPI.Master.Set_user
+              (Transmit_Transaction, Transmit_Descriptor.all'Address);
+
+            Success :=
+              ESPIDF.Driver.SPI.Master.spi_device_queue_trans
+                (Device_Handle, Transmit_Transaction, 0)
+              = ESPIDF.ESP_OK;
+
+            if not Success then
+               A0B.Asynchronous_Transfers.Set_Failure
+                 (Transmit_Descriptor.all, 0);
+            end if;
+
+            return;
+         end if;
+
+         A0B.Asynchronous_Transfers.Set_Success (Transmit_Descriptor.all, 0);
+
+         exit when
+           Transmit_Descriptors = null
+           or else Transmit_Index = Transmit_Descriptors'Last;
+
+         Transmit_Index      := @ + 1;
+         Transmit_Descriptor := Transmit_Descriptors (Transmit_Index);
+      end loop;
+
+      Finish_Transmit;
+   end Start_Transmit;
 
 end Nu_Pogodi.Hardware.SPI;
