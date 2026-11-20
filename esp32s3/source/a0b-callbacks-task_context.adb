@@ -6,6 +6,8 @@
 
 pragma Ada_2022;
 
+with System;
+
 package body A0B.Callbacks.Task_Context is
 
    type Element_Index is mod 4;
@@ -14,7 +16,9 @@ package body A0B.Callbacks.Task_Context is
 
    task Dispatcher;
 
-   protected Queue is
+   protected Queue
+     with Interrupt_Priority => System.Interrupt_Priority'Last
+   is
 
       procedure Enqueue (Self : Callback);
 
