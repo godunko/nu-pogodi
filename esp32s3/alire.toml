@@ -40,6 +40,7 @@ nu_pogodi = "*"
 xtensa_dynconfig = "*"
 
 [[pins]]
+a0b_buffers = { path = "../../a0b-buffers" }
 a0b_callbacks = { path = "../../a0b-callbacks" }
 a0b_time = { path = "../../a0b-time" }
 a0b_tools = { path = "crates/a0b-tools" }
