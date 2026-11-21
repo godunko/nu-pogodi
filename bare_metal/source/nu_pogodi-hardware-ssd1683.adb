@@ -1003,6 +1003,11 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
    package body State_Machine_Command_Busy_State is
 
+      Transfer_Done : Boolean := False;
+      Busy_Done     : Boolean := False;
+      --  Completion of both transfer and busy signals is required before
+      --  emitting the callback.
+
       -----------
       -- Enter --
       -----------
@@ -1011,7 +1016,10 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          Success : Boolean := True;
 
       begin
-         State := Command_Busy;
+         State         := Command_Busy;
+
+         Transfer_Done := False;
+         Busy_Done     := False;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
            (On_Busy_Callbacks.Create);
@@ -1041,6 +1049,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          end if;
 
          State            := Command_Busy;
+
+         Transfer_Done    := False;
+         Busy_Done        := False;
          Command_Callback := Callback;
 
          Nu_Pogodi.Hardware.Pin_Control.Enable_SSD1683_BUSY
@@ -1072,6 +1083,9 @@ package body Nu_Pogodi.Hardware.SSD1683 is
          end if;
 
          State            := Command_Busy;
+
+         Transfer_Done    := False;
+         Busy_Done        := False;
          Command_Callback := Callback;
 
          A0B.Asynchronous_Transfers.Initialize
@@ -1098,9 +1112,16 @@ package body Nu_Pogodi.Hardware.SSD1683 is
 
       procedure On_Busy is
       begin
-         State := Ready;
+         Busy_Done := True;
 
-         A0B.Callbacks.Emit_Once (Command_Callback);
+         if Transfer_Done then
+            --  Both the transfer and the busy signal are done, so we can
+            --  complete the command.
+
+            State := Ready;
+
+            A0B.Callbacks.Emit_Once (Command_Callback);
+         end if;
       end On_Busy;
 
       --------------------------
@@ -1111,7 +1132,16 @@ package body Nu_Pogodi.Hardware.SSD1683 is
       begin
          --  XXX Transfer error handling is not implemented.
 
-         null;
+         Transfer_Done := True;
+
+         if Busy_Done then
+            --  Both the transfer and the busy signal are done, so we can
+            --  complete the command.
+
+            State := Ready;
+
+            A0B.Callbacks.Emit_Once (Command_Callback);
+         end if;
       end On_Transfer_Finished;
 
    end State_Machine_Command_Busy_State;
