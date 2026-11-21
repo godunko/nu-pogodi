@@ -8,6 +8,7 @@ pragma Ada_2022;
 
 with System;
 
+with A0B.Callbacks.Task_Context;
 with A0B.Time;
 with A0B.Time.Clock;
 with A0B.Types;
@@ -62,7 +63,11 @@ package body Nu_Pogodi.Hardware.Pin_Control is
    procedure BUSY_Handler (Arg : System.Address) is
    begin
       ESPIDF.Driver.GPIO.gpio_intr_disable (SSD1686_BUSY);
-      A0B.Callbacks.Emit_Once (SSD1683_BUSY_Callback);
+
+      --  Redispatch the callback in the task context, upper level code might
+      --  access to API functions which must be called in task context.
+
+      A0B.Callbacks.Task_Context.Emit_Once (SSD1683_BUSY_Callback);
    end BUSY_Handler;
 
    -------------------------
