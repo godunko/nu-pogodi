@@ -6,6 +6,7 @@
 /build/
 /config/
 /crates/
+/managed_components/
 /runtime/
 /sdkconfig
 /sdkconfig.old
