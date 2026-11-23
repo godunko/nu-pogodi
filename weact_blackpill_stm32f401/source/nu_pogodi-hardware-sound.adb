@@ -4,21 +4,14 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --
 
-pragma Ada_2022;
-
-with System.Storage_Elements;
-
-with A0B.Asynchronous_Transfers;
+--  This is WeAct BlackPill STM32F401 version of the package.
 
 with Nu_Pogodi.Hardware.Pin_Control;
 with Nu_Pogodi.Hardware.TIM;
 
 package body Nu_Pogodi.Hardware.Sound is
 
-   use type System.Storage_Elements.Storage_Count;
    use type A0B.Asynchronous_Transfers.Operation_State;
-
-   Descriptor : aliased A0B.Asynchronous_Transfers.Transfer_Descriptor;
 
    ----------------
    -- Initialize --
@@ -35,22 +28,21 @@ package body Nu_Pogodi.Hardware.Sound is
    -----------
 
    procedure Start
-     (Data     : aliased Sample_Array;
-      Finished : A0B.Callbacks.Callback;
-      Success  : out Boolean) is
+     (Descriptor :
+        aliased in out A0B.Asynchronous_Transfers.Transfer_Descriptor;
+      Finished   : A0B.Callbacks.Callback;
+      Success    : in out Boolean) is
    begin
-      if Descriptor.State = A0B.Asynchronous_Transfers.Active then
+      if not Success then
+         return;
+      end if;
+
+      if Descriptor.State /= A0B.Asynchronous_Transfers.Inactive then
          Success := False;
 
          return;
       end if;
 
-      A0B.Asynchronous_Transfers.Initialize
-        (Self   => Descriptor,
-         Data   => Data'Address,
-         Length => Data'Size / System.Storage_Unit);
-
-      Success := True;
       Nu_Pogodi.Hardware.TIM.Transmit (Descriptor, Finished, Success);
    end Start;
 

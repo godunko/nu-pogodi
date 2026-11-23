@@ -6,6 +6,7 @@
 
 pragma Ada_2022;
 
+with A0B.Asynchronous_Transfers;
 with A0B.Callbacks.Generic_Parameterless;
 
 with Nu_Pogodi.Application;
@@ -31,8 +32,7 @@ package body Nu_Pogodi.States.Game is
 
    procedure Start_Sound;
 
-   Buffer : Nu_Pogodi.Hardware.Sound.Sample_Array
-     renames Nu_Pogodi.Sounds.Buffers.Buffer_0;
+   Descriptor : aliased A0B.Asynchronous_Transfers.Transfer_Descriptor;
 
    type Queue_Index is mod 4;
    --  One slot remains free, leaving room for three sounds.
@@ -128,8 +128,7 @@ package body Nu_Pogodi.States.Game is
 
    procedure Start_Sound is
       Sound   : Nu_Pogodi.Sounds.Sound_Identifier;
-      Last    : Natural;
-      Success : Boolean;
+      Success : Boolean := True;
 
    begin
       if Read_Index = Write_Index then
@@ -146,18 +145,15 @@ package body Nu_Pogodi.States.Game is
       --  occupied until the completion callback advances Read_Index.
 
       Queue (Read_Index) := Nu_Pogodi.Sounds.None;
-      Nu_Pogodi.Sounds.Samples.Builders (Sound) (Buffer, Last);
-
-      declare
-         Data : constant access Nu_Pogodi.Hardware.Sound.Sample_Array :=
-           Buffer (Buffer'First .. Last)'Unrestricted_Access;
-
-      begin
-         Nu_Pogodi.Hardware.Sound.Start
-           (Data     => Data.all,
-            Finished => Sound_Finished_Callbacks.Create,
-            Success  => Success);
-      end;
+      Nu_Pogodi.Sounds.Buffers.Set_Mode (Nu_Pogodi.Sounds.Buffers.Single);
+      Nu_Pogodi.Sounds.Buffers.Clear;
+      Nu_Pogodi.Sounds.Samples.Builders (Sound) (Success);
+      Nu_Pogodi.Sounds.Buffers.Finish (Success);
+      Nu_Pogodi.Sounds.Buffers.Get (Descriptor, Success);
+      Nu_Pogodi.Hardware.Sound.Start
+        (Descriptor => Descriptor,
+         Finished   => Sound_Finished_Callbacks.Create,
+         Success    => Success);
 
       if not Success then
          Queue (Read_Index) := Sound;

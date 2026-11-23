@@ -6,6 +6,7 @@
 
 pragma Ada_2022;
 
+with A0B.Asynchronous_Transfers;
 with A0B.Callbacks.Generic_Discrete;
 
 with Nu_Pogodi.Application;
@@ -18,18 +19,43 @@ package body Nu_Pogodi.States.Splash is
 
    package Sound_Buffers renames Nu_Pogodi.Sounds.Buffers;
 
-   Last_Frame : constant Natural :=
+   Last_Frame      : constant Natural :=
      Nu_Pogodi.Matrix_Printer.Frame_Count (Nu_Pogodi.Logo.Descriptor);
    Last_Frame_Tick : constant Natural := Last_Frame * Ticks_Per_Frame;
    Hold_Ticks      : constant Natural :=
      Last_Frame_Tick + Physics_Ticks_Per_Second;
 
-   subtype Buffer_Index is Sound_Buffers.Buffer_Index;
+   type Buffer_Index is mod 2;
+
+   Descriptors : array (Buffer_Index) of aliased
+     A0B.Asynchronous_Transfers.Transfer_Descriptor;
 
    procedure On_Sound_Finished (Frame : Natural);
 
    package Sound_Finished_Callbacks is
      new A0B.Callbacks.Generic_Discrete (Natural, On_Sound_Finished);
+
+   --------------------
+   -- Generate_Sound --
+   --------------------
+
+   procedure Generate_Sound (Frame : Positive) is
+      Success : Boolean := True;
+
+   begin
+      Sound_Buffers.Clear;
+      Nu_Pogodi.Matrix_Printer.Generate_Sound
+        (Nu_Pogodi.Logo.Descriptor, Frame, Success);
+      Sound_Buffers.Finish (Success);
+      Sound_Buffers.Get
+        (Descriptors (Buffer_Index ((Frame - 1) mod 2)), Success);
+
+      if not Success then
+         raise Program_Error;
+      end if;
+
+      Sound_Buffers.Switch;
+   end Generate_Sound;
 
    --------------
    -- Keyboard --
@@ -48,7 +74,7 @@ package body Nu_Pogodi.States.Splash is
 
    procedure On_Sound_Finished (Frame : Natural) is
       Buffer  : constant Buffer_Index := Buffer_Index (Frame mod 2);
-      Success : Boolean;
+      Success : Boolean := True;
 
    begin
       if Frame >= Last_Frame then
@@ -56,7 +82,7 @@ package body Nu_Pogodi.States.Splash is
       end if;
 
       Nu_Pogodi.Hardware.Sound.Start
-        (Sound_Buffers.Buffers (Buffer).all,
+        (Descriptors (Buffer),
          Sound_Finished_Callbacks.Create (Frame + 1),
          Success);
 
@@ -77,13 +103,12 @@ package body Nu_Pogodi.States.Splash is
          Self.Started := True;
 
          if Last_Frame /= 0 then
-            Nu_Pogodi.Matrix_Printer.Generate_Sound
-              (Nu_Pogodi.Logo.Descriptor, 1, Sound_Buffers.Buffers (0).all);
+            Sound_Buffers.Set_Mode (Sound_Buffers.Double);
+            Generate_Sound (1);
             On_Sound_Finished (0);
 
             if Last_Frame > 1 then
-               Nu_Pogodi.Matrix_Printer.Generate_Sound
-                 (Nu_Pogodi.Logo.Descriptor, 2, Sound_Buffers.Buffers (1).all);
+               Generate_Sound (2);
             end if;
          end if;
 
@@ -106,11 +131,7 @@ package body Nu_Pogodi.States.Splash is
 
             begin
                if Sound_Frame <= Last_Frame then
-                  Nu_Pogodi.Matrix_Printer.Generate_Sound
-                    (Nu_Pogodi.Logo.Descriptor,
-                     Sound_Frame,
-                     Sound_Buffers.Buffers
-                       (Buffer_Index ((Sound_Frame - 1) mod 2)).all);
+                  Generate_Sound (Sound_Frame);
                end if;
             end;
          end if;

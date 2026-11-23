@@ -8,7 +8,6 @@ with A0B.Types;
 
 with Nu_Pogodi.Bitmaps;
 with Nu_Pogodi.Framebuffers;
-with Nu_Pogodi.Hardware.Sound;
 
 package Nu_Pogodi.Matrix_Printer is
 
@@ -28,7 +27,7 @@ package Nu_Pogodi.Matrix_Printer is
    procedure Generate_Sound
      (Bitmap  : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
       Frame   : Positive;
-      Samples : out Nu_Pogodi.Hardware.Sound.Sample_Array);
+      Success : in out Boolean);
    --  Fill the sound buffer for the specified printer frame.
 
 end Nu_Pogodi.Matrix_Printer;

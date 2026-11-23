@@ -6,49 +6,37 @@
 
 pragma Ada_2022;
 
-with Nu_Pogodi.Hardware.Sound;
-
 package Nu_Pogodi.Sounds.Samples is
 
    Samples_Per_Game_Over : constant :=
-     Nu_Pogodi.Hardware.Sound.Sample_Rate * 350 / 1_000;
+     4_000 * 350 / 1_000;
 
    type Builder_Subprogram is access procedure
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
-   --  Last is the index of the last sample written to Buffer.
+     (Success : in out Boolean);
 
    procedure Generate_Catch_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Chick_Jump_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Fall_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Game_Over_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Left_Bottom_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Left_Top_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Right_Bottom_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    procedure Generate_Right_Top_Sound
-     (Buffer : out Nu_Pogodi.Hardware.Sound.Sample_Array;
-      Last   : out Natural);
+     (Success : in out Boolean);
 
    Builders : constant
      array (Nu_Pogodi.Sounds.Sound_Identifier) of Builder_Subprogram :=

@@ -7,6 +7,8 @@
 pragma Ada_2022;
 
 with Nu_Pogodi.Drawing;
+with Nu_Pogodi.Hardware.Sound;
+with Nu_Pogodi.Sounds.Buffers;
 
 package body Nu_Pogodi.Matrix_Printer is
 
@@ -156,31 +158,19 @@ package body Nu_Pogodi.Matrix_Printer is
    procedure Generate_Sound
      (Bitmap  : Nu_Pogodi.Bitmaps.Bitmap_Descriptor;
       Frame   : Positive;
-      Samples : out Nu_Pogodi.Hardware.Sound.Sample_Array)
+      Success : in out Boolean)
    is
       use type A0B.Types.Unsigned_32;
 
-      function PWM_Sample
-        (Frequency : Positive;
-         Divisor   : Positive) return Nu_Pogodi.Hardware.Sound.Sample;
-
-      ----------------
-      -- PWM_Sample --
-      ----------------
-
-      function PWM_Sample
-        (Frequency : Positive;
-         Divisor   : Positive) return Nu_Pogodi.Hardware.Sound.Sample
-      is
+      procedure Encode_PWM (Frequency, Divisor : Positive) is
          Period : constant Positive := 1_000_000 / Frequency;
-
       begin
-         return
-           (ARR    => A0B.Types.Unsigned_16 (Period - 1),
-            CCR1   => A0B.Types.Unsigned_16 (Period / Divisor),
-            others => <>);
-      end PWM_Sample;
+         Nu_Pogodi.Sounds.Buffers.Encode
+           (Period => Period, High => Period / Divisor, Success => Success);
+      end Encode_PWM;
 
+      Samples_Per_Frame : constant :=
+        Nu_Pogodi.Hardware.Sound.Samples_Per_Frame;
       Columns : Needle_Mask_Array;
       Count   : Natural;
       Index   : Natural := 0;
@@ -189,13 +179,13 @@ package body Nu_Pogodi.Matrix_Printer is
       Read_Needles (Bitmap, Frame, Columns, Count);
 
       if Count = 0 then
-         for J in Samples'Range loop
-            Samples (J) := PWM_Sample (550 + (J * 7) mod 250, 3);
+         for J in 0 .. Samples_Per_Frame - 1 loop
+            Encode_PWM (550 + (J * 7) mod 250, 3);
          end loop;
 
       else
          for Column in 0 .. Count - 1 loop
-            for S in 0 .. Samples'Length / Count - 1 loop
+            for S in 0 .. Samples_Per_Frame / Count - 1 loop
                declare
                   Mask : constant A0B.Types.Unsigned_32 :=
                     A0B.Types.Unsigned_32 (Columns (Column));
@@ -206,15 +196,14 @@ package body Nu_Pogodi.Matrix_Printer is
                           mod 1_600));
 
                begin
-                  Samples (Index) :=
-                    PWM_Sample (Frequency, (if Mask = 0 then 2 else 6));
+                  Encode_PWM (Frequency, (if Mask = 0 then 2 else 6));
                   Index := @ + 1;
                end;
             end loop;
          end loop;
 
-         while Index < Samples'Length loop
-            Samples (Index) := PWM_Sample (300, 2);
+         while Index < Samples_Per_Frame loop
+            Encode_PWM (300, 2);
             Index := @ + 1;
          end loop;
       end if;
