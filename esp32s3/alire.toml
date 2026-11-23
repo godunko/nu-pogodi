@@ -32,6 +32,7 @@ a0b_buffers = "*"
 a0b_timer = "*"
 a0b_tools = "*"
 espidfada_button = "*"
+espidfada_driver_rmt = "*"
 espidfada_driver_spi = "*"
 espidfada_timer = "*"
 espidf_gnat_runtime = "*"
@@ -51,6 +52,7 @@ a0b_espidf_timer_clock_timer = { path='components/a0b_espidf_timer_clock_timer' 
 espidfada = { path='components/espidfada' }
 espidfada_button = { path='components/espidfada_button' }
 espidfada_driver_gpio = { path='components/espidfada_driver_gpio' }
+espidfada_driver_rmt = { path='components/espidfada_driver_rmt' }
 espidfada_driver_spi = { path='components/espidfada_driver_spi' }
 espidfada_timer = { path='components/espidfada_timer' }
 nu_pogodi = { path = ".." }
